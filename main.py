@@ -173,7 +173,7 @@ class RegressionPage(ctk.CTkFrame):
         button = ctk.CTkButton(self, text="Upload your data file", command=UploadAction)
         button.grid(row=1, column=0, padx=8, pady=8, ipadx=8, ipady=8)
         
-        button1 = ctk.CTkButton(self, text="Print", command=lambda: print(DATA))
+        button1 = ctk.CTkButton(self, text="Print", command=lambda: print(DATA)) # Raises the error -> NameError: name 'DATA' is not defined (TO SOLVE)
         button1.grid(row=2, column=0, padx=8, pady=8, ipadx=8, ipady=8)
 
         button2 = ctk.CTkButton(self, image=backImg, text="", command=lambda: controller.show_frame(StartPage))
