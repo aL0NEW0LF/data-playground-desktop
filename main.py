@@ -1,11 +1,35 @@
 import tkinter as tk
 from tkinter import ttk
+import os
 import customtkinter as ctk
 from PIL import ImageTk, Image
+import pandas as pd
+from logic.file_handling import file_handling as fh
+from pandastable import Table, TableModel
 
 LARGEFONT = ("montserrat", 24)
 
+def UploadAction():
+    file_path = ctk.filedialog.askopenfilename()
+    print('Selected:', file_path)
+    if not file_path:
+        return
+    _, file_extension = os.path.splitext(file_path)
 
+    try:
+        if file_extension in ['.csv', '.xlsx', '.json', '.txt']:
+            global DATA
+            DATA = fh(file_path=file_path, file_extension=file_extension)
+            print(DATA)
+        return None
+
+    except ValueError:
+        ctk.messagebox.showerror("Information", "The file you have chosen is invalid")
+        return None
+    except FileNotFoundError:
+        ctk.messagebox.showerror("Information", f"No such file as {file_path}")
+        return None
+        
 class App(ctk.CTk):
     # __init__ function for class cApp
     def __init__(self, *args, **kwargs):
@@ -46,9 +70,6 @@ class App(ctk.CTk):
     # to display the current frame passed as
     # parameter
     def show_frame(self, cont):
-        print(cont)
-        print(self.frames)
-        print(self.frames[cont])
         frame = self.frames[cont]
         frame.configure(fg_color="#101010")
         frame.tkraise()
@@ -140,6 +161,7 @@ class StartPage(ctk.CTkFrame):
         KNNButton.grid(row=1, column=2, padx=20, pady=20, sticky="nw")
 
 
+
 class RegressionPage(ctk.CTkFrame):
     def __init__(self, parent, controller):
         ctk.CTkFrame.__init__(self, parent)
@@ -148,15 +170,33 @@ class RegressionPage(ctk.CTkFrame):
         label = ctk.CTkLabel(self, text="RegressionPage", text_color="#FFFFFF", font=LARGEFONT)
         label.grid(row=0, column=0, padx=10, pady=10)
 
-        # button to show frame 2 with text
-        # layout2
-        button1 = ctk.CTkButton(self, image=backImg, text="", command=lambda: controller.show_frame(StartPage))
+        button = ctk.CTkButton(self, text="Upload your data file", command=UploadAction)
+        button.grid(row=1, column=0, padx=8, pady=8, ipadx=8, ipady=8)
+        
+        button1 = ctk.CTkButton(self, text="Print", command=lambda: print(DATA))
+        button1.grid(row=2, column=0, padx=8, pady=8, ipadx=8, ipady=8)
 
-        # putting the button in its place
-        # by using grid
-        button1.grid(row=1, column=0, padx=8, pady=8, ipadx=8, ipady=8)
+        button2 = ctk.CTkButton(self, image=backImg, text="", command=lambda: controller.show_frame(StartPage))
+        button2.grid(row=3, column=0, padx=8, pady=8, ipadx=8, ipady=8)
+"""         # Frame for TreeView
+        frame1 = ctk.CTkFrame(self)
+        frame1.place(height=250, width=500)
 
 
+        ## Treeview Widget
+        tv1 = ttk.Treeview(frame1)
+        tv1.place(relheight=1, relwidth=1) # set the height and width of the widget to 100% of its container (frame1).
+
+        treescrolly = tk.Scrollbar(frame1, orient="vertical", command=tv1.yview) # command means update the yaxis view of the widget
+        treescrollx = tk.Scrollbar(frame1, orient="horizontal", command=tv1.xview) # command means update the xaxis view of the widget
+        tv1.configure(xscrollcommand=treescrollx.set, yscrollcommand=treescrolly.set) # assign the scrollbars to the Treeview Widget
+        treescrollx.pack(side="bottom", fill="x") # make the scrollbar fill the x axis of the Treeview widget
+        treescrolly.pack(side="right", fill="y") # make the scrollbar fill the y axis of the Treeview widget
+
+    def clear_data(tv):
+        tv1.delete(*tv1.get_children())
+        return None """
+    
 class DecisionTreePage(ctk.CTkFrame):
     def __init__(self, parent, controller):
         ctk.CTkFrame.__init__(self, parent)
