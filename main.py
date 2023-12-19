@@ -6,11 +6,12 @@ from PIL import ImageTk, Image
 import pandas as pd
 from logic.file_handling import file_handling as fh
 from pandastable import Table, TableModel
+from tksheet import Sheet
 
 LARGEFONT = ("montserrat", 24)
 
 def UploadAction():
-    file_path = ctk.filedialog.askopenfilename()
+    file_path = ctk.filedialog.askopenfilename(filetypes=[("Excel files", "*.xlsx"), ("CSV files", "*.csv"), ("JSON files", "*.json"), ("Text files", "*.txt")])
     print('Selected:', file_path)
     if not file_path:
         return
@@ -29,7 +30,12 @@ def UploadAction():
     except FileNotFoundError:
         ctk.messagebox.showerror("Information", f"No such file as {file_path}")
         return None
-        
+
+def read_data():
+    global DATA
+    DATA.file_data_read()
+    print(DATA)
+
 class App(ctk.CTk):
     # __init__ function for class cApp
     def __init__(self, *args, **kwargs):
@@ -43,9 +49,9 @@ class App(ctk.CTk):
         self.configure(fg_color="#161616")
 
         # creating a container
-        container = ctk.CTkFrame(self)
+        container = ctk.CTkFrame(self, width=self.winfo_width(), height=self.winfo_height())
         container.configure(fg_color="#101010")
-        container.pack(side="bottom", expand=True, fill="both", padx=12, pady=12)
+        container.pack(side="bottom", expand=True, fill="both", padx=24, pady=24)
 
         container.grid_rowconfigure(0, weight=1)
         container.grid_columnconfigure(0, weight=1)
@@ -84,8 +90,8 @@ class StartPage(ctk.CTkFrame):
         frame.configure(fg_color="#101010")
         frame.place(relx=0.5, rely=0.5, anchor="c")
 
-        frame.grid_rowconfigure(1, weight=1)
-        frame.grid_columnconfigure((2, 0), weight=1)
+        """ frame.grid_rowconfigure(1, weight=1)
+        frame.grid_columnconfigure((2, 0), weight=1) """
 
 
         RegressionButton = ctk.CTkButton(frame,
@@ -166,36 +172,41 @@ class RegressionPage(ctk.CTkFrame):
     def __init__(self, parent, controller):
         ctk.CTkFrame.__init__(self, parent)
         backImg = ImageTk.PhotoImage(Image.open("./assets/icons/back.png").resize((24, 24), Image.LANCZOS))
+        self.columnconfigure(0, weight=1)
+        self.rowconfigure(2, weight=1)
 
-        label = ctk.CTkLabel(self, text="RegressionPage", text_color="#FFFFFF", font=LARGEFONT)
-        label.grid(row=0, column=0, padx=10, pady=10)
+        label = ctk.CTkLabel(self, text="Regression Page", text_color="#FFFFFF", font=LARGEFONT, bg_color="#101010", fg_color="#101010")
+        label.grid(row=0, column=0, columnspan=5, padx=12, pady=12, sticky="nw")
 
-        button = ctk.CTkButton(self, text="Upload your data file", command=UploadAction)
-        button.grid(row=1, column=0, padx=8, pady=8, ipadx=8, ipady=8)
+        frame1 = ctk.CTkFrame(self, fg_color="#101010")
+        frame1.grid(row=1, column=0, columnspan=5, ipadx=8, ipady=8, sticky="ew")
+
+        button = ctk.CTkButton(frame1, text="Upload your data file", command= UploadAction)
+        button.grid(row=0, column=0, padx=(0, 4), pady=8, ipadx=8, ipady=8, sticky="w")
         
-        button1 = ctk.CTkButton(self, text="Print", command=lambda: print(DATA)) # Raises the error -> NameError: name 'DATA' is not defined (TO SOLVE)
-        button1.grid(row=2, column=0, padx=8, pady=8, ipadx=8, ipady=8)
+        button3 = ctk.CTkButton(frame1, text="Read data file", command= read_data)
+        button3.grid(row=0, column=1, padx=4, pady=8, ipadx=8, ipady=8, sticky="w")
 
-        button2 = ctk.CTkButton(self, image=backImg, text="", command=lambda: controller.show_frame(StartPage))
-        button2.grid(row=3, column=0, padx=8, pady=8, ipadx=8, ipady=8)
-"""         # Frame for TreeView
-        frame1 = ctk.CTkFrame(self)
-        frame1.place(height=250, width=500)
+        button1 = ctk.CTkButton(frame1, text="Print", command=lambda: print(DATA))
+        button1.grid(row=0, column=2, padx=4, pady=8, ipadx=8, ipady=8, sticky="w")
+
+        button4 = ctk.CTkButton(frame1, text="Load table", command=lambda: self.load_data(frame2))
+        button4.grid(row=0, column=3, padx=4, pady=8, ipadx=8, ipady=8, sticky="w")
+
+        button2 = ctk.CTkButton(frame1, image=backImg, text="", command=lambda: controller.show_frame(StartPage))
+        button2.grid(row=0, column=4, padx=4, pady=8, ipadx=8, ipady=8, sticky="w")
+
+        frame2 = ctk.CTkFrame(self, fg_color="#101010")
+        #frame2.configure(fg_color="#101010")
+        frame2.grid(row=2, column=0, columnspan=5, ipadx=8, ipady=8, sticky="nsew")
 
 
-        ## Treeview Widget
-        tv1 = ttk.Treeview(frame1)
-        tv1.place(relheight=1, relwidth=1) # set the height and width of the widget to 100% of its container (frame1).
+    def load_data(self, frame2):
+        global DATA
+        sheet = Sheet(frame2, data = DATA.file_data.values.tolist(), auto_resize_columns = 100)
+        sheet.enable_bindings()
+        sheet.pack(side="top" , fill="both", expand=True)
 
-        treescrolly = tk.Scrollbar(frame1, orient="vertical", command=tv1.yview) # command means update the yaxis view of the widget
-        treescrollx = tk.Scrollbar(frame1, orient="horizontal", command=tv1.xview) # command means update the xaxis view of the widget
-        tv1.configure(xscrollcommand=treescrollx.set, yscrollcommand=treescrolly.set) # assign the scrollbars to the Treeview Widget
-        treescrollx.pack(side="bottom", fill="x") # make the scrollbar fill the x axis of the Treeview widget
-        treescrolly.pack(side="right", fill="y") # make the scrollbar fill the y axis of the Treeview widget
-
-    def clear_data(tv):
-        tv1.delete(*tv1.get_children())
-        return None """
     
 class DecisionTreePage(ctk.CTkFrame):
     def __init__(self, parent, controller):
