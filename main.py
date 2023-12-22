@@ -7,7 +7,8 @@ import pandas as pd
 from logic.file_handling import file_handling as fh
 from pandastable import Table, TableModel
 from tksheet import Sheet
-from logic.data_preprocessing import feature_selection_kBestFeatures, feature_selection_varianceThreshold
+from logic.data_preprocessing import feature_selection_kBestFeatures, feature_selection_varianceThreshold, handle_missing_values, drop_duplicate_rows, drop_contant_columns, get_non_constant_columns
+from enums import enums
 
 LARGEFONT = ("montserrat", 24)
 
@@ -23,6 +24,7 @@ def UploadAction():
         if file_extension in ['.csv', '.xlsx', '.json', '.txt']:
             global DATA
             DATA = fh(file_path=file_path, file_extension=file_extension)
+            DATA.file_data_read()
             print(DATA)
         return
 
@@ -32,7 +34,7 @@ def UploadAction():
     except FileNotFoundError:
         ctk.messagebox.showerror("Information", f"No such file as {file_path}")
         return
-
+    
 def read_data():
     global DATA
     DATA.file_data_read()
@@ -41,7 +43,6 @@ def read_data():
 def kbestFeat_Selec_event():
     dialog = ctk.CTkInputDialog(text="Type in a number:", title="Test")
     print("Number:", dialog.get_input())
-
 
 # MAIN APP
 class App(ctk.CTk):
@@ -64,7 +65,7 @@ class App(ctk.CTk):
         self.frames = {}
 
 
-        for F in (StartPage, RegressionPage, DecisionTreePage, NaiveBayesPage, SVMPage, KmeansPage, KNNPage, VarianceThresholdPage, KbestfeatPage):
+        for F in (StartPage, RegressionPage, DecisionTreePage, NaiveBayesPage, SVMPage, KmeansPage, KNNPage, VarianceThresholdPage, KbestfeatPage, MissingValuesPage, DuplicateRowsPage, ConstantFeaturesPage, OutliersPage):
             frame = F(container, self)
 
             self.frames[F] = frame
@@ -181,25 +182,27 @@ class RegressionPage(ctk.CTkFrame):
         button2 = ctk.CTkButton(frame1, image=backImg, text="", command=lambda: controller.show_frame(StartPage))
         button2.grid(row=0, column=0, padx=4, pady=8, ipadx=8, ipady=8, sticky="w")
 
-        button = ctk.CTkButton(frame1, text="Upload your data file", command= UploadAction)
-        button.grid(row=0, column=1, padx=(0, 4), pady=8, ipadx=8, ipady=8, sticky="w")
-        
-        button3 = ctk.CTkButton(frame1, text="Read data file", command= read_data)
-        button3.grid(row=0, column=2, padx=4, pady=8, ipadx=8, ipady=8, sticky="w")
+        button4 = ctk.CTkButton(frame1, text="Upload your data", command=lambda: self.upload_data())
+        button4.grid(row=0, column=1, padx=4, pady=8, ipadx=8, ipady=8, sticky="w")
 
         button1 = ctk.CTkButton(frame1, text="Print", command=lambda: print(DATA))
-        button1.grid(row=0, column=3, padx=4, pady=8, ipadx=8, ipady=8, sticky="w")
+        button1.grid(row=0, column=2, padx=4, pady=8, ipadx=8, ipady=8, sticky="w")
 
-        button4 = ctk.CTkButton(frame1, text="Load table", command=lambda: self.load_data())
-        button4.grid(row=0, column=4, padx=4, pady=8, ipadx=8, ipady=8, sticky="w")
-
-        optionmenu_var = ctk.StringVar(value="")
+        optionmenu_var = ctk.StringVar(value="Features selection")
         combobox = ctk.CTkOptionMenu(master=frame1,
                                        values=["Variance threshold", "K-best features"],
                                        command=lambda x: self.optionmenu_callback(x, controller),
                                        variable=optionmenu_var,
                                        width=150)
-        combobox.grid(row=0, column=5, padx=4, pady=8, ipadx=8, ipady=8, sticky="w")
+        combobox.grid(row=0, column=3, padx=4, pady=8, ipadx=8, ipady=8, sticky="w")
+
+        optionmenu_var2 = ctk.StringVar(value="Preprocessing")
+        combobox2 = ctk.CTkOptionMenu(master=frame1,
+                                       values=["Missing values", "Duplicate rows", "Constant features", "Outliers"],
+                                       command=lambda x: self.optionmenu_callback(x, controller),
+                                       variable=optionmenu_var2,
+                                       width=150)
+        combobox2.grid(row=0, column=4, padx=4, pady=8, ipadx=8, ipady=8, sticky="w")
 
         frame2 = ctk.CTkFrame(self, fg_color="#101010")
         #frame2.configure(fg_color="#101010")
@@ -208,7 +211,12 @@ class RegressionPage(ctk.CTkFrame):
         self.sheet.enable_bindings()
         self.sheet.pack(side="top" , fill="both", expand=True)
 
+    def upload_data(self):
+        UploadAction()
+        self.load_data()
+
     def load_data(self):
+        global app
         global DATA
         self.sheet.set_sheet_data(data = DATA.file_data.values.tolist())
 
@@ -227,9 +235,21 @@ class RegressionPage(ctk.CTkFrame):
         if choice == "Variance threshold":
             controller.show_frame(VarianceThresholdPage)
         elif choice == "K-best features":
-            # kbestFeat_Selec_event()
             controller.show_frame(KbestfeatPage)
+        elif choice == "Missing values":
+            app.frames[MissingValuesPage].textbox.configure(text = f"Number of missing values: {DATA.file_data.isnull().sum().sum()}\n\nPourcentage of missing values: {(DATA.file_data.isnull().sum().sum() / (DATA.file_data.shape[0] * DATA.file_data.shape[1])) * 100}%")
+            controller.show_frame(MissingValuesPage)
+        elif choice == "Duplicate rows":
+            app.frames[DuplicateRowsPage].textbox.configure(text = f"Number of duplicate rows: {DATA.file_data.duplicated().sum()}\n\nPourcentage of duplicate rows: {(DATA.file_data.duplicated().sum() / DATA.file_data.shape[0]) * 100}%")
+            controller.show_frame(DuplicateRowsPage)
+        elif choice == "Constant features":
+            app.frames[ConstantFeaturesPage].textbox.configure(text = f"Number of constant columns: {len([c for c in DATA.file_data.columns if len(set(DATA.file_data[c])) == 1])}\n\nPourcentage of constant columns: {(len([c for c in DATA.file_data.columns if len(set(DATA.file_data[c])) == 1]) / DATA.file_data.shape[1]) * 100}%")
+            controller.show_frame(ConstantFeaturesPage)
+        elif choice == "Outliers":
+            controller.show_frame(OutliersPage)
 
+# FILLER PAGES ############################################################################################################################
+###########################################################################################################################################
 class DecisionTreePage(ctk.CTkFrame):
     def __init__(self, parent, controller):
         ctk.CTkFrame.__init__(self, parent)
@@ -300,6 +320,8 @@ class VarianceThresholdPage(ctk.CTkFrame):
         button1 = ctk.CTkButton(self, image=backImg, text="", width=32, height=32, command=lambda: controller.show_frame(RegressionPage))
         button1.grid(row=1, column=0, padx=8, pady=8)
 
+###########################################################################################################################################
+###########################################################################################################################################
 class KbestfeatPage(ctk.CTkFrame):
     def __init__(self, parent, controller):
         ctk.CTkFrame.__init__(self, parent)
@@ -314,10 +336,10 @@ class KbestfeatPage(ctk.CTkFrame):
         K_entry = ctk.CTkEntry(self, width=10)
         K_entry.grid(row=2, column=0, padx=8, pady=8)
 
-        button2 = ctk.CTkButton(self, text="Select features", command=lambda: self.kbestFeat_Selec_event(K_entry.get()))
+        button2 = ctk.CTkButton(self, text="Select features", command=lambda: self.kbestFeat_Selec_event(K_entry.get(), controller))
         button2.grid(row=3, column=0, padx=8, pady=8)
 
-    def kbestFeat_Selec_event(self, k):  
+    def kbestFeat_Selec_event(self, k, controller):  
         global DATA
 
         if k == "":
@@ -333,9 +355,15 @@ class KbestfeatPage(ctk.CTkFrame):
         if k <= 0:
             tk.messagebox.showerror("Value", "The value you chose for k is invalid")
             return
+        
         elif k >= DATA.file_data.shape[1]:
             tk.messagebox.showerror("Value", "The value you chose for k cant be greater than the number of features")
             return
+
+        for type in DATA.file_data.dtypes:
+            if type == 'int64' and type == 'float64' and type == 'int32' and type == 'float32': 
+                tk.messagebox.showerror("Information", "Please make sure all the features are numerical")
+                return
         
         DATA.file_data = feature_selection_kBestFeatures(DATA.file_data.values, k)
         
@@ -343,7 +371,113 @@ class KbestfeatPage(ctk.CTkFrame):
 
         app.frames[RegressionPage].load_data()
 
+        controller.show_frame(RegressionPage)
 
-# Driver Code
+class MissingValuesPage(ctk.CTkFrame):
+    def __init__(self, parent, controller):
+        ctk.CTkFrame.__init__(self, parent)
+
+        backImg = ImageTk.PhotoImage(Image.open("./assets/icons/back.png").resize((32, 32), Image.LANCZOS))
+
+        self.rowconfigure(2, weight=1)
+        
+        label = ctk.CTkLabel(self, text="MissingValuesPage", text_color="#FFFFFF", font=LARGEFONT)
+        label.grid(row=0, column=0, padx=10, pady=10, sticky="w")
+
+        button1 = ctk.CTkButton(self, image=backImg, text="", width=32, height=32, command=lambda: controller.show_frame(RegressionPage))
+        button1.grid(row=1, column=0, padx=8, pady=8, sticky="w")
+
+        self.textbox = ctk.CTkLabel(self, text="", text_color="#FFFFFF", font=LARGEFONT)
+        self.textbox.grid(row=2, column=0, sticky="nsew", columnspan=3)
+
+        button4 = ctk.CTkButton(self, text="Fill with the mean", command=lambda: self.values_handling(method=enums.FillMethod.MEAN))
+        button4.grid(row=3, column=0, padx=4, pady=8, ipadx=8, ipady=8, sticky="w")
+
+        button5 = ctk.CTkButton(self, text="Fill with the median", command=lambda: self.values_handling(method=enums.FillMethod.MEDIAN))
+        button5.grid(row=3, column=1, padx=4, pady=8, ipadx=8, ipady=8, sticky="w")
+
+        button3 = ctk.CTkButton(self, text="Remove rows with missing values", command=lambda: self.values_handling(method=enums.FillMethod.DROP))
+        button3.grid(row=3, column=2, padx=4, pady=8, ipadx=8, ipady=8, sticky="w")
+
+    def values_handling(self, value: int | float | str = None, method: enums.FillMethod = enums.FillMethod.MEAN):
+        global DATA
+
+        handle_missing_values(DATA.file_data, value, method)
+
+        self.textbox.configure(text = f"Number of missing values: {DATA.file_data.isnull().sum().sum()}\n\nPourcentage of missing values: {(DATA.file_data.isnull().sum().sum() / (DATA.file_data.shape[0] * DATA.file_data.shape[1])) * 100}%")
+        app.frames[RegressionPage].load_data()
+    
+
+class DuplicateRowsPage(ctk.CTkFrame):
+    def __init__(self, parent, controller):
+        ctk.CTkFrame.__init__(self, parent)
+        backImg = ImageTk.PhotoImage(Image.open("./assets/icons/back.png").resize((32, 32), Image.LANCZOS))
+
+        self.rowconfigure(2, weight=1)
+
+        label = ctk.CTkLabel(self, text="DuplicateRowsPage", text_color="#FFFFFF", font=LARGEFONT)
+        label.grid(row=0, column=0, padx=10, pady=10)
+
+        button1 = ctk.CTkButton(self, image=backImg, text="", width=32, height=32, command=lambda: controller.show_frame(RegressionPage))
+        button1.grid(row=1, column=0, padx=8, pady=8, sticky="w")
+
+        self.textbox = ctk.CTkLabel(self, text="", text_color="#FFFFFF", font=LARGEFONT)
+        self.textbox.grid(row=2, column=0, sticky="nsew", columnspan=3)
+
+        button4 = ctk.CTkButton(self, text="Drop duplicate rows", command=lambda: self.drop_duplicate_rows())
+        button4.grid(row=3, column=0, padx=0, pady=8, ipadx=8, ipady=8, sticky="w")
+
+    def drop_duplicate_rows(self):
+        global DATA
+
+        drop_duplicate_rows(DATA.file_data)
+        
+        self.textbox.configure(text = f"Number of duplicate rows: {DATA.file_data.duplicated().sum()}\n\nPourcentage of duplicate rows: {(DATA.file_data.duplicated().sum() / DATA.file_data.shape[0]) * 100}%")
+        app.frames[RegressionPage].load_data()
+
+
+class ConstantFeaturesPage(ctk.CTkFrame):
+    def __init__(self, parent, controller):
+        ctk.CTkFrame.__init__(self, parent)
+        backImg = ImageTk.PhotoImage(Image.open("./assets/icons/back.png").resize((32, 32), Image.LANCZOS))
+
+        label = ctk.CTkLabel(self, text="ConstantFeaturesPage", text_color="#FFFFFF", font=LARGEFONT)
+        label.grid(row=0, column=0, padx=10, pady=10)
+
+        button1 = ctk.CTkButton(self, image=backImg, text="", width=32, height=32, command=lambda: controller.show_frame(RegressionPage))
+        button1.grid(row=1, column=0, padx=8, pady=8)
+
+        self.textbox = ctk.CTkLabel(self, text="", text_color="#FFFFFF", font=LARGEFONT)
+        self.textbox.grid(row=2, column=0, sticky="nsew", columnspan=3)
+
+        button4 = ctk.CTkButton(self, text="Drop constant columns", command=lambda: self.drop_contant_columns())
+        button4.grid(row=3, column=0, padx=0, pady=8, ipadx=8, ipady=8, sticky="w")
+
+    def drop_contant_columns(self):
+        global DATA
+        
+        drop_contant_columns(DATA.file_data)
+        
+        self.textbox.configure(text = f"Number of constant columns: {len([c for c in DATA.file_data.columns if len(set(DATA.file_data[c])) == 1])}\n\nPourcentage of constant columns: {(len([c for c in DATA.file_data.columns if len(set(DATA.file_data[c])) == 1]) / DATA.file_data.shape[1]) * 100}%")
+        app.frames[RegressionPage].load_data()
+
+
+# FILLER PAGES ############################################################################################################################
+###########################################################################################################################################
+class OutliersPage(ctk.CTkFrame):
+    def __init__(self, parent, controller):
+        ctk.CTkFrame.__init__(self, parent)
+        backImg = ImageTk.PhotoImage(Image.open("./assets/icons/back.png").resize((32, 32), Image.LANCZOS))
+
+        label = ctk.CTkLabel(self, text="OutliersPage", text_color="#FFFFFF", font=LARGEFONT)
+        label.grid(row=0, column=0, padx=10, pady=10)
+
+        button1 = ctk.CTkButton(self, image=backImg, text="", width=32, height=32, command=lambda: controller.show_frame(RegressionPage))
+        button1.grid(row=1, column=0, padx=8, pady=8)
+###########################################################################################################################################
+###########################################################################################################################################
+
+
+# DRIVER CODE
 app = App()
 app.mainloop()
