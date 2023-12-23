@@ -1,13 +1,19 @@
+'''
+NOTE: This alpha version of the app is not meant to be used in production. It is only meant to be used for testing purposes, and making sure that the app is working as intended. So the development is done to make a
+specific workflow work.
+'''
 import tkinter as tk
 from tkinter import ttk
 import os
+from webbrowser import get
 import customtkinter as ctk
 from PIL import ImageTk, Image
 import pandas as pd
+from pyparsing import col
 from logic.file_handling import file_handling as fh
 from pandastable import Table, TableModel
 from tksheet import Sheet
-from logic.data_preprocessing import feature_selection_kBestFeatures, feature_selection_varianceThreshold, handle_missing_values, drop_duplicate_rows, drop_contant_columns, get_non_constant_columns
+from logic.data_preprocessing import feature_selection_kBestFeatures, feature_selection_varianceThreshold, handle_missing_values, drop_duplicate_rows, drop_contant_columns, get_non_constant_columns, get_constant_columns, remove_outliers
 from enums import enums
 
 LARGEFONT = ("montserrat", 24)
@@ -170,6 +176,9 @@ class RegressionPage(ctk.CTkFrame):
     def __init__(self, parent, controller):
         ctk.CTkFrame.__init__(self, parent)
         backImg = ImageTk.PhotoImage(Image.open("./assets/icons/back.png").resize((24, 24), Image.LANCZOS))
+
+        continueImg = ImageTk.PhotoImage(Image.open("./assets/icons/back.png").rotate(180).resize((24, 24), Image.LANCZOS))
+
         self.columnconfigure(0, weight=1)
         self.rowconfigure(2, weight=1)
 
@@ -203,6 +212,9 @@ class RegressionPage(ctk.CTkFrame):
                                        variable=optionmenu_var2,
                                        width=150)
         combobox2.grid(row=0, column=4, padx=4, pady=8, ipadx=8, ipady=8, sticky="w")
+
+        button5 = ctk.CTkButton(frame1, image=continueImg, text="", command=lambda: controller.show_frame(KNNPage))
+        button5.grid(row=0, column=5, padx=4, pady=8, ipadx=8, ipady=8, sticky="w")
 
         frame2 = ctk.CTkFrame(self, fg_color="#101010")
         #frame2.configure(fg_color="#101010")
@@ -243,7 +255,7 @@ class RegressionPage(ctk.CTkFrame):
             app.frames[DuplicateRowsPage].textbox.configure(text = f"Number of duplicate rows: {DATA.file_data.duplicated().sum()}\n\nPourcentage of duplicate rows: {(DATA.file_data.duplicated().sum() / DATA.file_data.shape[0]) * 100}%")
             controller.show_frame(DuplicateRowsPage)
         elif choice == "Constant features":
-            app.frames[ConstantFeaturesPage].textbox.configure(text = f"Number of constant columns: {len([c for c in DATA.file_data.columns if len(set(DATA.file_data[c])) == 1])}\n\nPourcentage of constant columns: {(len([c for c in DATA.file_data.columns if len(set(DATA.file_data[c])) == 1]) / DATA.file_data.shape[1]) * 100}%")
+            app.frames[ConstantFeaturesPage].textbox.configure(text = f"Number of constant columns: {len(get_constant_columns(DATA.file_data))}\n\nPourcentage of constant columns: {(len(get_constant_columns(DATA.file_data)) / DATA.file_data.shape[1]) * 100}%")
             controller.show_frame(ConstantFeaturesPage)
         elif choice == "Outliers":
             controller.show_frame(OutliersPage)
@@ -405,6 +417,8 @@ class MissingValuesPage(ctk.CTkFrame):
         handle_missing_values(DATA.file_data, value, method)
 
         self.textbox.configure(text = f"Number of missing values: {DATA.file_data.isnull().sum().sum()}\n\nPourcentage of missing values: {(DATA.file_data.isnull().sum().sum() / (DATA.file_data.shape[0] * DATA.file_data.shape[1])) * 100}%")
+        
+        global app
         app.frames[RegressionPage].load_data()
     
 
@@ -433,6 +447,8 @@ class DuplicateRowsPage(ctk.CTkFrame):
         drop_duplicate_rows(DATA.file_data)
         
         self.textbox.configure(text = f"Number of duplicate rows: {DATA.file_data.duplicated().sum()}\n\nPourcentage of duplicate rows: {(DATA.file_data.duplicated().sum() / DATA.file_data.shape[0]) * 100}%")
+        
+        global app
         app.frames[RegressionPage].load_data()
 
 
@@ -456,14 +472,14 @@ class ConstantFeaturesPage(ctk.CTkFrame):
     def drop_contant_columns(self):
         global DATA
         
-        drop_contant_columns(DATA.file_data)
+        DATA.file_data = DATA.file_data[get_non_constant_columns(DATA.file_data)]
         
-        self.textbox.configure(text = f"Number of constant columns: {len([c for c in DATA.file_data.columns if len(set(DATA.file_data[c])) == 1])}\n\nPourcentage of constant columns: {(len([c for c in DATA.file_data.columns if len(set(DATA.file_data[c])) == 1]) / DATA.file_data.shape[1]) * 100}%")
+        self.textbox.configure(text = f"Number of constant columns: {len(get_constant_columns(DATA.file_data))}\n\nPourcentage of constant columns: {(len(get_constant_columns(DATA.file_data)) / DATA.file_data.shape[1]) * 100}%")
+        
+        global app
         app.frames[RegressionPage].load_data()
 
 
-# FILLER PAGES ############################################################################################################################
-###########################################################################################################################################
 class OutliersPage(ctk.CTkFrame):
     def __init__(self, parent, controller):
         ctk.CTkFrame.__init__(self, parent)
@@ -474,8 +490,22 @@ class OutliersPage(ctk.CTkFrame):
 
         button1 = ctk.CTkButton(self, image=backImg, text="", width=32, height=32, command=lambda: controller.show_frame(RegressionPage))
         button1.grid(row=1, column=0, padx=8, pady=8)
-###########################################################################################################################################
-###########################################################################################################################################
+
+        button4 = ctk.CTkButton(self, text="Drop outliers based on z-score", command=lambda: self.outliers_handling(controller))
+        button4.grid(row=2, column=0, padx=4, pady=8, ipadx=8, ipady=8, sticky="w")
+
+        button5 = ctk.CTkButton(self, text="Drop outliers based on percentiles", command=lambda: self.outliers_handling(controller, method=enums.OutlierMethod.IQR))
+        button5.grid(row=2, column=1, padx=4, pady=8, ipadx=8, ipady=8, sticky="w")
+
+        
+    def outliers_handling(self, controller, method: enums.OutlierMethod = enums.OutlierMethod.ZSCORE):
+        global DATA
+
+        remove_outliers(DATA.file_data, method)
+
+        global app
+        app.frames[RegressionPage].load_data()
+        controller.show_frame(RegressionPage)
 
 
 # DRIVER CODE

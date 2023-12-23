@@ -6,3 +6,7 @@ class FillMethod(Enum):
     MODE = 'mode'
     ZERO = 'zero'
     DROP = 'drop'
+
+class OutlierMethod(Enum):
+    ZSCORE = 'zscore'
+    IQR = 'iqr'

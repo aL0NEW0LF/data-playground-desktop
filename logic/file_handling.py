@@ -25,7 +25,7 @@ class file_handling:
         # self.file_data_duplicated_index_drop = None
 
     def __str__(self) -> str:
-        return f"File path: {self.file_path}\nFile extension: {self.file_extension}\nFile data: {True if self.file_data is not None else False}"
+        return f"File path: {self.file_path}\nFile extension: {self.file_extension}\nFile data: {self.file_data}"
         
     """     def UploadAction(self):
             self.file_path = filedialog.askopenfilename()
