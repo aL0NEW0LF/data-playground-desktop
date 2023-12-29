@@ -207,7 +207,7 @@ class RegressionPage(ctk.CTkFrame):
 
         optionmenu_var2 = ctk.StringVar(value="Preprocessing")
         combobox2 = ctk.CTkOptionMenu(master=frame1,
-                                       values=["Missing values", "Duplicate rows", "Constant features", "Outliers"],
+                                       values=["Missing values", "Duplicate rows", "Constant features", "Outliers", "Remove columns"],
                                        command=lambda x: self.optionmenu_callback(x, controller),
                                        variable=optionmenu_var2,
                                        width=150)
@@ -507,6 +507,33 @@ class OutliersPage(ctk.CTkFrame):
         app.frames[RegressionPage].load_data()
         controller.show_frame(RegressionPage)
 
+
+class RemoveColumnsPage(ctk.CTkFrame):
+    def __init__(self, parent, controller):
+        ctk.CTkFrame.__init__(self, parent)
+        backImg = ImageTk.PhotoImage(Image.open("./assets/icons/back.png").resize((32, 32), Image.LANCZOS))
+
+        label = ctk.CTkLabel(self, text="OutliersPage", text_color="#FFFFFF", font=LARGEFONT)
+        label.grid(row=0, column=0, padx=10, pady=10)
+
+        button1 = ctk.CTkButton(self, image=backImg, text="", width=32, height=32, command=lambda: controller.show_frame(RegressionPage))
+        button1.grid(row=1, column=0, padx=8, pady=8)
+
+        button4 = ctk.CTkButton(self, text="Drop outliers based on z-score", command=lambda: self.outliers_handling(controller))
+        button4.grid(row=2, column=0, padx=4, pady=8, ipadx=8, ipady=8, sticky="w")
+
+        button5 = ctk.CTkButton(self, text="Drop outliers based on percentiles", command=lambda: self.outliers_handling(controller, method=enums.OutlierMethod.IQR))
+        button5.grid(row=2, column=1, padx=4, pady=8, ipadx=8, ipady=8, sticky="w")
+
+        
+    def outliers_handling(self, controller, method: enums.OutlierMethod = enums.OutlierMethod.ZSCORE):
+        global DATA
+
+        remove_outliers(DATA.file_data, method)
+
+        global app
+        app.frames[RegressionPage].load_data()
+        controller.show_frame(RegressionPage)
 
 # DRIVER CODE
 app = App()
