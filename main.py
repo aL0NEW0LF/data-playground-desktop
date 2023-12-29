@@ -5,6 +5,7 @@ specific workflow work.
 import tkinter as tk
 from tkinter import ttk
 import os
+from turtle import st
 from webbrowser import get
 import customtkinter as ctk
 from PIL import ImageTk, Image
@@ -15,6 +16,16 @@ from pandastable import Table, TableModel
 from tksheet import Sheet
 from logic.data_preprocessing import feature_selection_kBestFeatures, feature_selection_varianceThreshold, handle_missing_values, drop_duplicate_rows, drop_contant_columns, get_non_constant_columns, get_constant_columns, remove_outliers
 from enums import enums
+import matplotlib
+
+matplotlib.use('TkAgg')
+
+from matplotlib.figure import Figure
+from matplotlib.backends.backend_tkagg import (
+    FigureCanvasTkAgg,
+    NavigationToolbar2Tk
+)
+
 
 LARGEFONT = ("montserrat", 24)
 
@@ -50,6 +61,11 @@ def kbestFeat_Selec_event():
     dialog = ctk.CTkInputDialog(text="Type in a number:", title="Test")
     print("Number:", dialog.get_input())
 
+def get_dataframe_columns():
+    global DATA
+    
+    return DATA.file_data.columns.values.tolist()
+
 # MAIN APP
 class App(ctk.CTk):
     def __init__(self, *args, **kwargs):
@@ -71,7 +87,7 @@ class App(ctk.CTk):
         self.frames = {}
 
 
-        for F in (StartPage, RegressionPage, DecisionTreePage, NaiveBayesPage, SVMPage, KmeansPage, KNNPage, VarianceThresholdPage, KbestfeatPage, MissingValuesPage, DuplicateRowsPage, ConstantFeaturesPage, OutliersPage):
+        for F in (StartPage, RegressionPage, DecisionTreePage, NaiveBayesPage, SVMPage, KmeansPage, KNNPage, VarianceThresholdPage, KbestfeatPage, MissingValuesPage, DuplicateRowsPage, ConstantFeaturesPage, OutliersPage, VisualizationPage):
             frame = F(container, self)
 
             self.frames[F] = frame
@@ -213,8 +229,11 @@ class RegressionPage(ctk.CTkFrame):
                                        width=150)
         combobox2.grid(row=0, column=4, padx=4, pady=8, ipadx=8, ipady=8, sticky="w")
 
+        button6 = ctk.CTkButton(frame1, text="Visualize", command=lambda: self.VisPageSwitch(controller=controller))
+        button6.grid(row=0, column=5, padx=4, pady=8, ipadx=8, ipady=8, sticky="w")
+
         button5 = ctk.CTkButton(frame1, image=continueImg, text="", command=lambda: controller.show_frame(KNNPage))
-        button5.grid(row=0, column=5, padx=4, pady=8, ipadx=8, ipady=8, sticky="w")
+        button5.grid(row=0, column=6, padx=4, pady=8, ipadx=8, ipady=8, sticky="w")
 
         frame2 = ctk.CTkFrame(self, fg_color="#101010")
         #frame2.configure(fg_color="#101010")
@@ -259,6 +278,16 @@ class RegressionPage(ctk.CTkFrame):
             controller.show_frame(ConstantFeaturesPage)
         elif choice == "Outliers":
             controller.show_frame(OutliersPage)
+
+    def VisPageSwitch(self, controller):
+        if 'DATA' not in globals() or DATA.file_data is None:
+            tk.messagebox.showerror("Information", "Please upload a data file first")
+            return
+        
+        global app
+        app.frames[VisualizationPage].combobox1.configure(values=get_dataframe_columns())
+        app.frames[VisualizationPage].combobox2.configure(values=get_dataframe_columns())
+        controller.show_frame(VisualizationPage)
 
 # FILLER PAGES ############################################################################################################################
 ###########################################################################################################################################
@@ -506,6 +535,148 @@ class OutliersPage(ctk.CTkFrame):
         global app
         app.frames[RegressionPage].load_data()
         controller.show_frame(RegressionPage)
+
+
+class VisualizationPage(ctk.CTkFrame):
+    def __init__(self, parent, controller):
+        ctk.CTkFrame.__init__(self, parent)
+
+        backImg = ImageTk.PhotoImage(Image.open("./assets/icons/back.png").resize((32, 32), Image.LANCZOS))
+
+        # prepare data
+        self.visPlotType = None
+        self.visColumnX = None
+        self.visColumnY = None
+
+        label = ctk.CTkLabel(self, text="VisualizationPage", text_color="#FFFFFF", font=LARGEFONT)
+        label.grid(row=0, column=0, padx=8, pady=8, sticky="w")
+
+        button1 = ctk.CTkButton(self, image=backImg, text="", width=32, height=32, command=lambda: controller.show_frame(StartPage))
+        button1.grid(row=1, column=0, padx=8, pady=8)
+
+        self.columnconfigure(0, weight=1)
+        self.rowconfigure(2, weight=1)
+
+        frame1 = ctk.CTkFrame(self, fg_color="#101010")
+        frame1.grid(row=1, column=0, columnspan=5, ipadx=8, ipady=8, sticky="ew")
+
+        button2 = ctk.CTkButton(frame1, image=backImg, text="", command=lambda: controller.show_frame(StartPage))
+        button2.grid(row=0, column=0, padx=4, pady=8, ipadx=8, ipady=8, sticky="w")
+
+        self.optionmenu_var = ctk.StringVar(value="Plot type")
+        self.combobox = ctk.CTkOptionMenu(master=frame1,
+                                       values=["Scatter plot", "Histogram", "Bar chart", "Line chart"],
+                                       command=lambda x: self.plotType_optionmenu_callback(x),
+                                       variable=self.optionmenu_var,
+                                       width=150)
+        self.combobox.grid(row=0, column=3, padx=4, pady=8, ipadx=8, ipady=8, sticky="w")
+
+        self.optionmenu_var2 = ctk.StringVar(value="Column X")
+        self.combobox1 = ctk.CTkOptionMenu(master=frame1,
+                                       values=[],
+                                       command=lambda x: self.columnX_optionmenu_callback(x),
+                                       variable=self.optionmenu_var2,
+                                       width=150, state='disabled')
+        self.combobox1.grid(row=0, column=4, padx=4, pady=8, ipadx=8, ipady=8, sticky="w")
+
+        self.optionmenu_var3 = ctk.StringVar(value="Column Y")
+        self.combobox2 = ctk.CTkOptionMenu(master=frame1,
+                                       values=[],
+                                       command=lambda x: self.columnY_optionmenu_callback(x),
+                                       variable=self.optionmenu_var3,
+                                       width=150, state='disabled')
+        self.combobox2.grid(row=0, column=5, padx=4, pady=8, ipadx=8, ipady=8, sticky="w")
+
+        self.K_entry = ctk.CTkEntry(frame1, width=24, state='disabled')
+        self.K_entry.grid(row=0, column=6, padx=8, pady=8)
+
+        button3 = ctk.CTkButton(frame1, text="Plot", command=lambda: self.plot(int(self.K_entry.get())))
+        button3.grid(row=0, column=7, padx=4, pady=8, ipadx=8, ipady=8, sticky="w")
+
+        frame2 = ctk.CTkFrame(self, fg_color="#101010")
+        frame2.grid(row=2, column=0, columnspan=5, ipadx=8, ipady=8, sticky="nsew")
+
+        self.figure = Figure(dpi=100)
+
+        # create FigureCanvasTkAgg object
+        self.figure_canvas = FigureCanvasTkAgg(self.figure, frame2)
+        self.figure_canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=1)
+
+        # create the toolbar
+        self.toolbar = NavigationToolbar2Tk(self.figure_canvas, frame2)
+        self.toolbar.update()
+        # create axes
+        self.axes = self.figure.add_subplot()
+
+
+    def plotType_optionmenu_callback(self, choice):
+        """ if 'DATA' not in globals() or DATA.file_data is None:
+            tk.messagebox.showerror("Information", "Please upload a data file first")
+            return """
+        
+        self.visPlotType = choice
+        print(self.visPlotType)
+        
+        if self.visPlotType == "Scatter plot":
+            self.K_entry.configure(state="disabled")
+            self.combobox1.configure(state="normal")
+            self.combobox2.configure(state="normal")
+        elif self.visPlotType == "Histogram":
+            self.K_entry.configure(state="normal")
+            self.combobox1.configure(state="normal")
+            self.combobox2.configure(state="disabled")
+        elif self.visPlotType == "Bar chart":
+            self.K_entry.configure(state="disabled")
+            self.combobox1.configure(state="normal")
+            self.combobox2.configure(state="normal")
+        elif self.visPlotType == "Line chart":
+            self.K_entry.configure(state="disabled")
+            self.combobox1.configure(state="normal")
+            self.combobox2.configure(state="normal")
+
+    def columnX_optionmenu_callback(self, choice):
+        """ if 'DATA' not in globals() or DATA.file_data is None:
+            tk.messagebox.showerror("Information", "Please upload a data file first")
+            return """
+        
+        self.visColumnX = choice
+        print(self.visColumnX)
+    
+    def columnY_optionmenu_callback(self, choice):
+        """ if 'DATA' not in globals() or DATA.file_data is None:
+            tk.messagebox.showerror("Information", "Please upload a data file first")
+            return """
+        
+        self.visColumnY = choice
+        print(self.visColumnY)
+
+    def plot(self, k=0):
+        global DATA
+        
+        self.axes.clear()
+
+        if self.visPlotType == "Scatter plot":
+            self.axes.scatter(DATA.file_data[self.visColumnX], DATA.file_data[self.visColumnY])
+            self.axes.set_xlabel(self.visColumnX)
+            self.axes.set_ylabel(self.visColumnY)
+            self.axes.set_title(f"{self.visColumnX} vs {self.visColumnY}")
+        elif self.visPlotType == "Histogram":
+            self.axes.hist(DATA.file_data[self.visColumnX], bins=k, linewidth=0.5, edgecolor="white")
+            self.axes.set_xlabel(self.visColumnX)
+            self.axes.set_title(f"{self.visColumnX} histogram")
+        elif self.visPlotType == "Bar chart":
+            self.axes.bar(DATA.file_data[self.visColumnX], DATA.file_data[self.visColumnY])
+            self.axes.set_xlabel(self.visColumnX)
+            self.axes.set_ylabel(self.visColumnY)
+            self.axes.set_title(f"{self.visColumnX} vs {self.visColumnY}")
+        elif self.visPlotType == "Line chart":
+            self.axes.plot(DATA.file_data[self.visColumnX], DATA.file_data[self.visColumnY])
+            self.axes.set_xlabel(self.visColumnX)
+            self.axes.set_ylabel(self.visColumnY)
+            self.axes.set_title(f"{self.visColumnX} vs {self.visColumnY}")
+
+        self.figure_canvas.draw()
+        self.toolbar.update()
 
 
 # DRIVER CODE
