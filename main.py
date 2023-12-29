@@ -50,6 +50,11 @@ def kbestFeat_Selec_event():
     dialog = ctk.CTkInputDialog(text="Type in a number:", title="Test")
     print("Number:", dialog.get_input())
 
+def get_dataframe_columns():
+    global DATA
+    
+    return DATA.file_data.columns.values.tolist()
+
 # MAIN APP
 class App(ctk.CTk):
     def __init__(self, *args, **kwargs):
@@ -71,7 +76,7 @@ class App(ctk.CTk):
         self.frames = {}
 
 
-        for F in (StartPage, RegressionPage, DecisionTreePage, NaiveBayesPage, SVMPage, KmeansPage, KNNPage, VarianceThresholdPage, KbestfeatPage, MissingValuesPage, DuplicateRowsPage, ConstantFeaturesPage, OutliersPage):
+        for F in (StartPage, RegressionPage, DecisionTreePage, NaiveBayesPage, SVMPage, KmeansPage, KNNPage, VarianceThresholdPage, KbestfeatPage, MissingValuesPage, DuplicateRowsPage, ConstantFeaturesPage, OutliersPage, RemoveColumnsPage):
             frame = F(container, self)
 
             self.frames[F] = frame
@@ -259,6 +264,9 @@ class RegressionPage(ctk.CTkFrame):
             controller.show_frame(ConstantFeaturesPage)
         elif choice == "Outliers":
             controller.show_frame(OutliersPage)
+        elif choice == "Remove columns":
+            app.frames[RemoveColumnsPage].load_checkboxes()
+            controller.show_frame(RemoveColumnsPage)
 
 # FILLER PAGES ############################################################################################################################
 ###########################################################################################################################################
@@ -511,6 +519,7 @@ class OutliersPage(ctk.CTkFrame):
 class RemoveColumnsPage(ctk.CTkFrame):
     def __init__(self, parent, controller):
         ctk.CTkFrame.__init__(self, parent)
+
         backImg = ImageTk.PhotoImage(Image.open("./assets/icons/back.png").resize((32, 32), Image.LANCZOS))
 
         label = ctk.CTkLabel(self, text="OutliersPage", text_color="#FFFFFF", font=LARGEFONT)
@@ -519,22 +528,53 @@ class RemoveColumnsPage(ctk.CTkFrame):
         button1 = ctk.CTkButton(self, image=backImg, text="", width=32, height=32, command=lambda: controller.show_frame(RegressionPage))
         button1.grid(row=1, column=0, padx=8, pady=8)
 
-        button4 = ctk.CTkButton(self, text="Drop outliers based on z-score", command=lambda: self.outliers_handling(controller))
-        button4.grid(row=2, column=0, padx=4, pady=8, ipadx=8, ipady=8, sticky="w")
-
-        button5 = ctk.CTkButton(self, text="Drop outliers based on percentiles", command=lambda: self.outliers_handling(controller, method=enums.OutlierMethod.IQR))
-        button5.grid(row=2, column=1, padx=4, pady=8, ipadx=8, ipady=8, sticky="w")
-
+        button4 = ctk.CTkButton(self, text="Remove columns", command=lambda: self.remove_columns(controller))
+        button4.grid(row=1, column=2, padx=4, pady=8, ipadx=8, ipady=8, sticky="w")
         
-    def outliers_handling(self, controller, method: enums.OutlierMethod = enums.OutlierMethod.ZSCORE):
-        global DATA
+        self.frame1 = ctk.CTkFrame(self, fg_color="#101010")
+        self.frame1.grid(row=2, column=0, columnspan=5, ipadx=8, ipady=8, sticky="ew")
+        
+    def load_checkboxes(self):
+        self.df_columns = get_dataframe_columns()
 
-        remove_outliers(DATA.file_data, method)
+        """ self.l = Checkbar(self.frame1, self.df_columns)
+        self.l.pack(anchor = 'w') """
+
+        """ for x in range(len(self.df_columns)):
+            self.l = ctk.CTkCheckBox(self.frame1, text=self.df_columns[x][0], variable=self.df_columns[x],command=lambda x=self.df_columns[x]:self.selected_df_columns.append(x), onvalue="on", offvalue="off")
+            self.l.pack(anchor = 'w') """
+        
+        self.checkbuttons_vars = [tk.BooleanVar() for value in self.df_columns]
+        
+        self.checkbuttons = []
+        for index, value in enumerate(self.df_columns):
+            self.checkbutton = ctk.CTkCheckBox(self.frame1, text=value, variable=self.checkbuttons_vars[index], text_color="#FFFFFF")
+            self.checkbutton.pack(side="top", anchor="w")
+            self.checkbuttons.append(self.checkbutton)
+    
+
+    def remove_columns(self, controller):
+        global DATA
+        
+        self.selected_values = [value for value, var in zip(self.df_columns, self.checkbuttons_vars) if var.get()]
+
+        if len(self.selected_values) == 0:
+            controller.show_frame(RegressionPage)
+            for checkbutton in self.checkbuttons:
+                checkbutton.destroy()
+            self.checkbuttons.clear()
+            return
+
+        DATA.file_data.drop(self.selected_values, axis=1, inplace=True)
 
         global app
         app.frames[RegressionPage].load_data()
         controller.show_frame(RegressionPage)
-
+        for checkbutton in self.checkbuttons:
+            checkbutton.destroy()
+        self.checkbuttons.clear()
+   
+   
 # DRIVER CODE
 app = App()
 app.mainloop()
