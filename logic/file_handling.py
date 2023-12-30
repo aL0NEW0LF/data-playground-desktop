@@ -9,6 +9,12 @@ class file_handling:
         self.file_path: str = file_path
         self.file_extension: str = file_extension
         self.file_data: pd.DataFrame = None
+        self.X: pd.DataFrame = None
+        self.y: pd.DataFrame = None
+        self.X_train: pd.DataFrame = None
+        self.X_test: pd.DataFrame = None
+        self.y_train: pd.DataFrame = None
+        self.y_test: pd.DataFrame = None
         # self.file_data_columns = None
         # self.file_data_rows = None
         # self.file_data_shape = None
