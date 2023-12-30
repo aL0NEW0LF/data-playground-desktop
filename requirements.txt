@@ -27,4 +27,5 @@ statsmodels==0.14.1
 threadpoolctl==3.2.0
 tksheet==6.3.4
 tzdata==2023.3
+windows-curses==2.3.2
 xlrd==2.0.1
