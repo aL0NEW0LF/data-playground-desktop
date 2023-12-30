@@ -2,6 +2,7 @@
 NOTE: This alpha version of the app is not meant to be used in production. It is only meant to be used for testing purposes, and making sure that the app is working as intended. So the development is done to make a
 specific workflow work.
 '''
+from curses.ascii import isdigit
 import tkinter as tk
 from tkinter import ttk
 import os
@@ -590,7 +591,7 @@ class VisualizationPage(ctk.CTkFrame):
         self.K_entry = ctk.CTkEntry(frame1, width=24, state='disabled')
         self.K_entry.grid(row=0, column=6, padx=8, pady=8)
 
-        button3 = ctk.CTkButton(frame1, text="Plot", command=lambda: self.plot(int(self.K_entry.get())))
+        button3 = ctk.CTkButton(frame1, text="Plot", command=lambda: self.plot(self.K_entry.get()))
         button3.grid(row=0, column=7, padx=4, pady=8, ipadx=8, ipady=8, sticky="w")
 
         frame2 = ctk.CTkFrame(self, fg_color="#101010")
@@ -600,7 +601,7 @@ class VisualizationPage(ctk.CTkFrame):
 
         # create FigureCanvasTkAgg object
         self.figure_canvas = FigureCanvasTkAgg(self.figure, frame2)
-        self.figure_canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=1)
+        self.figure_canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=True)
 
         # create the toolbar
         self.toolbar = NavigationToolbar2Tk(self.figure_canvas, frame2)
@@ -650,26 +651,41 @@ class VisualizationPage(ctk.CTkFrame):
         self.visColumnY = choice
         print(self.visColumnY)
 
-    def plot(self, k=0):
+    def plot(self, k=''):
         global DATA
         
         self.axes.clear()
 
         if self.visPlotType == "Scatter plot":
+            if self.visColumnX == None or self.visColumnY == None or self.visColumnX == '' or self.visColumnY == '':
+                tk.messagebox.showerror("Information", "Please select a column for X and Y")
+                return
             self.axes.scatter(DATA.file_data[self.visColumnX], DATA.file_data[self.visColumnY])
             self.axes.set_xlabel(self.visColumnX)
             self.axes.set_ylabel(self.visColumnY)
             self.axes.set_title(f"{self.visColumnX} vs {self.visColumnY}")
         elif self.visPlotType == "Histogram":
-            self.axes.hist(DATA.file_data[self.visColumnX], bins=k, linewidth=0.5, edgecolor="white")
+            if self.visColumnX == None or self.visColumnX == '':
+                tk.messagebox.showerror("Information", "Please select a column for X")
+                return
+            elif not k.isdigit():
+                tk.messagebox.showerror("Information", "Please enter a valid value for k")
+                return
+            self.axes.hist(DATA.file_data[self.visColumnX], bins=int(k), linewidth=0.5, edgecolor="white")
             self.axes.set_xlabel(self.visColumnX)
             self.axes.set_title(f"{self.visColumnX} histogram")
         elif self.visPlotType == "Bar chart":
+            if self.visColumnX == None or self.visColumnY == None or self.visColumnX == '' or self.visColumnY == '':
+                tk.messagebox.showerror("Information", "Please select a column for X and Y")
+                return
             self.axes.bar(DATA.file_data[self.visColumnX], DATA.file_data[self.visColumnY])
             self.axes.set_xlabel(self.visColumnX)
             self.axes.set_ylabel(self.visColumnY)
             self.axes.set_title(f"{self.visColumnX} vs {self.visColumnY}")
         elif self.visPlotType == "Line chart":
+            if self.visColumnX == None or self.visColumnY == None or self.visColumnX == '' or self.visColumnY == '':
+                tk.messagebox.showerror("Information", "Please select a column for X and Y")
+                return
             self.axes.plot(DATA.file_data[self.visColumnX], DATA.file_data[self.visColumnY])
             self.axes.set_xlabel(self.visColumnX)
             self.axes.set_ylabel(self.visColumnY)
