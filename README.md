@@ -4,6 +4,18 @@ After cloning the project, you can run the following command to install the depe
 pip3 install -r requirements.txt
 ```
 
+Activate the env:
+
+```bash
+.venv\Scripts\activate
+```
+
+Then run the main file with:
+
+```bash
+python main.py
+```
+
 > [!IMPORTANT]
 > This app is still an alpha, which means it got developed to make specific situations and at least a workflow work.
 >
