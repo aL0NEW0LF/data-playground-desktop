@@ -9,11 +9,13 @@ pip3 install -r requirements.txt
 >
 > For this version, you will need to place your target column the last column and split the data into training and testing data.
 
-> [!TODO]
+> [!NOTE]
 >
-> - Variance threshold feature selection
-> - More plots if possible
-> - Better error handling & conditions handling
-> - Add training & testing the model without spliting the data
-> - Model, metrics & data visualization after training
-> - Better UI
+> # TODO
+>
+> - [ ] Variance threshold feature selection
+> - [ ] More plots if possible
+> - [ ] Better error handling & conditions handling
+> - [ ] Add training & testing the model without spliting the data
+> - [ ] Model, metrics & data visualization after training
+> - [ ] Better UI
