@@ -3,11 +3,12 @@ import os
 import pandas as pd
 import tkinter as tk
 import customtkinter as ctk
+from typing import Protocol
 
 class file_handling:
-    def __init__(self, file_path, file_extension):
-        self.file_path: str = file_path
-        self.file_extension: str = file_extension
+    def __init__(self):
+        self.file_path: str = None
+        self.file_extension: str = None
         self.file_data: pd.DataFrame = None
         self.X: pd.DataFrame = None
         self.y: pd.DataFrame = None
@@ -15,6 +16,9 @@ class file_handling:
         self.X_test: pd.DataFrame = None
         self.y_train: pd.DataFrame = None
         self.y_test: pd.DataFrame = None
+        self.mlModelType: str = None
+        self.mlModel: Protocol = None
+        # self.LabelEnc = None
         # self.file_data_columns = None
         # self.file_data_rows = None
         # self.file_data_shape = None

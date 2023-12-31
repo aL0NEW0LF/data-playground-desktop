@@ -13,15 +13,16 @@ from PIL import ImageTk, Image
 from numpy import pad
 import pandas as pd
 from pyparsing import col
+from sklearn.calibration import LabelEncoder
 from sklearn.model_selection import train_test_split
-# from sklearn.naive_bayes import GaussianNB
-# from sklearn.tree import DecisionTreeClassifier
-# from sklearn.linear_model import LogisticRegression
-# from sklearn.neighbors import KNeighborsClassifier
-# from sklearn.ensemble import RandomForestClassifier
-# from sklearn.linear_model import LinearRegression
-# from sklearn import svm
-# from sklearn.cluster import KMeans
+from sklearn.naive_bayes import GaussianNB
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.linear_model import LogisticRegression
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.linear_model import LinearRegression
+from sklearn import metrics, svm
+from sklearn.cluster import KMeans
 from logic.file_handling import file_handling as fh
 from pandastable import Table, TableModel
 from tksheet import Sheet
@@ -40,7 +41,8 @@ from matplotlib.backends.backend_tkagg import (
 
 
 LARGEFONT = ("montserrat", 24)
-# MLModels = {'Linear Regression': LinearRegression(), 'Decision Tree': DecisionTreeClassifier(), 'Naive Bayes': GaussianNB(), 'Support Vector Machine (SVM)': svm.SVC(), 'Kmeans': KMeans(), 'K nearest neighbor (KNN)': KNeighborsClassifier()}
+MLModels = {'Linear Regression': LinearRegression(), 'Decision Tree': DecisionTreeClassifier(), 'Naive Bayes': GaussianNB(), 'Support Vector Machine (SVM)': svm.SVC(), 'Kmeans': KMeans(), 'K nearest neighbor (KNN)': KNeighborsClassifier()}
+DATA = fh()
 
 # WRAPPER FUNCTIONS
 def UploadAction():
@@ -53,7 +55,10 @@ def UploadAction():
     try:
         if file_extension in ['.csv', '.xlsx', '.json', '.txt']:
             global DATA
-            DATA = fh(file_path=file_path, file_extension=file_extension)
+
+            DATA.file_path = file_path
+            DATA.file_extension = file_extension
+
             DATA.file_data_read()
             print(DATA)
         return
@@ -69,7 +74,8 @@ def read_data():
     global DATA
     DATA.file_data_read()
     print(DATA)
-
+        
+# UNUSED
 def kbestFeat_Selec_event():
     dialog = ctk.CTkInputDialog(text="Type in a number:", title="Test")
     print("Number:", dialog.get_input())
@@ -99,7 +105,7 @@ class App(ctk.CTk):
 
         self.frames = {}
 
-        for F in (StartPage, RegressionPage, DecisionTreePage, NaiveBayesPage, SVMPage, KmeansPage, KNNPage, VarianceThresholdPage, KbestfeatPage, MissingValuesPage, DuplicateRowsPage, ConstantFeaturesPage, OutliersPage, VisualizationPage, RemoveColumnsPage, DataSplitPage, MLPage):
+        for F in (StartPage, DataProcessingPage, VarianceThresholdPage, KbestfeatPage, MissingValuesPage, DuplicateRowsPage, ConstantFeaturesPage, OutliersPage, VisualizationPage, RemoveColumnsPage, DataSplitPage, MLPage, LabelEncodingPage):
             frame = F(container, self)
 
             self.frames[F] = frame
@@ -118,8 +124,6 @@ class App(ctk.CTk):
 class StartPage(ctk.CTkFrame):
     def __init__(self, parent, controller):
         ctk.CTkFrame.__init__(self, parent)
-
-        self.mlModel: Protocol = None
 
         frame = ctk.CTkFrame(self)
         frame.configure(fg_color="#101010")
@@ -203,12 +207,15 @@ class StartPage(ctk.CTkFrame):
 
     def button_click_controller(self, btn: ctk.CTkButton, controller):
         # self.mlModel = MLModels[btn.cget('text')]
-        self.mlModel = btn.cget('text')
-        print(self.mlModel)
-        controller.show_frame(RegressionPage)
+        global DATA 
+
+        DATA.mlModelType = btn.cget('text')
+
+        print(DATA.mlModelType)
+        controller.show_frame(DataProcessingPage)
 
 
-class RegressionPage(ctk.CTkFrame):
+class DataProcessingPage(ctk.CTkFrame):
     def __init__(self, parent, controller):
         ctk.CTkFrame.__init__(self, parent)
         backImg = ImageTk.PhotoImage(Image.open("./assets/icons/back.png").resize((24, 24), Image.LANCZOS))
@@ -218,7 +225,7 @@ class RegressionPage(ctk.CTkFrame):
         self.columnconfigure(0, weight=1)
         self.rowconfigure(2, weight=1)
 
-        label = ctk.CTkLabel(self, text="Regression Page", text_color="#FFFFFF", font=LARGEFONT, bg_color="#101010", fg_color="#101010")
+        label = ctk.CTkLabel(self, text="Data processing", text_color="#FFFFFF", font=LARGEFONT, bg_color="#101010", fg_color="#101010")
         label.grid(row=0, column=0, columnspan=5, padx=12, pady=12, sticky="nw")
 
         frame1 = ctk.CTkFrame(self, fg_color="#101010")
@@ -243,7 +250,7 @@ class RegressionPage(ctk.CTkFrame):
 
         optionmenu_var2 = ctk.StringVar(value="Preprocessing")
         combobox2 = ctk.CTkOptionMenu(master=frame1,
-                                       values=["Missing values", "Duplicate rows", "Constant features", "Outliers", "Remove columns"],
+                                       values=["Missing values", "Duplicate rows", "Constant features", "Outliers", "Remove columns", "Label encoding"],
                                        command=lambda x: self.optionmenu_callback(x, controller),
                                        variable=optionmenu_var2,
                                        width=150)
@@ -286,6 +293,10 @@ class RegressionPage(ctk.CTkFrame):
         if choice == "Variance threshold":
             controller.show_frame(VarianceThresholdPage)
         elif choice == "K-best features":
+            for type in DATA.file_data.dtypes.values:
+                if type != 'int64' and type != 'float64' and type != 'int32' and type != 'float32': 
+                    tk.messagebox.showerror("Information", "Please make sure all the features are numerical")
+                    return
             controller.show_frame(KbestfeatPage)
         elif choice == "Missing values":
             app.frames[MissingValuesPage].textbox.configure(text = f"Number of missing values: {DATA.file_data.isnull().sum().sum()}\n\nPourcentage of missing values: {(DATA.file_data.isnull().sum().sum() / (DATA.file_data.shape[0] * DATA.file_data.shape[1])) * 100}%")
@@ -301,6 +312,9 @@ class RegressionPage(ctk.CTkFrame):
         elif choice == "Remove columns":
             app.frames[RemoveColumnsPage].load_checkboxes()
             controller.show_frame(RemoveColumnsPage)
+        elif choice == "Label encoding":
+            app.frames[LabelEncodingPage].combobox1.configure(values=get_dataframe_columns())
+            controller.show_frame(LabelEncodingPage)
 
     def VisPageSwitch(self, controller):
         if 'DATA' not in globals() or DATA.file_data is None:
@@ -323,65 +337,6 @@ class RegressionPage(ctk.CTkFrame):
 
 # FILLER PAGES ############################################################################################################################
 ###########################################################################################################################################
-class DecisionTreePage(ctk.CTkFrame):
-    def __init__(self, parent, controller):
-        ctk.CTkFrame.__init__(self, parent)
-        backImg = ImageTk.PhotoImage(Image.open("./assets/icons/back.png").resize((32, 32), Image.LANCZOS))
-
-        label = ctk.CTkLabel(self, text="DecisionTreePage", text_color="#FFFFFF", font=LARGEFONT)
-        label.grid(row=0, column=0, padx=10, pady=10)
-
-        button1 = ctk.CTkButton(self, image=backImg, text="", width=32, height=32, command=lambda: controller.show_frame(StartPage))
-        button1.grid(row=1, column=0, padx=8, pady=8)
-
-
-class NaiveBayesPage(ctk.CTkFrame):
-    def __init__(self, parent, controller):
-        ctk.CTkFrame.__init__(self, parent)
-        backImg = ImageTk.PhotoImage(Image.open("./assets/icons/back.png").resize((32, 32), Image.LANCZOS))
-
-        label = ctk.CTkLabel(self, text="NaiveBayesPage", text_color="#FFFFFF", font=LARGEFONT)
-        label.grid(row=0, column=0, padx=10, pady=10)
-
-        button1 = ctk.CTkButton(self, image=backImg, text="", width=32, height=32, command=lambda: controller.show_frame(StartPage))
-        button1.grid(row=1, column=0, padx=8, pady=8)
-
-
-class SVMPage(ctk.CTkFrame):
-    def __init__(self, parent, controller):
-        ctk.CTkFrame.__init__(self, parent)
-        backImg = ImageTk.PhotoImage(Image.open("./assets/icons/back.png").resize((32, 32), Image.LANCZOS))
-
-        label = ctk.CTkLabel(self, text="SVMPage", text_color="#FFFFFF", font=LARGEFONT)
-        label.grid(row=0, column=0, padx=10, pady=10)
-
-        button1 = ctk.CTkButton(self, image=backImg, text="", width=32, height=32, command=lambda: controller.show_frame(StartPage))
-        button1.grid(row=1, column=0, padx=8, pady=8)
-
-
-class KmeansPage(ctk.CTkFrame):
-    def __init__(self, parent, controller):
-        ctk.CTkFrame.__init__(self, parent)
-        backImg = ImageTk.PhotoImage(Image.open("./assets/icons/back.png").resize((32, 32), Image.LANCZOS))
-
-        label = ctk.CTkLabel(self, text="KmeansPage", text_color="#FFFFFF", font=LARGEFONT)
-        label.grid(row=0, column=0, padx=10, pady=10)
-
-        button1 = ctk.CTkButton(self, image=backImg, text="", width=32, height=32, command=lambda: controller.show_frame(StartPage))
-        button1.grid(row=1, column=0, padx=8, pady=8)
-
-
-class KNNPage(ctk.CTkFrame):
-    def __init__(self, parent, controller):
-        ctk.CTkFrame.__init__(self, parent)
-        backImg = ImageTk.PhotoImage(Image.open("./assets/icons/back.png").resize((32, 32), Image.LANCZOS))
-
-        label = ctk.CTkLabel(self, text="KNNPage", text_color="#FFFFFF", font=LARGEFONT)
-        label.grid(row=0, column=0, padx=8, pady=8)
-
-        button1 = ctk.CTkButton(self, image=backImg, text="", width=32, height=32, command=lambda: controller.show_frame(StartPage))
-        button1.grid(row=1, column=0, padx=8, pady=8)
-
 class VarianceThresholdPage(ctk.CTkFrame):
     def __init__(self, parent, controller):
         ctk.CTkFrame.__init__(self, parent)
@@ -390,7 +345,7 @@ class VarianceThresholdPage(ctk.CTkFrame):
         label = ctk.CTkLabel(self, text="VarianceThresholdPage", text_color="#FFFFFF", font=LARGEFONT)
         label.grid(row=0, column=0, padx=10, pady=10)
 
-        button1 = ctk.CTkButton(self, image=backImg, text="", width=32, height=32, command=lambda: controller.show_frame(RegressionPage))
+        button1 = ctk.CTkButton(self, image=backImg, text="", width=32, height=32, command=lambda: controller.show_frame(DataProcessingPage))
         button1.grid(row=1, column=0, padx=8, pady=8)
 
 ###########################################################################################################################################
@@ -403,7 +358,7 @@ class KbestfeatPage(ctk.CTkFrame):
         label = ctk.CTkLabel(self, text="KbestfeatPage", text_color="#FFFFFF", font=LARGEFONT)
         label.grid(row=0, column=0, padx=10, pady=10)
         
-        button1 = ctk.CTkButton(self, image=backImg, text="", width=32, height=32, command=lambda: controller.show_frame(RegressionPage))
+        button1 = ctk.CTkButton(self, image=backImg, text="", width=32, height=32, command=lambda: controller.show_frame(DataProcessingPage))
         button1.grid(row=1, column=0, padx=8, pady=8)
         
         K_entry = ctk.CTkEntry(self, width=10)
@@ -432,19 +387,14 @@ class KbestfeatPage(ctk.CTkFrame):
         elif k >= DATA.file_data.shape[1]:
             tk.messagebox.showerror("Value", "The value you chose for k cant be greater than the number of features")
             return
-
-        for type in DATA.file_data.dtypes:
-            if type == 'int64' and type == 'float64' and type == 'int32' and type == 'float32': 
-                tk.messagebox.showerror("Information", "Please make sure all the features are numerical")
-                return
         
         DATA.file_data = feature_selection_kBestFeatures(DATA.file_data.values, k)
         
         global app
 
-        app.frames[RegressionPage].load_data()
+        app.frames[DataProcessingPage].load_data()
 
-        controller.show_frame(RegressionPage)
+        controller.show_frame(DataProcessingPage)
 
 class MissingValuesPage(ctk.CTkFrame):
     def __init__(self, parent, controller):
@@ -457,7 +407,7 @@ class MissingValuesPage(ctk.CTkFrame):
         label = ctk.CTkLabel(self, text="MissingValuesPage", text_color="#FFFFFF", font=LARGEFONT)
         label.grid(row=0, column=0, padx=10, pady=10, sticky="w")
 
-        button1 = ctk.CTkButton(self, image=backImg, text="", width=32, height=32, command=lambda: controller.show_frame(RegressionPage))
+        button1 = ctk.CTkButton(self, image=backImg, text="", width=32, height=32, command=lambda: controller.show_frame(DataProcessingPage))
         button1.grid(row=1, column=0, padx=8, pady=8, sticky="w")
 
         self.textbox = ctk.CTkLabel(self, text="", text_color="#FFFFFF", font=LARGEFONT)
@@ -480,7 +430,7 @@ class MissingValuesPage(ctk.CTkFrame):
         self.textbox.configure(text = f"Number of missing values: {DATA.file_data.isnull().sum().sum()}\n\nPourcentage of missing values: {(DATA.file_data.isnull().sum().sum() / (DATA.file_data.shape[0] * DATA.file_data.shape[1])) * 100}%")
         
         global app
-        app.frames[RegressionPage].load_data()
+        app.frames[DataProcessingPage].load_data()
     
 
 class DuplicateRowsPage(ctk.CTkFrame):
@@ -493,7 +443,7 @@ class DuplicateRowsPage(ctk.CTkFrame):
         label = ctk.CTkLabel(self, text="DuplicateRowsPage", text_color="#FFFFFF", font=LARGEFONT)
         label.grid(row=0, column=0, padx=10, pady=10)
 
-        button1 = ctk.CTkButton(self, image=backImg, text="", width=32, height=32, command=lambda: controller.show_frame(RegressionPage))
+        button1 = ctk.CTkButton(self, image=backImg, text="", width=32, height=32, command=lambda: controller.show_frame(DataProcessingPage))
         button1.grid(row=1, column=0, padx=8, pady=8, sticky="w")
 
         self.textbox = ctk.CTkLabel(self, text="", text_color="#FFFFFF", font=LARGEFONT)
@@ -510,7 +460,7 @@ class DuplicateRowsPage(ctk.CTkFrame):
         self.textbox.configure(text = f"Number of duplicate rows: {DATA.file_data.duplicated().sum()}\n\nPourcentage of duplicate rows: {(DATA.file_data.duplicated().sum() / DATA.file_data.shape[0]) * 100}%")
         
         global app
-        app.frames[RegressionPage].load_data()
+        app.frames[DataProcessingPage].load_data()
 
 
 class ConstantFeaturesPage(ctk.CTkFrame):
@@ -521,7 +471,7 @@ class ConstantFeaturesPage(ctk.CTkFrame):
         label = ctk.CTkLabel(self, text="ConstantFeaturesPage", text_color="#FFFFFF", font=LARGEFONT)
         label.grid(row=0, column=0, padx=10, pady=10)
 
-        button1 = ctk.CTkButton(self, image=backImg, text="", width=32, height=32, command=lambda: controller.show_frame(RegressionPage))
+        button1 = ctk.CTkButton(self, image=backImg, text="", width=32, height=32, command=lambda: controller.show_frame(DataProcessingPage))
         button1.grid(row=1, column=0, padx=8, pady=8)
 
         self.textbox = ctk.CTkLabel(self, text="", text_color="#FFFFFF", font=LARGEFONT)
@@ -538,7 +488,7 @@ class ConstantFeaturesPage(ctk.CTkFrame):
         self.textbox.configure(text = f"Number of constant columns: {len(get_constant_columns(DATA.file_data))}\n\nPourcentage of constant columns: {(len(get_constant_columns(DATA.file_data)) / DATA.file_data.shape[1]) * 100}%")
         
         global app
-        app.frames[RegressionPage].load_data()
+        app.frames[DataProcessingPage].load_data()
 
 
 class OutliersPage(ctk.CTkFrame):
@@ -549,7 +499,7 @@ class OutliersPage(ctk.CTkFrame):
         label = ctk.CTkLabel(self, text="OutliersPage", text_color="#FFFFFF", font=LARGEFONT)
         label.grid(row=0, column=0, padx=10, pady=10)
 
-        button1 = ctk.CTkButton(self, image=backImg, text="", width=32, height=32, command=lambda: controller.show_frame(RegressionPage))
+        button1 = ctk.CTkButton(self, image=backImg, text="", width=32, height=32, command=lambda: controller.show_frame(DataProcessingPage))
         button1.grid(row=1, column=0, padx=8, pady=8)
 
         button4 = ctk.CTkButton(self, text="Drop outliers based on z-score", command=lambda: self.outliers_handling(controller))
@@ -565,8 +515,8 @@ class OutliersPage(ctk.CTkFrame):
         remove_outliers(DATA.file_data, method)
 
         global app
-        app.frames[RegressionPage].load_data()
-        controller.show_frame(RegressionPage)
+        app.frames[DataProcessingPage].load_data()
+        controller.show_frame(DataProcessingPage)
 
 
 class RemoveColumnsPage(ctk.CTkFrame):
@@ -614,8 +564,8 @@ class RemoveColumnsPage(ctk.CTkFrame):
         DATA.file_data.drop(self.selected_values, axis=1, inplace=True)
 
         global app
-        app.frames[RegressionPage].load_data()
-        controller.show_frame(RegressionPage)
+        app.frames[DataProcessingPage].load_data()
+        controller.show_frame(DataProcessingPage)
         for checkbutton in self.checkbuttons:
             checkbutton.destroy()
         self.checkbuttons.clear()
@@ -625,14 +575,45 @@ class RemoveColumnsPage(ctk.CTkFrame):
 
     def back_handler(self, controller):
         global app
-        app.frames[RegressionPage].load_data()
-        controller.show_frame(RegressionPage)
+        app.frames[DataProcessingPage].load_data()
+        controller.show_frame(DataProcessingPage)
         for checkbutton in self.checkbuttons:
             checkbutton.destroy()
         self.checkbuttons.clear()
         self.checkbuttons_vars.clear()
 
         self.df_columns = get_dataframe_columns()
+
+
+class LabelEncodingPage(ctk.CTkFrame):
+    def __init__(self, parent, controller):
+        ctk.CTkFrame.__init__(self, parent)
+
+        backImg = ImageTk.PhotoImage(Image.open("./assets/icons/back.png").resize((32, 32), Image.LANCZOS))
+
+        label = ctk.CTkLabel(self, text="OutliersPage", text_color="#FFFFFF", font=LARGEFONT)
+        label.grid(row=0, column=0, padx=10, pady=10)
+
+        button1 = ctk.CTkButton(self, image=backImg, text="", width=32, height=32, command=lambda: controller.show_frame(DataProcessingPage))
+        button1.grid(row=1, column=0, padx=8, pady=8)
+
+        self.optionmenu_var2 = ctk.StringVar(value="Column X")
+        self.combobox1 = ctk.CTkOptionMenu(master=self,
+                                       values=[],
+                                       command=lambda x: self.Column_choice_handler(x, controller),
+                                       variable=self.optionmenu_var2,
+                                       width=150)
+        self.combobox1.grid(row=2, column=0, padx=4, pady=8, ipadx=8, ipady=8, sticky="w")
+
+    def Column_choice_handler(self, choice: str, controller):
+        global app
+        global DATA
+
+        DATA.file_data[choice] = LabelEncoder().fit_transform(DATA.file_data[choice])
+
+        app.frames[DataProcessingPage].load_data()
+        controller.show_frame(DataProcessingPage)
+
 
 class VisualizationPage(ctk.CTkFrame):
     def __init__(self, parent, controller):
@@ -656,7 +637,7 @@ class VisualizationPage(ctk.CTkFrame):
         frame1 = ctk.CTkFrame(self, fg_color="#101010")
         frame1.grid(row=1, column=0, columnspan=5, ipadx=8, ipady=8, sticky="ew")
 
-        button2 = ctk.CTkButton(frame1, image=backImg, text="", command=lambda: controller.show_frame(RegressionPage))
+        button2 = ctk.CTkButton(frame1, image=backImg, text="", command=lambda: controller.show_frame(DataProcessingPage))
         button2.grid(row=0, column=0, padx=4, pady=8, ipadx=8, ipady=8, sticky="w")
 
         self.optionmenu_var = ctk.StringVar(value="Plot type")
@@ -804,7 +785,7 @@ class DataSplitPage(ctk.CTkFrame):
         frame1 = ctk.CTkFrame(self, fg_color="#101010")
         frame1.grid(row=1, column=0, padx=(0, 12), sticky="nsew")
 
-        button1 = ctk.CTkButton(frame1, image=backImg, text="", width=32, height=32, command=lambda: controller.show_frame(RegressionPage))
+        button1 = ctk.CTkButton(frame1, image=backImg, text="", width=32, height=32, command=lambda: controller.show_frame(DataProcessingPage))
         button1.grid(row=0, column=0, padx=8, pady=8, sticky = "w")
 
         self.optionmenu_var2 = ctk.StringVar(value="Target column")
@@ -814,17 +795,23 @@ class DataSplitPage(ctk.CTkFrame):
                                        width=150)
         self.combobox1.grid(row=0, column=1, padx=4, pady=8, ipadx=8, ipady=8, sticky="w")
 
+        label1 = ctk.CTkLabel(frame1, text="Test data ratio(default: 0.2):", text_color="#FFFFFF", font=("montserrat", 12))
+        label1.grid(row=0, column=2, padx=10, pady=10, sticky = "w")
+
         K_entry = ctk.CTkEntry(frame1, width=30, height=24)
-        K_entry.grid(row=0, column=2, padx=8)
+        K_entry.grid(row=0, column=3, padx=8)
+
+        label2 = ctk.CTkLabel(frame1, text="Random state(default: 42):", text_color="#FFFFFF", font=("montserrat", 12))
+        label2.grid(row=0, column=4, padx=10, pady=10, sticky = "w")
 
         K_entry1 = ctk.CTkEntry(frame1, width=30, height=24)
-        K_entry1.grid(row=0, column=3, padx=8)
+        K_entry1.grid(row=0, column=5, padx=8)
 
-        button2 = ctk.CTkButton(frame1, text="Split data", width=32, height=32, command=lambda: self.split_data(K_entry.get(), K_entry1.get()))
-        button2.grid(row=0, column=4, padx=8, pady=8, sticky = "w")
+        button2 = ctk.CTkButton(frame1, text="Split data", width=32, height=32, command=lambda: self.split_train_test(K_entry.get(), K_entry1.get()))
+        button2.grid(row=0, column=6, padx=8, pady=8, sticky = "w")
 
-        button5 = ctk.CTkButton(frame1, image=continueImg, text="", command=lambda: controller.show_frame(MLPage))
-        button5.grid(row=0, column=5, padx=4, pady=8, ipadx=8, ipady=8, sticky="w")
+        button5 = ctk.CTkButton(frame1, image=continueImg, text="", command=lambda: self.mlPage_switch(controller))
+        button5.grid(row=0, column=7, padx=4, pady=8, ipadx=8, ipady=8, sticky="w")
 
         frame2 = ctk.CTkFrame(self, fg_color="#101010")
         #frame2.configure(fg_color="#101010")
@@ -855,12 +842,37 @@ class DataSplitPage(ctk.CTkFrame):
         self.TestSheet.enable_bindings()
         self.TestSheet.pack(side="top" , fill="both", expand=True)
 
-    def split_data(self, k='', random_state=''):
+    def split_X_y(self):
+        global DATA
+
+        target_column = self.optionmenu_var2.get()
+        target_column_type = DATA.file_data[target_column].dtype.name
+
+        print(target_column_type)
+
+        if DATA.mlModelType == 'Linear Regression':
+            if target_column_type != 'int64' and target_column_type != 'float64' and target_column_type != 'int32' and target_column_type != 'float32':
+                tk.messagebox.showerror("Information", "Please choose a valid target column for linear regression")
+                return
+        else: 
+            if target_column_type == 'float64' or target_column_type == 'float32':
+                tk.messagebox.showerror("Information", "Please choose a valid target column for classification")
+                return
+
+        if target_column is None or target_column == "":
+            tk.messagebox.showerror("Information", "Choose a target class")
+            return
+
+        DATA.X = DATA.file_data.drop(target_column, axis=1)
+        DATA.y = DATA.file_data[target_column]
+
+    def split_train_test(self, k='', random_state=''):
         global app
         global DATA
 
-        DATA.X = DATA.file_data.drop(self.optionmenu_var2.get(), axis=1)
-        DATA.y = DATA.file_data[self.optionmenu_var2.get()]
+        print(DATA)
+
+        self.split_X_y()
         
         if (k != '' and k != None) and (random_state != '' and random_state != None):
             try:
@@ -903,23 +915,111 @@ class DataSplitPage(ctk.CTkFrame):
         
         self.TrainSheet.set_sheet_data(data = pd.concat([DATA.X_train, DATA.y_train], axis=1).values.tolist())
         self.TestSheet.set_sheet_data(data = pd.concat([DATA.X_test, DATA.y_test], axis=1).values.tolist())
-        
+
+        print(DATA.X_train)
+        print(DATA.y_train)
+        print(DATA.X_test)
+        print(DATA.y_test)
+        print(DATA.X)
+        print(DATA.y)
+    
+    def mlPage_switch(self, controller):
+        global app
+        global DATA
+
+        if DATA.X_train is None or DATA.y_train is None or DATA.X_test is None or DATA.y_test is None or DATA.X is None or DATA.y is None:
+            tk.messagebox.showerror("Information", "Please split the data first")
+            return
+
+        app.frames[MLPage].label.configure(text=DATA.mlModelType)
+        controller.show_frame(MLPage)
+
 class MLPage(ctk.CTkFrame):
     def __init__(self, parent, controller):
         ctk.CTkFrame.__init__(self, parent)
         backImg = ImageTk.PhotoImage(Image.open("./assets/icons/back.png").resize((32, 32), Image.LANCZOS))
         continueImg = ImageTk.PhotoImage(Image.open("./assets/icons/back.png").rotate(180).resize((24, 24), Image.LANCZOS))
 
-        self.columnconfigure(0, weight=1)
-        self.rowconfigure(2, weight=1)
-
-        label = ctk.CTkLabel(self, text="Machine learning", text_color="#FFFFFF", font=LARGEFONT)
-        label.grid(row=0, column=0, padx=10, pady=10, sticky = "w")
+        self.label = ctk.CTkLabel(self, text="Machine learning", text_color="#FFFFFF", font=LARGEFONT)
+        self.label.grid(row=0, column=0, padx=10, pady=10, sticky = "w")
 
         button1 = ctk.CTkButton(self, image=backImg, text="", width=32, height=32, command=lambda: controller.show_frame(DataSplitPage))
         button1.grid(row=1, column=0, padx=8, pady=8, sticky = "w")
 
+        button2 = ctk.CTkButton(self, text="Train model", width=32, height=32, command=lambda: self.train_mlModel())
+        button2.grid(row=1, column=1, padx=8, pady=8, sticky = "w")
+        
+        button3 = ctk.CTkButton(self, text="Test model", width=32, height=32, command=lambda: self.test_mlModel())
+        button3.grid(row=1, column=2, padx=8, pady=8, sticky = "w")
 
+    def train_mlModel(self):
+        global DATA
+
+        try:
+            DATA.mlModel = MLModels[DATA.mlModelType]
+            print(DATA.mlModel)
+        except KeyError:
+            tk.messagebox.showerror("Information", "Please select a valid model")
+            return
+
+        DATA.mlModel.fit(DATA.X_train, DATA.y_train)
+        """ if DATA.X_train is None or DATA.y_train is None or DATA.X_test is None or DATA.y_test is None:
+            print('DATA.X', DATA.X)
+            print('DATA.y', DATA.y)
+            DATA.mlModel.fit(DATA.X, DATA.y)
+            print('Model fitted')
+        else:
+            DATA.mlModel.fit(DATA.X_train, DATA.y_train)
+            print('Model fitted') """
+
+    def test_mlModel(self):
+        global DATA
+
+        """ if DATA.X_train is None or DATA.y_train is None or DATA.X_test is None or DATA.y_test is None:
+            print('DATA.X', DATA.X)
+            print('DATA.y', DATA.y)
+            prediction = DATA.mlModel.predict(DATA.X)
+        else:
+            prediction = DATA.mlModel.predict(DATA.X_test) """
+        prediction = DATA.mlModel.predict(DATA.X_test)
+        print(DATA.mlModel)
+        print(prediction)
+
+        if DATA.mlModelType == 'Linear Regression':
+            self.label1 = ctk.CTkLabel(self, text=f"Max error: {metrics.max_error(DATA.y_test, prediction)}", text_color="#FFFFFF", font=LARGEFONT)
+            self.label1.grid(row=2, column=0, padx=10, pady=10, sticky = "w")
+
+            self.label2 = ctk.CTkLabel(self, text=f"Mean absolute error: {metrics.mean_absolute_error(DATA.y_test, prediction)}", text_color="#FFFFFF", font=LARGEFONT)
+            self.label2.grid(row=3, column=0, padx=10, pady=10, sticky = "w")
+
+            self.label3 = ctk.CTkLabel(self, text=f"Mean squared error: {metrics.mean_squared_error(DATA.y_test, prediction)}", text_color="#FFFFFF", font=LARGEFONT)
+            self.label3.grid(row=4, column=0, padx=10, pady=10, sticky = "w")
+
+            self.label4 = ctk.CTkLabel(self, text=f"R2 score: {metrics.r2_score(DATA.y_test, prediction)}", text_color="#FFFFFF", font=LARGEFONT)
+            self.label4.grid(row=5, column=0, padx=10, pady=10, sticky = "w")
+
+        else:
+            cm = metrics.confusion_matrix(DATA.y_test, prediction)
+            BER = 1 - (1/2 * ((cm[0][0] / (cm[0][0] + cm[1][0])) + (cm[1][1] / (cm[1][1] + cm[0][1]))))
+    
+            self.label1 = ctk.CTkLabel(self, text=f"Balanced Error Rate: {BER}", text_color="#FFFFFF", font=LARGEFONT)
+            self.label1.grid(row=3, column=0, padx=10, pady=10, sticky = "w")
+
+            self.label2 = ctk.CTkLabel(self, text=f"Accuracy: {metrics.accuracy_score(DATA.y_test, prediction)}", text_color="#FFFFFF", font=LARGEFONT)
+            self.label2.grid(row=3, column=0, padx=10, pady=10, sticky = "w")
+
+            self.label3 = ctk.CTkLabel(self, text=f"Precision: {metrics.precision_score(DATA.y_test, prediction)}", text_color="#FFFFFF", font=LARGEFONT)
+            self.label3.grid(row=4, column=0, padx=10, pady=10, sticky = "w")
+
+            self.label4 = ctk.CTkLabel(self, text=f"Recall: {metrics.recall_score(DATA.y_test, prediction)}", text_color="#FFFFFF", font=LARGEFONT)
+            self.label4.grid(row=5, column=0, padx=10, pady=10, sticky = "w")
+
+            self.label5 = ctk.CTkLabel(self, text=f"F1 score: {metrics.f1_score(DATA.y_test, prediction)}", text_color="#FFFFFF", font=LARGEFONT)
+            self.label5.grid(row=6, column=0, padx=10, pady=10, sticky = "w")
+
+            self.label6 = ctk.CTkLabel(self, text=f"AUC score: {metrics.roc_auc_score(DATA.y_test, prediction)}", text_color="#FFFFFF", font=LARGEFONT)
+            self.label6.grid(row=7, column=0, padx=10, pady=10, sticky = "w")
+    
 # DRIVER CODE
 app = App()
 app.mainloop()
