@@ -1,13 +1,13 @@
-After cloning the project, you can run the following command to install the dependencies:
-
-```bash
-pip3 install -r requirements.txt
-```
-
-Activate the env:
+After cloning the project, activate the env:
 
 ```bash
 .venv\Scripts\activate
+```
+
+You can run the following command to install the dependencies:
+
+```bash
+pip3 install -r requirements.txt
 ```
 
 Then run the main file with:
