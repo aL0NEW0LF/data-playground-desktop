@@ -16,6 +16,8 @@ Then run the main file with:
 python main.py
 ```
 
+2 sets of data are included, for users to test the app, first one is the titanic dataset to test all features of the app, second one is the same dataset but cleaned so the user can test training and testing the model directly.
+
 > [!IMPORTANT]
 > This app is still an alpha, which means it got developed to make specific situations and at least a workflow work.
 >
