@@ -1,3 +1,9 @@
+To start off, close this cranch of the repo into your local:
+
+```bash
+git clone -b alpha/main --single-branch https://github.com/aL0NEW0LF/data-playground-desktop
+```
+
 After cloning the project, activate the env:
 
 ```bash
