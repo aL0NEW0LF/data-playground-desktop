@@ -482,7 +482,10 @@ class MissingValuesPage(ctk.CTkFrame):
         global DATA
 
         handle_missing_values(DATA.file_data, value, method)
-
+        
+        DATA.X = DATA.file_data.drop(DATA.target_column, axis=1)
+        DATA.y = DATA.file_data[DATA.target_column]
+        
         self.textbox.configure(text = f"Number of missing values: {DATA.file_data.isnull().sum().sum()}\n\nPourcentage of missing values: {(DATA.file_data.isnull().sum().sum() / (DATA.file_data.shape[0] * DATA.file_data.shape[1])) * 100}%")
         
         global app
@@ -673,7 +676,7 @@ class LabelEncodingPage(ctk.CTkFrame):
         global DATA
 
         DATA.file_data[choice] = LabelEncoder().fit_transform(DATA.file_data[choice])
-        
+
         DATA.X = DATA.file_data.drop(DATA.target_column, axis=1)
         DATA.y = DATA.file_data[DATA.target_column]
 
