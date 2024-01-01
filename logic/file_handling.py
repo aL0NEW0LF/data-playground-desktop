@@ -10,6 +10,7 @@ class file_handling:
         self.file_path: str = None
         self.file_extension: str = None
         self.file_data: pd.DataFrame = None
+        self.target_column: str = None
         self.X: pd.DataFrame = None
         self.y: pd.DataFrame = None
         self.X_train: pd.DataFrame = None

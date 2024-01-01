@@ -27,15 +27,30 @@ python main.py
 > [!IMPORTANT]
 > This app is still an alpha, which means it got developed to make specific situations and at least a workflow work.
 >
-> For this version, you will need to place your target column the last column and split the data into training and testing data.
+> For this version, you will need to split the data into training and testing data.
+
+> [!IMPORTANT]
+> The work flow will be as follows:
+>
+> After starting the app:
+>
+> 1. Choose your wanted ML algorithm
+> 2. Upload data
+> 3. Choose your target column
+> 4. Proccess & visualize your data
+> 5. Split your dataset into training & testing data
+> 6. Train & test your model, then see results
 
 > [!NOTE]
 >
 > # TODO
 >
+> - [x] Choose target column right after uploading data
 > - [ ] Variance threshold feature selection
+> - [ ] More data processing
 > - [ ] More plots if possible
 > - [ ] Better error handling & conditions handling
 > - [ ] Add training & testing the model without spliting the data
+> - [ ] Model configuration
 > - [ ] Model, metrics & data visualization after training
 > - [ ] Better UI
