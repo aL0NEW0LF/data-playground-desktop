@@ -85,6 +85,11 @@ def get_dataframe_columns():
     
     return DATA.file_data.columns.values.tolist()
 
+def get_dataframe_features():
+    global DATA
+    
+    return DATA.X.columns.values.tolist()
+
 # MAIN APP
 class App(ctk.CTk):
     def __init__(self, *args, **kwargs):
@@ -231,36 +236,44 @@ class DataProcessingPage(ctk.CTkFrame):
         frame1 = ctk.CTkFrame(self, fg_color="#101010")
         frame1.grid(row=1, column=0, columnspan=5, ipadx=8, ipady=8, sticky="ew")
 
-        button2 = ctk.CTkButton(frame1, image=backImg, text="", command=lambda: controller.show_frame(StartPage))
-        button2.grid(row=0, column=0, padx=4, pady=8, ipadx=8, ipady=8, sticky="w")
+        self.button2 = ctk.CTkButton(frame1, image=backImg, text="", command=lambda: controller.show_frame(StartPage))
+        self.button2.grid(row=0, column=0, padx=4, pady=8, ipadx=8, ipady=8, sticky="w")
 
-        button4 = ctk.CTkButton(frame1, text="Upload your data", command=lambda: self.upload_data())
-        button4.grid(row=0, column=1, padx=4, pady=8, ipadx=8, ipady=8, sticky="w")
+        self.button4 = ctk.CTkButton(frame1, text="Upload your data", command=lambda: self.upload_data())
+        self.button4.grid(row=0, column=1, padx=4, pady=8, ipadx=8, ipady=8, sticky="w")
 
-        button1 = ctk.CTkButton(frame1, text="Print", command=lambda: print(DATA))
-        button1.grid(row=0, column=2, padx=4, pady=8, ipadx=8, ipady=8, sticky="w")
+        self.optionmenu_var2 = ctk.StringVar(value="Target column")
+        self.combobox1 = ctk.CTkOptionMenu(master=frame1,
+                                       values=[],
+                                       variable=self.optionmenu_var2,
+                                       width=150, 
+                                       state='disabled',
+                                       command=lambda x: self.split_X_y(x))
+        self.combobox1.grid(row=0, column=2, padx=4, pady=8, ipadx=8, ipady=8, sticky="w")
 
-        optionmenu_var = ctk.StringVar(value="Features selection")
-        combobox = ctk.CTkOptionMenu(master=frame1,
+        self.optionmenu_var = ctk.StringVar(value="Features selection")
+        self.combobox = ctk.CTkOptionMenu(master=frame1,
                                        values=["Variance threshold", "K-best features"],
                                        command=lambda x: self.optionmenu_callback(x, controller),
-                                       variable=optionmenu_var,
-                                       width=150)
-        combobox.grid(row=0, column=3, padx=4, pady=8, ipadx=8, ipady=8, sticky="w")
+                                       variable=self.optionmenu_var,
+                                       width=150, 
+                                       state='disabled')
+        self.combobox.grid(row=0, column=3, padx=4, pady=8, ipadx=8, ipady=8, sticky="w")
 
-        optionmenu_var2 = ctk.StringVar(value="Preprocessing")
-        combobox2 = ctk.CTkOptionMenu(master=frame1,
+        self.optionmenu_var2 = ctk.StringVar(value="Preprocessing")
+        self.combobox2 = ctk.CTkOptionMenu(master=frame1,
                                        values=["Missing values", "Duplicate rows", "Constant features", "Outliers", "Remove columns", "Label encoding"],
                                        command=lambda x: self.optionmenu_callback(x, controller),
-                                       variable=optionmenu_var2,
-                                       width=150)
-        combobox2.grid(row=0, column=4, padx=4, pady=8, ipadx=8, ipady=8, sticky="w")
+                                       variable=self.optionmenu_var2,
+                                       width=150, 
+                                       state='disabled')
+        self.combobox2.grid(row=0, column=4, padx=4, pady=8, ipadx=8, ipady=8, sticky="w")
 
-        button6 = ctk.CTkButton(frame1, text="Visualize", command=lambda: self.VisPageSwitch(controller=controller))
-        button6.grid(row=0, column=5, padx=4, pady=8, ipadx=8, ipady=8, sticky="w")
+        self.button6 = ctk.CTkButton(frame1, text="Visualize", command=lambda: self.VisPageSwitch(controller=controller), state='disabled')
+        self.button6.grid(row=0, column=5, padx=4, pady=8, ipadx=8, ipady=8, sticky="w")
 
-        button5 = ctk.CTkButton(frame1, image=continueImg, text="", command=lambda: self.SplitPageSwitch(controller))
-        button5.grid(row=0, column=6, padx=4, pady=8, ipadx=8, ipady=8, sticky="w")
+        self.button5 = ctk.CTkButton(frame1, image=continueImg, text="", command=lambda: self.SplitPageSwitch(controller), state='disabled')
+        self.button5.grid(row=0, column=6, padx=4, pady=8, ipadx=8, ipady=8, sticky="w")
 
         frame2 = ctk.CTkFrame(self, fg_color="#101010")
         #frame2.configure(fg_color="#101010")
@@ -272,6 +285,14 @@ class DataProcessingPage(ctk.CTkFrame):
     def upload_data(self):
         UploadAction()
         self.load_data()
+
+        self.combobox1.configure(values=get_dataframe_columns())
+
+        self.combobox1.configure(state='normal')
+        self.combobox.configure(state='disabled')
+        self.combobox2.configure(state='disabled')
+        self.button6.configure(state='disabled')
+        self.button5.configure(state='disabled')
 
     def load_data(self):
         global app
@@ -332,8 +353,41 @@ class DataProcessingPage(ctk.CTkFrame):
             return
         
         global app
-        app.frames[DataSplitPage].combobox1.configure(values=get_dataframe_columns())
         controller.show_frame(DataSplitPage)
+
+    def split_X_y(self, choice: str):
+        global DATA
+
+        choice_type = DATA.file_data[choice].dtype.name
+
+        if DATA.mlModelType == 'Linear Regression':
+            if choice_type != 'int64' and choice_type != 'float64' and choice_type != 'int32' and choice_type != 'float32':
+                tk.messagebox.showerror("Information", "Please choose a valid target column for linear regression")
+                return
+        else: 
+            if choice_type == 'float64' or choice_type == 'float32':
+                tk.messagebox.showerror("Information", "Please choose a valid target column for classification")
+                return
+
+        if choice is None or choice == "":
+            tk.messagebox.showerror("Information", "Choose a target class")
+            return
+
+        DATA.target_column = choice
+
+        print(DATA.target_column)
+
+        DATA.X = DATA.file_data.drop(DATA.target_column, axis=1)
+        DATA.y = DATA.file_data[DATA.target_column]
+
+        DATA.file_data = pd.concat([DATA.X, DATA.y], axis=1)
+
+        self.load_data()
+
+        self.combobox.configure(state='normal')
+        self.combobox2.configure(state='normal')
+        self.button6.configure(state='normal')
+        self.button5.configure(state='normal')
 
 # FILLER PAGES ############################################################################################################################
 ###########################################################################################################################################
@@ -389,7 +443,9 @@ class KbestfeatPage(ctk.CTkFrame):
             return
         
         DATA.file_data = feature_selection_kBestFeatures(DATA.file_data.values, k)
-        
+        DATA.X = DATA.file_data.drop(DATA.target_column, axis=1)
+        DATA.y = DATA.file_data[DATA.target_column]
+
         global app
 
         app.frames[DataProcessingPage].load_data()
@@ -538,7 +594,7 @@ class RemoveColumnsPage(ctk.CTkFrame):
         self.frame1.grid(row=2, column=0, columnspan=5, ipadx=8, ipady=8, sticky="ew")
         
     def load_checkboxes(self):
-        self.df_columns = get_dataframe_columns()
+        self.df_columns = get_dataframe_features()
 
         """ self.l = Checkbar(self.frame1, self.df_columns)
         self.l.pack(anchor = 'w') """
@@ -563,7 +619,12 @@ class RemoveColumnsPage(ctk.CTkFrame):
 
         DATA.file_data.drop(self.selected_values, axis=1, inplace=True)
 
+        DATA.X = DATA.file_data.drop(DATA.target_column, axis=1)
+        DATA.y = DATA.file_data[DATA.target_column]
+
         global app
+
+        app.frames[DataProcessingPage].combobox1.configure(values=get_dataframe_columns())
         app.frames[DataProcessingPage].load_data()
         controller.show_frame(DataProcessingPage)
         for checkbutton in self.checkbuttons:
@@ -575,6 +636,8 @@ class RemoveColumnsPage(ctk.CTkFrame):
 
     def back_handler(self, controller):
         global app
+
+        app.frames[DataProcessingPage].combobox1.configure(values=get_dataframe_columns())
         app.frames[DataProcessingPage].load_data()
         controller.show_frame(DataProcessingPage)
         for checkbutton in self.checkbuttons:
@@ -610,6 +673,9 @@ class LabelEncodingPage(ctk.CTkFrame):
         global DATA
 
         DATA.file_data[choice] = LabelEncoder().fit_transform(DATA.file_data[choice])
+        
+        DATA.X = DATA.file_data.drop(DATA.target_column, axis=1)
+        DATA.y = DATA.file_data[DATA.target_column]
 
         app.frames[DataProcessingPage].load_data()
         controller.show_frame(DataProcessingPage)
@@ -788,30 +854,23 @@ class DataSplitPage(ctk.CTkFrame):
         button1 = ctk.CTkButton(frame1, image=backImg, text="", width=32, height=32, command=lambda: controller.show_frame(DataProcessingPage))
         button1.grid(row=0, column=0, padx=8, pady=8, sticky = "w")
 
-        self.optionmenu_var2 = ctk.StringVar(value="Target column")
-        self.combobox1 = ctk.CTkOptionMenu(master=frame1,
-                                       values=[],
-                                       variable=self.optionmenu_var2,
-                                       width=150)
-        self.combobox1.grid(row=0, column=1, padx=4, pady=8, ipadx=8, ipady=8, sticky="w")
-
         label1 = ctk.CTkLabel(frame1, text="Test data ratio(default: 0.2):", text_color="#FFFFFF", font=("montserrat", 12))
-        label1.grid(row=0, column=2, padx=10, pady=10, sticky = "w")
+        label1.grid(row=0, column=1, padx=10, pady=10, sticky = "w")
 
         K_entry = ctk.CTkEntry(frame1, width=30, height=24)
-        K_entry.grid(row=0, column=3, padx=8)
+        K_entry.grid(row=0, column=2, padx=8)
 
         label2 = ctk.CTkLabel(frame1, text="Random state(default: 42):", text_color="#FFFFFF", font=("montserrat", 12))
-        label2.grid(row=0, column=4, padx=10, pady=10, sticky = "w")
+        label2.grid(row=0, column=3, padx=10, pady=10, sticky = "w")
 
         K_entry1 = ctk.CTkEntry(frame1, width=30, height=24)
-        K_entry1.grid(row=0, column=5, padx=8)
+        K_entry1.grid(row=0, column=4, padx=8)
 
         button2 = ctk.CTkButton(frame1, text="Split data", width=32, height=32, command=lambda: self.split_train_test(K_entry.get(), K_entry1.get()))
-        button2.grid(row=0, column=6, padx=8, pady=8, sticky = "w")
+        button2.grid(row=0, column=5, padx=8, pady=8, sticky = "w")
 
         button5 = ctk.CTkButton(frame1, image=continueImg, text="", command=lambda: self.mlPage_switch(controller))
-        button5.grid(row=0, column=7, padx=4, pady=8, ipadx=8, ipady=8, sticky="w")
+        button5.grid(row=0, column=6, padx=4, pady=8, ipadx=8, ipady=8, sticky="w")
 
         frame2 = ctk.CTkFrame(self, fg_color="#101010")
         #frame2.configure(fg_color="#101010")
@@ -842,7 +901,7 @@ class DataSplitPage(ctk.CTkFrame):
         self.TestSheet.enable_bindings()
         self.TestSheet.pack(side="top" , fill="both", expand=True)
 
-    def split_X_y(self):
+    """ def split_X_y(self):
         global DATA
 
         target_column = self.optionmenu_var2.get()
@@ -864,15 +923,11 @@ class DataSplitPage(ctk.CTkFrame):
             return
 
         DATA.X = DATA.file_data.drop(target_column, axis=1)
-        DATA.y = DATA.file_data[target_column]
+        DATA.y = DATA.file_data[target_column] """
 
     def split_train_test(self, k='', random_state=''):
         global app
         global DATA
-
-        print(DATA)
-
-        self.split_X_y()
         
         if (k != '' and k != None) and (random_state != '' and random_state != None):
             try:
@@ -915,13 +970,6 @@ class DataSplitPage(ctk.CTkFrame):
         
         self.TrainSheet.set_sheet_data(data = pd.concat([DATA.X_train, DATA.y_train], axis=1).values.tolist())
         self.TestSheet.set_sheet_data(data = pd.concat([DATA.X_test, DATA.y_test], axis=1).values.tolist())
-
-        print(DATA.X_train)
-        print(DATA.y_train)
-        print(DATA.X_test)
-        print(DATA.y_test)
-        print(DATA.X)
-        print(DATA.y)
     
     def mlPage_switch(self, controller):
         global app
