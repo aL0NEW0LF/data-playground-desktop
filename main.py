@@ -73,7 +73,10 @@ def UploadAction():
     except FileNotFoundError:
         ctk.messagebox.showerror("Information", f"No such file as {file_path}")
         return
-    
+
+def SelectSaveDirectory():
+    SaveDirectory = ctk.filedialog.askdirectory()
+
 def read_data():
     global DATA
     DATA.file_data_read()
@@ -273,8 +276,11 @@ class DataProcessingPage(ctk.CTkFrame):
         self.button6 = ctk.CTkButton(frame1, text="Visualize", command=lambda: self.VisPageSwitch(controller=controller), state='disabled', corner_radius=0, text_color="#101010", bg_color="#FFFFFF", fg_color="#FFFFFF", font=SMALLFONT, hover_color="#F0F0F0", height=48)
         self.button6.grid(row=0, column=5, padx=4, pady=8, sticky="w")
 
+        self.button7 = ctk.CTkButton(frame1, text="Save dataset", command=lambda: self.openTopLevel(), state='disabled', corner_radius=0, text_color="#101010", bg_color="#FFFFFF", fg_color="#FFFFFF", font=SMALLFONT, hover_color="#F0F0F0", height=48)
+        self.button7.grid(row=0, column=7, padx=4, pady=8, sticky="w")
+
         self.button5 = ctk.CTkButton(frame1, image=continueImg, text="", command=lambda: self.SplitPageSwitch(controller), state='disabled', corner_radius=0, text_color="#101010", bg_color="#FFFFFF", fg_color="#FFFFFF", font=SMALLFONT, hover_color="#F0F0F0", height=48, width=56)
-        self.button5.grid(row=0, column=6, padx=4, pady=8, sticky="w")
+        self.button5.grid(row=0, column=8, padx=4, pady=8, sticky="w")
 
         frame2 = ctk.CTkFrame(self, fg_color="#101010")
         #frame2.configure(fg_color="#101010")
@@ -282,6 +288,10 @@ class DataProcessingPage(ctk.CTkFrame):
         self.sheet = Sheet(frame2, data = None)
         self.sheet.enable_bindings()
         self.sheet.pack(side="top" , fill="both", expand=True)
+
+    def openTopLevel(self):
+        SaveWindow = SaveDatasetTopLevel()
+        SaveWindow.grab_set()
 
     def upload_data(self):
         UploadAction()
@@ -335,8 +345,9 @@ class DataProcessingPage(ctk.CTkFrame):
             app.frames[RemoveColumnsPage].load_checkboxes()
             controller.show_frame(RemoveColumnsPage)
         elif choice == "Label encoding":
-            app.frames[LabelEncodingPage].combobox1.configure(values=get_dataframe_columns())
-            controller.show_frame(LabelEncodingPage)
+            lableEncWindow = LabelEncodingTopLevel()
+            lableEncWindow.combobox1.configure(values=get_dataframe_columns())
+            lableEncWindow.grab_set()
 
     def VisPageSwitch(self, controller):
         if 'DATA' not in globals() or DATA.file_data is None:
@@ -389,6 +400,7 @@ class DataProcessingPage(ctk.CTkFrame):
         self.combobox2.configure(state='normal')
         self.button6.configure(state='normal')
         self.button5.configure(state='normal')
+        self.button7.configure(state='normal')
 
 # FILLER PAGES ############################################################################################################################
 ###########################################################################################################################################
@@ -437,7 +449,7 @@ class KbestfeatPage(ctk.CTkFrame):
     def kbestFeat_Selec_event(self, k, controller):  
         global DATA
 
-        if k == "":
+        if k == "" or k is None:
             tk.messagebox.showerror("Information", "Please enter a value for k")
             return
         
@@ -455,10 +467,8 @@ class KbestfeatPage(ctk.CTkFrame):
             tk.messagebox.showerror("Value", "The value you chose for k cant be greater than the number of features")
             return
         
-        DATA.file_data = feature_selection_kBestFeatures(DATA.file_data.values, k)
-        DATA.X = DATA.file_data.drop(DATA.target_column, axis=1)
-        DATA.y = DATA.file_data[DATA.target_column]
-
+        feature_selection_kBestFeatures(DATA.file_data, k)
+        
         global app
 
         app.frames[DataProcessingPage].load_data()
@@ -612,6 +622,10 @@ class RemoveColumnsPage(ctk.CTkFrame):
     def __init__(self, parent, controller):
         ctk.CTkFrame.__init__(self, parent)
 
+        self.checkbuttons_vars = []
+        self.checkbuttons = []
+        self.df_columns = []
+
         backImg = ImageTk.PhotoImage(Image.open("./assets/icons/back.png").resize((24, 24), Image.LANCZOS))
 
         label = ctk.CTkLabel(self, text="Remove columns", text_color="#FFFFFF", font=LARGEFONT)
@@ -639,14 +653,16 @@ class RemoveColumnsPage(ctk.CTkFrame):
             self.l = ctk.CTkCheckBox(self.frame1, text=self.df_columns[x][0], variable=self.df_columns[x],command=lambda x=self.df_columns[x]:self.selected_df_columns.append(x), onvalue="on", offvalue="off")
             self.l.pack(anchor = 'w') """
         
+        for checkbutton in self.frame1.winfo_children():
+            checkbutton.destroy()
+
         self.checkbuttons_vars = [tk.BooleanVar() for value in self.df_columns]
-        
+
         self.checkbuttons = []
         for index, value in enumerate(self.df_columns):
             self.checkbutton = ctk.CTkCheckBox(self.frame1, text=value, variable=self.checkbuttons_vars[index], text_color="#FFFFFF", corner_radius=0, font=SMALLFONT, border_color="#F0F0F0", hover_color="#F0F0F0", fg_color="#FFFFFF")
             self.checkbutton.pack(side="top", anchor="center", expand=True, fill="both")
             self.checkbuttons.append(self.checkbutton)
-    
 
     def remove_columns(self, controller):
         global DATA
@@ -663,12 +679,15 @@ class RemoveColumnsPage(ctk.CTkFrame):
         app.frames[DataProcessingPage].combobox1.configure(values=get_dataframe_columns())
         app.frames[DataProcessingPage].load_data()
         controller.show_frame(DataProcessingPage)
-        for checkbutton in self.checkbuttons:
-            checkbutton.destroy()
+
         self.checkbuttons.clear()
         self.checkbuttons_vars.clear()
+        self.df_columns.clear()
 
-        self.df_columns = get_dataframe_columns()
+        print(self.checkbuttons_vars)
+        print(self.checkbuttons)
+        print(self.df_columns)
+
 
     def back_handler(self, controller):
         global app
@@ -676,12 +695,14 @@ class RemoveColumnsPage(ctk.CTkFrame):
         app.frames[DataProcessingPage].combobox1.configure(values=get_dataframe_columns())
         app.frames[DataProcessingPage].load_data()
         controller.show_frame(DataProcessingPage)
-        for checkbutton in self.checkbuttons:
-            checkbutton.destroy()
+
         self.checkbuttons.clear()
         self.checkbuttons_vars.clear()
+        self.df_columns.clear()
 
-        self.df_columns = get_dataframe_columns()
+        print(self.checkbuttons_vars)
+        print(self.checkbuttons)
+        print(self.df_columns)
 
 
 class LabelEncodingPage(ctk.CTkFrame):
@@ -720,6 +741,48 @@ class LabelEncodingPage(ctk.CTkFrame):
         app.frames[DataProcessingPage].load_data()
         controller.show_frame(DataProcessingPage)
 
+class LabelEncodingTopLevel(ctk.CTkToplevel):
+    def __init__(self):
+        ctk.CTkToplevel.__init__(self)
+        
+        self.configure(bg_color="#101010", fg_color="#101010")
+
+        backImg = ImageTk.PhotoImage(Image.open("./assets/icons/back.png").resize((24, 24), Image.LANCZOS))
+
+        label = ctk.CTkLabel(self, text="Label encoding", text_color="#FFFFFF", font=LARGEFONT)
+        label.grid(row=0, column=0, padx=8, pady=8, sticky="w")
+
+        frame = ctk.CTkFrame(self, fg_color="#101010")
+        frame.grid(row=1, column=0, ipadx=0, ipady=0, columnspan=3, sticky="ew")
+
+        button1 = ctk.CTkButton(frame, image=backImg, text="", command=lambda: self.exitTopLevel(), corner_radius=0, text_color="#101010", bg_color="#FFFFFF", fg_color="#FFFFFF", font=SMALLFONT, hover_color="#F0F0F0", height=48, width=56)
+        button1.grid(row=0, column=0, padx=(8, 4), pady=8, sticky="w")
+
+        self.optionmenu_var2 = ctk.StringVar(value="Column X")
+        self.combobox1 = ctk.CTkOptionMenu(master=frame,
+                                       values=[],
+                                       command=lambda x: self.Column_choice_handler(x),
+                                       variable=self.optionmenu_var2,
+                                       width=150,
+                                       corner_radius=0, text_color="#101010", bg_color="#FFFFFF", fg_color="#FFFFFF", font=SMALLFONT, height=32, button_color="#FFFFFF", button_hover_color="#FFFFFF", dropdown_font=SMALLFONT, dropdown_hover_color="#F0F0F0", dropdown_fg_color="#FFFFFF")
+        self.combobox1.grid(row=0, column=1, padx=(4, 8), pady=8, ipadx=8, ipady=8, sticky="w")
+
+    def Column_choice_handler(self, choice: str):
+        global app
+        global DATA
+
+        DATA.file_data[choice] = LabelEncoder().fit_transform(DATA.file_data[choice])
+
+        DATA.X = DATA.file_data.drop(DATA.target_column, axis=1)
+        DATA.y = DATA.file_data[DATA.target_column]
+
+        app.frames[DataProcessingPage].load_data()
+        self.destroy()
+        self.update()
+
+    def exitTopLevel(self):
+        self.destroy()
+        self.update()
 
 class VisualizationPage(ctk.CTkFrame):
     def __init__(self, parent, controller):
@@ -875,6 +938,80 @@ class VisualizationPage(ctk.CTkFrame):
 
         self.figure_canvas.draw()
         self.toolbar.update()
+
+
+class SaveDatasetTopLevel(ctk.CTkToplevel):
+    def __init__(self):
+        ctk.CTkToplevel.__init__(self)
+        
+        self.resizable(False, False)
+        self.configure(bg_color="#101010", fg_color="#101010")
+
+        backImg = ImageTk.PhotoImage(Image.open("./assets/icons/back.png").resize((24, 24), Image.LANCZOS))
+
+        label = ctk.CTkLabel(self, text="Save dataset", text_color="#FFFFFF", font=LARGEFONT)
+        label.grid(row=0, column=0, padx=8, pady=8, sticky="w")
+
+        frame1 = ctk.CTkFrame(self, fg_color="#101010")
+        frame1.grid(row=1, column=0, ipadx=0, ipady=0, columnspan=3, sticky="ew")
+
+        button2 = ctk.CTkButton(frame1, image=backImg, text="", command=lambda: self.exitTopLevel(), corner_radius=0, text_color="#101010", bg_color="#FFFFFF", fg_color="#FFFFFF", font=SMALLFONT, hover_color="#F0F0F0", height=48, width=56)
+        button2.grid(row=0, column=0, padx=(8, 4), pady=(8, 4), sticky="w")
+
+        button3 = ctk.CTkButton(frame1, text="Save file", command=lambda: self.SaveFile(), corner_radius=0, text_color="#101010", bg_color="#FFFFFF", fg_color="#FFFFFF", font=SMALLFONT, hover_color="#F0F0F0", height=48, width=56)
+        button3.grid(row=0, column=1, padx=(4, 4), pady=(8, 4), sticky="w")
+
+        frame = ctk.CTkFrame(self, fg_color="#101010")
+        frame.grid(row=2, column=0, ipadx=0, ipady=0, columnspan=3, sticky="ew")
+
+        button1 = ctk.CTkButton(frame, text="Choose directory", command=lambda: self.SelectSaveDirectory(), corner_radius=0, text_color="#101010", bg_color="#FFFFFF", fg_color="#FFFFFF", font=SMALLFONT, hover_color="#F0F0F0", height=48, width=56)
+        button1.grid(row=0, column=0, padx=(8, 4), pady=(4, 8), sticky="w")
+
+        label1 = ctk.CTkLabel(frame, text="File name:", text_color="#FFFFFF", font=SMALLFONT)
+        label1.grid(row=0, column=1, padx=10, pady=(4, 8), sticky = "w")
+
+        self.K_entry = ctk.CTkEntry(frame, width=100, height=24)
+        self.K_entry.grid(row=0, column=2, padx=8)
+
+
+    def Column_choice_handler(self, choice: str):
+        global app
+        global DATA
+
+        DATA.file_data[choice] = LabelEncoder().fit_transform(DATA.file_data[choice])
+
+        DATA.X = DATA.file_data.drop(DATA.target_column, axis=1)
+        DATA.y = DATA.file_data[DATA.target_column]
+
+        app.frames[DataProcessingPage].load_data()
+        self.destroy()
+        self.update()
+
+    def exitTopLevel(self):
+        self.destroy()
+        self.update()        
+    
+    def SelectSaveDirectory(self):
+        self.SaveDirectory = ctk.filedialog.askdirectory()
+
+    
+    def SaveFile(self):
+        global DATA
+
+        if hasattr(self, 'SaveDirectory'):
+            if self.SaveDirectory == None or self.SaveDirectory == '':
+                tk.messagebox.showerror("Information", "Please select a directory")
+                return
+            elif self.K_entry.get() == None or self.K_entry.get() == '':
+                tk.messagebox.showerror("Information", "Please enter a file name")
+                return
+            
+            DATA.file_data.to_excel(self.SaveDirectory + "/" + self.K_entry.get() + ".xlsx", index=False)
+
+            self.exitTopLevel()
+        else:
+            tk.messagebox.showerror("Information", "Please select a directory")
+            return
 
 class DataSplitPage(ctk.CTkFrame):
     def __init__(self, parent, controller):
