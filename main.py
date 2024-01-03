@@ -10,11 +10,13 @@ from turtle import st
 from webbrowser import get
 import customtkinter as ctk
 from PIL import ImageTk, Image
+import joblib
 from matplotlib.font_manager import get_font
 from numpy import pad
 import pandas as pd
 from pyparsing import col
 from sklearn.calibration import LabelEncoder
+from sklearn.exceptions import NotFittedError
 from sklearn.model_selection import train_test_split
 from sklearn.naive_bayes import GaussianNB
 from sklearn.tree import DecisionTreeClassifier
@@ -222,7 +224,7 @@ class StartPage(ctk.CTkFrame):
         global DATA 
 
         DATA.mlModelType = btn.cget('text')
-
+        DATA.mlModel = MLModels[DATA.mlModelType]
         print(DATA.mlModelType)
         controller.show_frame(DataProcessingPage)
 
@@ -973,31 +975,16 @@ class SaveDatasetTopLevel(ctk.CTkToplevel):
         self.K_entry = ctk.CTkEntry(frame, width=100, height=24)
         self.K_entry.grid(row=0, column=2, padx=8)
 
-
-    def Column_choice_handler(self, choice: str):
-        global app
-        global DATA
-
-        DATA.file_data[choice] = LabelEncoder().fit_transform(DATA.file_data[choice])
-
-        DATA.X = DATA.file_data.drop(DATA.target_column, axis=1)
-        DATA.y = DATA.file_data[DATA.target_column]
-
-        app.frames[DataProcessingPage].load_data()
-        self.destroy()
-        self.update()
-
     def exitTopLevel(self):
         self.destroy()
         self.update()        
     
     def SelectSaveDirectory(self):
         self.SaveDirectory = ctk.filedialog.askdirectory()
-
     
     def SaveFile(self):
         global DATA
-
+        
         if hasattr(self, 'SaveDirectory'):
             if self.SaveDirectory == None or self.SaveDirectory == '':
                 tk.messagebox.showerror("Information", "Please select a directory")
@@ -1009,6 +996,7 @@ class SaveDatasetTopLevel(ctk.CTkToplevel):
             DATA.file_data.to_excel(self.SaveDirectory + "/" + self.K_entry.get() + ".xlsx", index=False)
 
             self.exitTopLevel()
+
         else:
             tk.messagebox.showerror("Information", "Please select a directory")
             return
@@ -1186,15 +1174,11 @@ class MLPage(ctk.CTkFrame):
         button3 = ctk.CTkButton(frame1, text="Test model", command=lambda: self.test_mlModel(), corner_radius=0, text_color="#101010", bg_color="#FFFFFF", fg_color="#FFFFFF", font=SMALLFONT, hover_color="#F0F0F0", height=48)
         button3.grid(row=0, column=2, padx=4, pady=8, sticky = "w")
 
+        button4 = ctk.CTkButton(frame1, text="Save model", command=lambda: self.openSaveModelWindow(), corner_radius=0, text_color="#101010", bg_color="#FFFFFF", fg_color="#FFFFFF", font=SMALLFONT, hover_color="#F0F0F0", height=48)
+        button4.grid(row=0, column=3, padx=4, pady=8, sticky = "w")
+
     def train_mlModel(self):
         global DATA
-
-        try:
-            DATA.mlModel = MLModels[DATA.mlModelType]
-            print(DATA.mlModel)
-        except KeyError:
-            tk.messagebox.showerror("Information", "Please select a valid model")
-            return
 
         DATA.mlModel.fit(DATA.X_train, DATA.y_train)
         """ if DATA.X_train is None or DATA.y_train is None or DATA.X_test is None or DATA.y_test is None:
@@ -1254,6 +1238,73 @@ class MLPage(ctk.CTkFrame):
             self.label6 = ctk.CTkLabel(self, text=f"AUC score: {metrics.roc_auc_score(DATA.y_test, prediction)}", text_color="#FFFFFF", font=LARGEFONT)
             self.label6.grid(row=7, column=0, padx=0, pady=8, sticky = "w")
     
+    def openSaveModelWindow(self):
+        try:
+            DATA.mlModel.predict(DATA.X_test)
+        except NotFittedError:
+            tk.messagebox.showerror("Information", "Please train your model")
+            return
+        
+        SaveModelWindow = SaveModelTopLevel()
+        SaveModelWindow.grab_set()
+
+class SaveModelTopLevel(ctk.CTkToplevel):
+    def __init__(self):
+        ctk.CTkToplevel.__init__(self)
+        
+        self.resizable(False, False)
+        self.configure(bg_color="#101010", fg_color="#101010")
+
+        backImg = ImageTk.PhotoImage(Image.open("./assets/icons/back.png").resize((24, 24), Image.LANCZOS))
+
+        label = ctk.CTkLabel(self, text="Save dataset", text_color="#FFFFFF", font=LARGEFONT)
+        label.grid(row=0, column=0, padx=8, pady=8, sticky="w")
+
+        frame1 = ctk.CTkFrame(self, fg_color="#101010")
+        frame1.grid(row=1, column=0, ipadx=0, ipady=0, columnspan=3, sticky="ew")
+
+        button2 = ctk.CTkButton(frame1, image=backImg, text="", command=lambda: self.exitTopLevel(), corner_radius=0, text_color="#101010", bg_color="#FFFFFF", fg_color="#FFFFFF", font=SMALLFONT, hover_color="#F0F0F0", height=48, width=56)
+        button2.grid(row=0, column=0, padx=(8, 4), pady=(8, 4), sticky="w")
+
+        button3 = ctk.CTkButton(frame1, text="Save file", command=lambda: self.SaveFile(), corner_radius=0, text_color="#101010", bg_color="#FFFFFF", fg_color="#FFFFFF", font=SMALLFONT, hover_color="#F0F0F0", height=48, width=56)
+        button3.grid(row=0, column=1, padx=(4, 4), pady=(8, 4), sticky="w")
+
+        frame = ctk.CTkFrame(self, fg_color="#101010")
+        frame.grid(row=2, column=0, ipadx=0, ipady=0, columnspan=3, sticky="ew")
+
+        button1 = ctk.CTkButton(frame, text="Choose directory", command=lambda: self.SelectSaveDirectory(), corner_radius=0, text_color="#101010", bg_color="#FFFFFF", fg_color="#FFFFFF", font=SMALLFONT, hover_color="#F0F0F0", height=48, width=56)
+        button1.grid(row=0, column=0, padx=(8, 4), pady=(4, 8), sticky="w")
+
+        label1 = ctk.CTkLabel(frame, text="File name:", text_color="#FFFFFF", font=SMALLFONT)
+        label1.grid(row=0, column=1, padx=10, pady=(4, 8), sticky = "w")
+
+        self.FileName_entry = ctk.CTkEntry(frame, width=100, height=24)
+        self.FileName_entry.grid(row=0, column=2, padx=8)
+
+    def exitTopLevel(self):
+        self.destroy()
+        self.update()        
+    
+    def SelectSaveDirectory(self):
+        self.SaveDirectory = ctk.filedialog.askdirectory()
+    
+    def SaveFile(self):
+        global DATA
+        if hasattr(self, 'SaveDirectory'):
+            if self.SaveDirectory == None or self.SaveDirectory == '':
+                tk.messagebox.showerror("Information", "Please select a directory")
+                return
+            elif self.FileName_entry.get() == None or self.FileName_entry.get() == '':
+                tk.messagebox.showerror("Information", "Please enter a file name")
+                return
+            
+            joblib.dump(DATA.file_data, self.SaveDirectory + "/" + self.FileName_entry.get() + ".sav")
+
+            self.exitTopLevel()
+        else:
+            tk.messagebox.showerror("Information", "Please select a directory")
+            return
+        
 # DRIVER CODE
 app = App()
 app.mainloop()
