@@ -53,9 +53,13 @@ def feature_selection_kBestFeatures(df: list | pd.DataFrame, k: int):
 
     return pd.concat([pd.DataFrame(skb.fit_transform(X, y)), pd.DataFrame(y)], axis=1)
 
-def feature_selection_varianceThreshold(df: list | pd.DataFrame, threshold: float):
-    X = df[:, :-1]
-    y = df[:, -1]
+def feature_selection_varianceThreshold(df, threshold):
+    X = df.iloc[:, :-1]
+    y = df.iloc[:, -1]
     vt = VarianceThreshold(threshold=threshold)
 
-    return pd.DataFrame(vt.fit_transform(X, y))
+    selected_data = vt.fit_transform(X)
+
+    selected_data = pd.concat([pd.DataFrame(selected_data), pd.DataFrame(y)], axis=1)
+
+    return selected_data

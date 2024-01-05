@@ -11,6 +11,7 @@ from webbrowser import get
 import customtkinter as ctk
 from PIL import ImageTk, Image
 import joblib
+from matplotlib import pyplot as plt
 from matplotlib.font_manager import get_font
 from numpy import full, pad
 import pandas as pd
@@ -80,7 +81,7 @@ def read_data():
     global DATA
     DATA.file_data_read()
     print(DATA)
-        
+
 # UNUSED
 def kbestFeat_Selec_event():
     dialog = ctk.CTkInputDialog(text="Type in a number:", title="Test")
@@ -433,14 +434,55 @@ class VarianceThresholdPage(ctk.CTkFrame):
         ctk.CTkFrame.__init__(self, parent)
         backImg = ImageTk.PhotoImage(Image.open("./assets/icons/back.png").resize((24, 24), Image.LANCZOS))
 
+        self.columnconfigure(0, weight=1)
+
         label = ctk.CTkLabel(self, text="Variance threshold", text_color="#FFFFFF", font=LARGEFONT)
         label.grid(row=0, column=0, padx=0, pady=8, sticky="w")
         
         frame1 = ctk.CTkFrame(self, fg_color="#101010")
         frame1.grid(row=1, column=0, ipadx=0, ipady=0, columnspan=3, sticky="ew")
 
-        button1 = ctk.CTkButton(frame1, image=backImg, text="", command=lambda: controller.show_frame(DataProcessingPage), corner_radius=0, text_color="#101010", bg_color="#FFFFFF", fg_color="#FFFFFF", font=SMALLFONT, hover_color="#F0F0F0", height=48, width=56)
-        button1.grid(row=0, column=0, padx=(0, 4), pady=8, sticky="w")
+        frame1.columnconfigure(1, weight=1)
+
+        threshold_label = ctk.CTkLabel(frame1, text="Choose the variance threshold you want:", text_color="#FFFFFF", font=SMALLFONT)
+        threshold_label.grid(row=0, column=0, padx=(0, 4), pady=8)
+
+        threshold_entry = ctk.CTkEntry(frame1, width=100, corner_radius=0)
+        threshold_entry.grid(row=0, column=1, padx=(4, 0), pady=8, sticky="ew")
+
+        ApplyButton = ctk.CTkButton(self, text="Select features", command=lambda: self.apply_threshold(threshold_entry.get(), controller), corner_radius=0, text_color="#101010", bg_color="#FFFFFF", fg_color="#FFFFFF", font=SMALLFONT, hover_color="#F0F0F0", height=48)
+        ApplyButton.grid(row=2, column=0, padx=0, pady=(8, 4), sticky="ew")
+
+        CancelButton = ctk.CTkButton(self, image=backImg, text="", command=lambda: controller.show_frame(BlankPage), corner_radius=0, text_color="#101010", bg_color="#FFFFFF", fg_color="#FFFFFF", font=SMALLFONT, hover_color="#F0F0F0", height=48, width=56)
+        CancelButton.grid(row=3, column=0, padx=0, pady=4, sticky="ew")
+
+    def apply_threshold(self, k, controller):
+
+        global DATA
+
+        if k == "" or k is None:
+            tk.messagebox.showerror("Information", "Please enter a value for the threshold")
+            return
+        
+        try:
+            k = float(k)
+        except ValueError:
+            tk.messagebox.showerror("Information", "Please enter a valid value for the threshold")
+            return
+
+        # print threshold
+        print(f"Threshold value: {k}")
+
+        DATA.file_data = feature_selection_varianceThreshold(DATA.file_data, k)
+        print(f"New DataFrame shape: {DATA.file_data.shape}")
+
+        global app
+        app.frames[DataProcessingPage].load_data()
+
+        print(f"Variance thresholding applied successfully. "
+                                       f"Updated dataset shape: {DATA.file_data.shape}")
+        
+        controller.show_frame(BlankPage)
 
 ###########################################################################################################################################
 ###########################################################################################################################################
@@ -457,11 +499,13 @@ class KbestfeatPage(ctk.CTkFrame):
         frame = ctk.CTkFrame(self, fg_color="#101010")
         frame.grid(row=1, column=0, ipadx=0, ipady=0, sticky="ew")
         
+        frame.columnconfigure(1, weight=1)
+
         label = ctk.CTkLabel(frame, text="Number of features you want to keep\n(Less than the number of actual\nfeatures):", text_color="#FFFFFF", font=SMALLFONT)
-        label.grid(row=0, column=0, padx=(0, 8), pady=8, sticky="w")
+        label.grid(row=0, column=0, padx=(0, 4), pady=8, sticky="w")
 
         K_entry = ctk.CTkEntry(frame, width=100, corner_radius=0)
-        K_entry.grid(row=0, column=1, padx=(8, 0), pady=8)
+        K_entry.grid(row=0, column=1, padx=(4, 0), pady=8, sticky="ew")
         
         button2 = ctk.CTkButton(self, text="Select features", command=lambda: self.kbestFeat_Selec_event(K_entry.get(), controller), corner_radius=0, text_color="#101010", bg_color="#FFFFFF", fg_color="#FFFFFF", font=SMALLFONT, hover_color="#F0F0F0", height=48)
         button2.grid(row=2, column=0, padx=0, pady=(8, 4), sticky="ew")
@@ -800,7 +844,7 @@ class VisualizationPage(ctk.CTkFrame):
 
         self.optionmenu_var = ctk.StringVar(value="Plot type")
         self.combobox = ctk.CTkOptionMenu(master=frame1,
-                                       values=["Scatter plot", "Histogram", "Bar chart", "Line chart"],
+                                       values=["Scatter plot", "Histogram", "Bar chart", "Line chart", "Box plot"],
                                        command=lambda x: self.plotType_optionmenu_callback(x),
                                        variable=self.optionmenu_var,
                                        width=150, corner_radius=0, text_color="#101010", bg_color="#FFFFFF", fg_color="#FFFFFF", font=SMALLFONT, height=32, button_color="#FFFFFF", button_hover_color="#FFFFFF", dropdown_font=SMALLFONT, dropdown_hover_color="#F0F0F0", dropdown_fg_color="#FFFFFF")
@@ -871,6 +915,10 @@ class VisualizationPage(ctk.CTkFrame):
             self.K_entry.configure(state="disabled")
             self.combobox1.configure(state="normal")
             self.combobox2.configure(state="normal")
+        elif self.visPlotType == "Box plot":
+            self.K_entry.configure(state="disabled")
+            self.combobox1.configure(state="normal")
+            self.combobox2.configure(state="disabled")
 
     def columnX_optionmenu_callback(self, choice):
         """ if 'DATA' not in globals() or DATA.file_data is None:
@@ -927,6 +975,13 @@ class VisualizationPage(ctk.CTkFrame):
             self.axes.set_xlabel(self.visColumnX)
             self.axes.set_ylabel(self.visColumnY)
             self.axes.set_title(f"{self.visColumnX} vs {self.visColumnY}")
+        elif self.visPlotType == "Box plot":
+            if self.visColumnX == None or self.visColumnX == '':
+                tk.messagebox.showerror("Information", "Please select a column for X")
+                return
+            self.axes.boxplot(DATA.file_data[self.visColumnX])
+            self.axes.set_xlabel(self.visColumnX)
+            self.axes.set_title(f"{self.visColumnX} box plot")
 
         self.figure_canvas.draw()
         self.toolbar.update()
@@ -1147,14 +1202,14 @@ class MLPage(ctk.CTkFrame):
         self.label = ctk.CTkLabel(self, text="Machine learning", text_color="#FFFFFF", font=LARGEFONT)
         self.label.grid(row=0, column=0, padx=0, pady=8, sticky = "w")
 
-        frame1 = ctk.CTkFrame(self, fg_color="#101010")
-        frame1.grid(row=1, column=0, ipadx=0, ipady=0, columnspan=3, sticky="ew")
+        self.frame1 = ctk.CTkFrame(self, fg_color="#101010")
+        self.frame1.grid(row=1, column=0, ipadx=0, ipady=0, columnspan=3, sticky="ew")
 
-        button1 = ctk.CTkButton(frame1, image=backImg, text="", command=lambda: controller.show_frame(DataSplitPage), corner_radius=0, text_color="#101010", bg_color="#FFFFFF", fg_color="#FFFFFF", font=SMALLFONT, hover_color="#F0F0F0", height=48, width=56)
+        button1 = ctk.CTkButton(self.frame1, image=backImg, text="", command=lambda: controller.show_frame(DataSplitPage), corner_radius=0, text_color="#101010", bg_color="#FFFFFF", fg_color="#FFFFFF", font=SMALLFONT, hover_color="#F0F0F0", height=48, width=56)
         button1.grid(row=0, column=0, padx=(0, 4), pady=8, sticky = "w")
 
         self.optionmenu_var2 = ctk.StringVar(value="Model type")
-        self.combobox2 = ctk.CTkOptionMenu(master=frame1,
+        self.combobox2 = ctk.CTkOptionMenu(master=self.frame1,
                                        values=["Linear Regression", "Logistic Regression", "Decision Tree", "Naive Bayes", "Random Forest", "K-Nearest Neighbors (KNN)", "K-means", "Support Vector Machine (SVM)"],
                                        command=lambda x: self.optionmenu_callback(x),
                                        width=250,
@@ -1162,13 +1217,13 @@ class MLPage(ctk.CTkFrame):
                                         corner_radius=0, text_color="#101010", bg_color="#FFFFFF", fg_color="#FFFFFF", font=SMALLFONT, height=48, button_color="#FFFFFF", button_hover_color="#FFFFFF", dropdown_font=SMALLFONT, dropdown_hover_color="#F0F0F0", dropdown_fg_color="#FFFFFF")
         self.combobox2.grid(row=0, column=1, padx=4, pady=8, sticky="w")
 
-        button2 = ctk.CTkButton(frame1, text="Train model", command=lambda: self.train_mlModel(), corner_radius=0, text_color="#101010", bg_color="#FFFFFF", fg_color="#FFFFFF", font=SMALLFONT, hover_color="#F0F0F0", height=48)
+        button2 = ctk.CTkButton(self.frame1, text="Train model", command=lambda: self.train_mlModel(), corner_radius=0, text_color="#101010", bg_color="#FFFFFF", fg_color="#FFFFFF", font=SMALLFONT, hover_color="#F0F0F0", height=48)
         button2.grid(row=0, column=2, padx=4, pady=8, sticky = "w")
         
-        button3 = ctk.CTkButton(frame1, text="Test model", command=lambda: self.test_mlModel(), corner_radius=0, text_color="#101010", bg_color="#FFFFFF", fg_color="#FFFFFF", font=SMALLFONT, hover_color="#F0F0F0", height=48)
+        button3 = ctk.CTkButton(self.frame1, text="Test model", command=lambda: self.test_mlModel(), corner_radius=0, text_color="#101010", bg_color="#FFFFFF", fg_color="#FFFFFF", font=SMALLFONT, hover_color="#F0F0F0", height=48)
         button3.grid(row=0, column=3, padx=4, pady=8, sticky = "w")
 
-        button4 = ctk.CTkButton(frame1, text="Save model", command=lambda: self.openSaveModelWindow(), corner_radius=0, text_color="#101010", bg_color="#FFFFFF", fg_color="#FFFFFF", font=SMALLFONT, hover_color="#F0F0F0", height=48)
+        button4 = ctk.CTkButton(self.frame1, text="Save model", command=lambda: self.openSaveModelWindow(), corner_radius=0, text_color="#101010", bg_color="#FFFFFF", fg_color="#FFFFFF", font=SMALLFONT, hover_color="#F0F0F0", height=48)
         button4.grid(row=0, column=4, padx=4, pady=8, sticky = "w")
 
         self.frame2 = ctk.CTkFrame(self, fg_color="#101010")
@@ -1610,45 +1665,45 @@ class MLPage(ctk.CTkFrame):
             prediction = DATA.mlModel.predict(DATA.X)
         else:
             prediction = DATA.mlModel.predict(DATA.X_test) """
-        prediction = DATA.mlModel.predict(DATA.X_test)
+        self.prediction = DATA.mlModel.predict(DATA.X_test)
         print(DATA.mlModel)
-        print(prediction)
+        print(self.prediction)
 
-        if DATA.mlModelType in ['Linear Regression']:
-            self.label1 = ctk.CTkLabel(self.frame3, text=f"Max error: {metrics.max_error(DATA.y_test, prediction)}", text_color="#FFFFFF", font=LARGEFONT)
+        if DATA.mlModelType == 'Linear Regression':
+            self.label1 = ctk.CTkLabel(self.frame3, text=f"Max error: {metrics.max_error(DATA.y_test, self.prediction)}", text_color="#FFFFFF", font=LARGEFONT)
             self.label1.grid(row=2, column=0, padx=0, pady=8, sticky = "w")
 
-            self.label2 = ctk.CTkLabel(self.frame3, text=f"Mean absolute error: {metrics.mean_absolute_error(DATA.y_test, prediction)}", text_color="#FFFFFF", font=LARGEFONT)
+            self.label2 = ctk.CTkLabel(self.frame3, text=f"Mean absolute error: {metrics.mean_absolute_error(DATA.y_test, self.prediction)}", text_color="#FFFFFF", font=LARGEFONT)
             self.label2.grid(row=3, column=0, padx=0, pady=8, sticky = "w")
 
-            self.label3 = ctk.CTkLabel(self.frame3, text=f"Mean squared error: {metrics.mean_squared_error(DATA.y_test, prediction)}", text_color="#FFFFFF", font=LARGEFONT)
+            self.label3 = ctk.CTkLabel(self.frame3, text=f"Mean squared error: {metrics.mean_squared_error(DATA.y_test, self.prediction)}", text_color="#FFFFFF", font=LARGEFONT)
             self.label3.grid(row=4, column=0, padx=0, pady=8, sticky = "w")
 
-            self.label4 = ctk.CTkLabel(self.frame3, text=f"R2 score: {metrics.r2_score(DATA.y_test, prediction)}", text_color="#FFFFFF", font=LARGEFONT)
+            self.label4 = ctk.CTkLabel(self.frame3, text=f"R2 score: {metrics.r2_score(DATA.y_test, self.prediction)}", text_color="#FFFFFF", font=LARGEFONT)
             self.label4.grid(row=5, column=0, padx=0, pady=8, sticky = "w")
 
         else:
-            cm = metrics.confusion_matrix(DATA.y_test, prediction)
-            BER = 1 - (1/2 * ((cm[0][0] / (cm[0][0] + cm[1][0])) + (cm[1][1] / (cm[1][1] + cm[0][1]))))
+            self.cm = metrics.confusion_matrix(DATA.y_test, self.prediction)
+            BER = 1 - (1/2 * ((self.cm[0][0] / (self.cm[0][0] + self.cm[1][0])) + (self.cm[1][1] / (self.cm[1][1] + self.cm[0][1]))))
     
             self.label1 = ctk.CTkLabel(self.frame3, text=f"Balanced Error Rate: {BER}", text_color="#FFFFFF", font=LARGEFONT)
             self.label1.grid(row=3, column=0, padx=0, pady=8, sticky = "w")
 
-            self.label2 = ctk.CTkLabel(self.frame3, text=f"Accuracy: {metrics.accuracy_score(DATA.y_test, prediction)}", text_color="#FFFFFF", font=LARGEFONT)
+            self.label2 = ctk.CTkLabel(self.frame3, text=f"Accuracy: {metrics.accuracy_score(DATA.y_test, self.prediction)}", text_color="#FFFFFF", font=LARGEFONT)
             self.label2.grid(row=3, column=0, padx=0, pady=8, sticky = "w")
 
-            self.label3 = ctk.CTkLabel(self.frame3, text=f"Precision: {metrics.precision_score(DATA.y_test, prediction)}", text_color="#FFFFFF", font=LARGEFONT)
+            self.label3 = ctk.CTkLabel(self.frame3, text=f"Precision: {metrics.precision_score(DATA.y_test, self.prediction)}", text_color="#FFFFFF", font=LARGEFONT)
             self.label3.grid(row=4, column=0, padx=0, pady=8, sticky = "w")
 
-            self.label4 = ctk.CTkLabel(self.frame3, text=f"Recall: {metrics.recall_score(DATA.y_test, prediction)}", text_color="#FFFFFF", font=LARGEFONT)
+            self.label4 = ctk.CTkLabel(self.frame3, text=f"Recall: {metrics.recall_score(DATA.y_test, self.prediction)}", text_color="#FFFFFF", font=LARGEFONT)
             self.label4.grid(row=5, column=0, padx=0, pady=8, sticky = "w")
 
-            self.label5 = ctk.CTkLabel(self.frame3, text=f"F1 score: {metrics.f1_score(DATA.y_test, prediction)}", text_color="#FFFFFF", font=LARGEFONT)
+            self.label5 = ctk.CTkLabel(self.frame3, text=f"F1 score: {metrics.f1_score(DATA.y_test, self.prediction)}", text_color="#FFFFFF", font=LARGEFONT)
             self.label5.grid(row=6, column=0, padx=0, pady=8, sticky = "w")
 
-            self.label6 = ctk.CTkLabel(self.frame3, text=f"AUC score: {metrics.roc_auc_score(DATA.y_test, prediction)}", text_color="#FFFFFF", font=LARGEFONT)
+            self.label6 = ctk.CTkLabel(self.frame3, text=f"AUC score: {metrics.roc_auc_score(DATA.y_test, self.prediction)}", text_color="#FFFFFF", font=LARGEFONT)
             self.label6.grid(row=7, column=0, padx=0, pady=8, sticky = "w")
-    
+
     """ def openSaveModelWindow(self):
         try:
             DATA.mlModel.predict(DATA.X_test)
