@@ -47,25 +47,10 @@ LARGEFONT = ("montserrat", 24)
 MEDIUMFONT = ("montserrat", 16)
 SMALLFONT = ("montserrat", 12)
 
-MLModels = {'Linear Regression': LinearRegression(), 'Decision Tree': DecisionTreeClassifier(), 'Naive Bayes': GaussianNB(), 'Support Vector Machine (SVM)': svm.SVC(), 'Kmeans': KMeans(), 'K nearest neighbor (KNN)': KNeighborsClassifier()}
+MLModels = {'Linear Regression': LinearRegression(), 'Decision Tree': DecisionTreeClassifier(), 'Naive Bayes': GaussianNB(), 'Support Vector Machine (SVM)': svm.SVC(), 'K-means': KMeans(), 'K-Nearest Neighbors (KNN)': KNeighborsClassifier(), 'Random Forest': RandomForestClassifier(), 'Logistic Regression': LogisticRegression()}
 DATA = fh()
 
 # WRAPPER FUNCTIONS
-def center(win, width, height):
-    """
-    centers a tkinter window
-    :param win: the main window or Toplevel window to center
-    """
-    win.update_idletasks()
-    frm_width = win.winfo_rootx() - win.winfo_x()
-    win_width = width + 2 * frm_width
-    titlebar_height = win.winfo_rooty() - win.winfo_y()
-    win_height = height + titlebar_height + frm_width
-    x = win.winfo_screenwidth() // 2 - win_width // 2
-    y = win.winfo_screenheight() // 2 - win_height // 2
-    win.geometry('{}x{}+{}+{}'.format(width, height, x, y))
-    win.deiconify()
-
 def UploadAction():
     file_path = ctk.filedialog.askopenfilename(filetypes=[("Excel files", "*.xlsx"), ("CSV files", "*.csv"), ("JSON files", "*.json"), ("Text files", "*.txt")])
     print('Selected:', file_path)
@@ -116,10 +101,10 @@ class App(ctk.CTk):
     def __init__(self, *args, **kwargs):
         ctk.CTk.__init__(self, *args, **kwargs)
 
-        CloseImg = ImageTk.PhotoImage(Image.open("./assets/icons/close.png").resize((12, 12), Image.LANCZOS))
+        """ CloseImg = ImageTk.PhotoImage(Image.open("./assets/icons/close.png").resize((12, 12), Image.LANCZOS))
         MinimizeImg = ImageTk.PhotoImage(Image.open("./assets/icons/minimize.png").resize((12, 12), Image.LANCZOS))
         self.FullscreenImg = ImageTk.PhotoImage(Image.open("./assets/icons/fullscreen.png").resize((12, 12), Image.LANCZOS))
-        self.MinscreenImg = ImageTk.PhotoImage(Image.open("./assets/icons/minscreen.png").resize((12, 12), Image.LANCZOS))
+        self.MinscreenImg = ImageTk.PhotoImage(Image.open("./assets/icons/minscreen.png").resize((12, 12), Image.LANCZOS)) """
 
         self.geometry("1380x720")
         self.iconbitmap('./assets/icons/machine-learning.ico')
@@ -195,8 +180,8 @@ class StartPage(ctk.CTkFrame):
         frame.grid_columnconfigure((2, 0), weight=1) """
 
 
-        RegressionButton = ctk.CTkButton(frame,
-                                         text="Linear Regression",
+        UploadButton = ctk.CTkButton(frame,
+                                         text="Upload your dataset",
                                          height=70,
                                          width=400,
                                          corner_radius=0,
@@ -204,68 +189,8 @@ class StartPage(ctk.CTkFrame):
                                          text_color="#000000",
                                          font=LARGEFONT,
                                          hover_color="#F0F0F0")
-        RegressionButton.configure(command=lambda b=RegressionButton: self.button_click_controller(b, controller))
-        RegressionButton.grid(row=0, column=0, padx=20, pady=20, sticky="se")
-
-        DecisionTreeButton = ctk.CTkButton(frame,
-                                           text="Decision Tree",
-                                           height=70,
-                                           width=400,
-                                           corner_radius=0,
-                                           fg_color="#FFFFFF",
-                                           text_color="#000000",
-                                           font=LARGEFONT,
-                                           hover_color="#F0F0F0")
-        DecisionTreeButton.configure(command=lambda b=DecisionTreeButton: self.button_click_controller(b, controller))
-        DecisionTreeButton.grid(row=0, column=1, padx=20, pady=20, sticky="s")
-
-        NaiveBayesButton = ctk.CTkButton(frame,
-                                         text="Naive Bayes",
-                                         height=70,
-                                         width=400,
-                                         corner_radius=0,
-                                         fg_color="#FFFFFF",
-                                         text_color="#000000",
-                                         font=LARGEFONT,
-                                         hover_color="#F0F0F0")
-        NaiveBayesButton.configure(command=lambda b=NaiveBayesButton: self.button_click_controller(b, controller))
-        NaiveBayesButton.grid(row=0, column=2, padx=20, pady=20, sticky="sw")
-
-        SVMButton = ctk.CTkButton(frame,
-                                  text="Support Vector Machine (SVM)",
-                                  height=70,
-                                  width=400,
-                                  corner_radius=0,
-                                  fg_color="#FFFFFF",
-                                  text_color="#000000",
-                                  font=LARGEFONT,
-                                  hover_color="#F0F0F0")
-        SVMButton.configure(command=lambda b=SVMButton: self.button_click_controller(b, controller))
-        SVMButton.grid(row=1, column=0, padx=20, pady=20, sticky="ne")
-
-        KmeansButton = ctk.CTkButton(frame,
-                                     text="Kmeans",
-                                     height=70,
-                                     width=400,
-                                     corner_radius=0,
-                                     fg_color="#FFFFFF",
-                                     text_color="#000000",
-                                     font=LARGEFONT,
-                                     hover_color="#F0F0F0")
-        KmeansButton.configure(command=lambda b=KmeansButton: self.button_click_controller(b, controller))
-        KmeansButton.grid(row=1, column=1, padx=20, pady=20, sticky="n")
-
-        KNNButton = ctk.CTkButton(frame,
-                                  text="K nearest neighbor (KNN)",
-                                  height=70,
-                                  width=400,
-                                  corner_radius=0,
-                                  fg_color="#FFFFFF",
-                                  text_color="#000000",
-                                  font=LARGEFONT,
-                                  hover_color="#F0F0F0")
-        KNNButton.configure(command=lambda b=KNNButton: self.button_click_controller(b, controller))
-        KNNButton.grid(row=1, column=2, padx=20, pady=20, sticky="nw")
+        UploadButton.configure(command=lambda: self.upload_data(controller))
+        UploadButton.grid(row=0, column=0, padx=20, pady=20, sticky="se")
 
     def button_click_controller(self, btn: ctk.CTkButton, controller):
         # self.mlModel = MLModels[btn.cget('text')]
@@ -276,6 +201,19 @@ class StartPage(ctk.CTkFrame):
         print(DATA.mlModelType)
         controller.show_frame(DataProcessingPage)
 
+    def upload_data(self, controller):
+        UploadAction()
+        app.frames[DataProcessingPage].load_data()
+
+        app.frames[DataProcessingPage].combobox1.configure(values=get_dataframe_columns())
+
+        app.frames[DataProcessingPage].combobox1.configure(state='normal')
+        app.frames[DataProcessingPage].combobox.configure(state='disabled')
+        app.frames[DataProcessingPage].combobox2.configure(state='disabled')
+        app.frames[DataProcessingPage].button6.configure(state='disabled')
+        app.frames[DataProcessingPage].button5.configure(state='disabled')
+
+        controller.show_frame(DataProcessingPage)
 
 class DataProcessingPage(ctk.CTkFrame):
     def __init__(self, parent, controller):
@@ -293,11 +231,8 @@ class DataProcessingPage(ctk.CTkFrame):
         frame1 = ctk.CTkFrame(self, fg_color="#101010")
         frame1.grid(row=1, column=0, sticky="ew")
 
-        self.button2 = ctk.CTkButton(frame1, image=backImg, text="", command=lambda: controller.show_frame(StartPage), corner_radius=0, text_color="#101010", bg_color="#FFFFFF", fg_color="#FFFFFF", font=SMALLFONT, hover_color="#F0F0F0", height=48, width=56)
-        self.button2.grid(row=0, column=0, padx=(0, 4), pady=8, sticky="w")
-
         self.button4 = ctk.CTkButton(frame1, text="Upload your data", command=lambda: self.upload_data(), corner_radius=0, text_color="#101010", bg_color="#FFFFFF", fg_color="#FFFFFF", font=SMALLFONT, hover_color="#F0F0F0", height=48)
-        self.button4.grid(row=0, column=1, padx=4, pady=8, sticky="w")
+        self.button4.grid(row=0, column=0, padx=(0, 4), pady=8, sticky="w")
 
         self.optionmenu_var2 = ctk.StringVar(value="Target column")
         self.combobox1 = ctk.CTkOptionMenu(master=frame1,
@@ -305,16 +240,16 @@ class DataProcessingPage(ctk.CTkFrame):
                                        variable=self.optionmenu_var2, 
                                        state='disabled',
                                        command=lambda x: self.split_X_y(x), corner_radius=0, text_color="#101010", bg_color="#FFFFFF", fg_color="#FFFFFF", font=SMALLFONT, height=48, width=146, button_color="#FFFFFF", button_hover_color="#FFFFFF", dropdown_font=SMALLFONT, dropdown_hover_color="#F0F0F0", dropdown_fg_color="#FFFFFF")
-        self.combobox1.grid(row=0, column=2, padx=4, pady=8, sticky="w")
+        self.combobox1.grid(row=0, column=1, padx=4, pady=8, sticky="w")
 
         self.button6 = ctk.CTkButton(frame1, text="Visualize", command=lambda: self.VisPageSwitch(controller=controller), state='disabled', corner_radius=0, text_color="#101010", bg_color="#FFFFFF", fg_color="#FFFFFF", font=SMALLFONT, hover_color="#F0F0F0", height=48)
-        self.button6.grid(row=0, column=5, padx=4, pady=8, sticky="w")
+        self.button6.grid(row=0, column=2, padx=4, pady=8, sticky="w")
 
         self.button7 = ctk.CTkButton(frame1, text="Save dataset", command=lambda: self.show_frame(SaveDatasetPage), state='disabled', corner_radius=0, text_color="#101010", bg_color="#FFFFFF", fg_color="#FFFFFF", font=SMALLFONT, hover_color="#F0F0F0", height=48)
-        self.button7.grid(row=0, column=7, padx=4, pady=8, sticky="w")
+        self.button7.grid(row=0, column=3, padx=4, pady=8, sticky="w")
 
         self.button5 = ctk.CTkButton(frame1, image=continueImg, text="", command=lambda: self.SplitPageSwitch(controller), state='disabled', corner_radius=0, text_color="#101010", bg_color="#FFFFFF", fg_color="#FFFFFF", font=SMALLFONT, hover_color="#F0F0F0", height=48, width=56)
-        self.button5.grid(row=0, column=8, padx=4, pady=8, sticky="w")
+        self.button5.grid(row=0, column=4, padx=4, pady=8, sticky="w")
 
         frame2 = ctk.CTkFrame(self, fg_color="#101010")
         #frame2.configure(fg_color="#101010")
@@ -1206,6 +1141,9 @@ class MLPage(ctk.CTkFrame):
         backImg = ImageTk.PhotoImage(Image.open("./assets/icons/back.png").resize((24, 24), Image.LANCZOS))
         continueImg = ImageTk.PhotoImage(Image.open("./assets/icons/back.png").rotate(180).resize((24, 24), Image.LANCZOS))
 
+        self.columnconfigure(0, weight=1)
+        self.rowconfigure(3, weight=1)
+
         self.label = ctk.CTkLabel(self, text="Machine learning", text_color="#FFFFFF", font=LARGEFONT)
         self.label.grid(row=0, column=0, padx=0, pady=8, sticky = "w")
 
@@ -1215,17 +1153,443 @@ class MLPage(ctk.CTkFrame):
         button1 = ctk.CTkButton(frame1, image=backImg, text="", command=lambda: controller.show_frame(DataSplitPage), corner_radius=0, text_color="#101010", bg_color="#FFFFFF", fg_color="#FFFFFF", font=SMALLFONT, hover_color="#F0F0F0", height=48, width=56)
         button1.grid(row=0, column=0, padx=(0, 4), pady=8, sticky = "w")
 
+        self.optionmenu_var2 = ctk.StringVar(value="Model type")
+        self.combobox2 = ctk.CTkOptionMenu(master=frame1,
+                                       values=["Linear Regression", "Logistic Regression", "Decision Tree", "Naive Bayes", "Random Forest", "K-Nearest Neighbors (KNN)", "K-means", "Support Vector Machine (SVM)"],
+                                       command=lambda x: self.optionmenu_callback(x),
+                                       width=250,
+                                       variable=self.optionmenu_var2, 
+                                        corner_radius=0, text_color="#101010", bg_color="#FFFFFF", fg_color="#FFFFFF", font=SMALLFONT, height=48, button_color="#FFFFFF", button_hover_color="#FFFFFF", dropdown_font=SMALLFONT, dropdown_hover_color="#F0F0F0", dropdown_fg_color="#FFFFFF")
+        self.combobox2.grid(row=0, column=1, padx=4, pady=8, sticky="w")
+
         button2 = ctk.CTkButton(frame1, text="Train model", command=lambda: self.train_mlModel(), corner_radius=0, text_color="#101010", bg_color="#FFFFFF", fg_color="#FFFFFF", font=SMALLFONT, hover_color="#F0F0F0", height=48)
-        button2.grid(row=0, column=1, padx=4, pady=8, sticky = "w")
+        button2.grid(row=0, column=2, padx=4, pady=8, sticky = "w")
         
         button3 = ctk.CTkButton(frame1, text="Test model", command=lambda: self.test_mlModel(), corner_radius=0, text_color="#101010", bg_color="#FFFFFF", fg_color="#FFFFFF", font=SMALLFONT, hover_color="#F0F0F0", height=48)
-        button3.grid(row=0, column=2, padx=4, pady=8, sticky = "w")
+        button3.grid(row=0, column=3, padx=4, pady=8, sticky = "w")
 
         button4 = ctk.CTkButton(frame1, text="Save model", command=lambda: self.openSaveModelWindow(), corner_radius=0, text_color="#101010", bg_color="#FFFFFF", fg_color="#FFFFFF", font=SMALLFONT, hover_color="#F0F0F0", height=48)
-        button4.grid(row=0, column=3, padx=4, pady=8, sticky = "w")
+        button4.grid(row=0, column=4, padx=4, pady=8, sticky = "w")
+
+        self.frame2 = ctk.CTkFrame(self, fg_color="#101010")
+        self.frame2.grid(row=2, column=0,sticky="nsew")
+
+        self.frame3 = ctk.CTkFrame(self, fg_color="#101010")
+        self.frame3.grid(row=3, column=0,sticky="nsew")
+
+    def optionmenu_callback(self, choice: str):
+        global DATA
+
+        target_type = DATA.y.dtype.name
+
+        if (target_type != 'int64' and target_type != 'float64' and target_type != 'int32' and target_type != 'float32' and choice in ["Linear Regression", "Decision tree"]) or ((target_type == 'float64' or target_type == 'float32') and choice not in ["Linear Regression", "Decision tree"]):
+            tk.messagebox.showerror("Information", "Please choose a valid model for your chosen target column")
+            return
+        
+        DATA.mlModelType = choice
+        
+        for widget in self.frame2.winfo_children():
+            widget.destroy()
+
+        if choice == 'Decision Tree':
+            CriterionLabel = ctk.CTkLabel(self.frame2, text="Criterion:", text_color="#FFFFFF", font=SMALLFONT)
+            CriterionLabel.grid(row=0, column=0, padx=(0, 4), pady=4, sticky="w")
+
+            self.optionmenu_var2 = ctk.StringVar(value="gini")
+            self.dtCriterionBox = ctk.CTkOptionMenu(master=self.frame2,
+                                       values=["gini", "entropy", "log_loss"],
+                                       width=250,
+                                       command=lambda x: print(x),
+                                       variable=self.optionmenu_var2, 
+                                       corner_radius=0, text_color="#101010", bg_color="#FFFFFF", fg_color="#FFFFFF", font=SMALLFONT, height=48, button_color="#FFFFFF", button_hover_color="#FFFFFF", dropdown_font=SMALLFONT, dropdown_hover_color="#F0F0F0", dropdown_fg_color="#FFFFFF")
+            self.dtCriterionBox.grid(row=0, column=1, padx=4, pady=4, sticky="w")
+
+            MaxDepthLabel = ctk.CTkLabel(self.frame2, text="Max depth:", text_color="#FFFFFF", font=SMALLFONT)
+            MaxDepthLabel.grid(row=0, column=3, padx=(0, 4), pady=4, sticky="w")
+
+            self.dtMaxDepthEntry = ctk.CTkEntry(self.frame2, width=100, height=24)
+            self.dtMaxDepthEntry.grid(row=0, column=4, padx=4, pady=4, sticky="w")
+
+            MinSamplesSplitLabel = ctk.CTkLabel(self.frame2, text="Min samples split:", text_color="#FFFFFF", font=SMALLFONT)
+            MinSamplesSplitLabel.grid(row=0, column=5, padx=(0, 4), pady=4, sticky="w")
+
+            self.dtMinSamplesSplitEntry = ctk.CTkEntry(self.frame2, width=100, height=24)
+            self.dtMinSamplesSplitEntry.grid(row=0, column=6, padx=4, pady=4, sticky="w")
+            
+            RandomStateLabel = ctk.CTkLabel(self.frame2, text="Random state:", text_color="#FFFFFF", font=SMALLFONT)
+            RandomStateLabel.grid(row=0, column=7, padx=(0, 4), pady=4, sticky="w")
+
+            self.dtRandomStateEntry = ctk.CTkEntry(self.frame2, width=100, height=24)
+            self.dtRandomStateEntry.grid(row=0, column=8, padx=4, pady=4, sticky="w")
+
+        elif choice == 'Logistic Regression':
+            SolverLabel = ctk.CTkLabel(self.frame2, text="Solver:", text_color="#FFFFFF", font=SMALLFONT)
+            SolverLabel.grid(row=0, column=0, padx=(0, 4), pady=4, sticky="w")
+
+            self.SolverVar = ctk.StringVar(value="lbfgs")
+            self.lrSolverBox = ctk.CTkOptionMenu(master=self.frame2,
+                                        values=["lbfgs", "liblinear", "sag", "saga", 'newton-cg', 'newton-cholesky'],
+                                        width=250,
+                                        variable=self.SolverVar, 
+                                        corner_radius=0, text_color="#101010", bg_color="#FFFFFF", fg_color="#FFFFFF", font=SMALLFONT, height=48, button_color="#FFFFFF", button_hover_color="#FFFFFF", dropdown_font=SMALLFONT, dropdown_hover_color="#F0F0F0", dropdown_fg_color="#FFFFFF")
+            self.lrSolverBox.grid(row=0, column=1, padx=4, pady=4, sticky="w")            
+
+            PenaltyLabel = ctk.CTkLabel(self.frame2, text="Penalty:", text_color="#FFFFFF", font=SMALLFONT)
+            PenaltyLabel.grid(row=0, column=2, padx=(0, 4), pady=4, sticky="w")
+
+            self.PenaltyVar = ctk.StringVar(value="l2")
+            self.lrPenaltyBox = ctk.CTkOptionMenu(master=self.frame2,
+                                       values=["l1", "l2", "elasticnet", "none"],
+                                       width=250,
+                                       variable=self.PenaltyVar, 
+                                       corner_radius=0, text_color="#101010", bg_color="#FFFFFF", fg_color="#FFFFFF", font=SMALLFONT, height=48, button_color="#FFFFFF", button_hover_color="#FFFFFF", dropdown_font=SMALLFONT, dropdown_hover_color="#F0F0F0", dropdown_fg_color="#FFFFFF")
+            self.lrPenaltyBox.grid(row=0, column=3, padx=4, pady=4, sticky="w")
+
+            CLabel = ctk.CTkLabel(self.frame2, text="C:", text_color="#FFFFFF", font=SMALLFONT)
+            CLabel.grid(row=0, column=4, padx=(0, 4), pady=4, sticky="w")
+
+            self.lrCEntry = ctk.CTkEntry(self.frame2, width=100, height=24)
+            self.lrCEntry.grid(row=0, column=5, padx=4, pady=4, sticky="w")
+
+            MaxIterLabel = ctk.CTkLabel(self.frame2, text="Max iter:", text_color="#FFFFFF", font=SMALLFONT)
+            MaxIterLabel.grid(row=0, column=6, padx=(0, 4), pady=4, sticky="w")
+
+            self.lrMaxIterEntry = ctk.CTkEntry(self.frame2, width=100, height=24)
+            self.lrMaxIterEntry.grid(row=0, column=7, padx=4, pady=4, sticky="w")
+            
+            RandomStateLabel = ctk.CTkLabel(self.frame2, text="Random state:", text_color="#FFFFFF", font=SMALLFONT)
+            RandomStateLabel.grid(row=0, column=8, padx=(0, 4), pady=4, sticky="w")
+
+            self.lrRandomStateEntry = ctk.CTkEntry(self.frame2, width=100, height=24)
+            self.lrRandomStateEntry.grid(row=0, column=9, padx=4, pady=4, sticky="w")
+
+        elif choice == 'Random Forest':
+            CriterionLabel = ctk.CTkLabel(self.frame2, text="Criterion:", text_color="#FFFFFF", font=SMALLFONT)
+            CriterionLabel.grid(row=0, column=0, padx=(0, 4), pady=4, sticky="w")
+
+            self.CriterionVar = ctk.StringVar(value="gini")
+            self.rfCriterionBox = ctk.CTkOptionMenu(master=self.frame2,
+                                       values=["gini", "entropy"],
+                                       width=250,
+                                       variable=self.CriterionVar, 
+                                       corner_radius=0, text_color="#101010", bg_color="#FFFFFF", fg_color="#FFFFFF", font=SMALLFONT, height=48, button_color="#FFFFFF", button_hover_color="#FFFFFF", dropdown_font=SMALLFONT, dropdown_hover_color="#F0F0F0", dropdown_fg_color="#FFFFFF")
+            self.rfCriterionBox.grid(row=0, column=1, padx=4, pady=4, sticky="w")
+
+            MaxDepthLabel = ctk.CTkLabel(self.frame2, text="Max depth:", text_color="#FFFFFF", font=SMALLFONT)
+            MaxDepthLabel.grid(row=0, column=3, padx=(0, 4), pady=4, sticky="w")
+
+            self.rfMaxDepthEntry = ctk.CTkEntry(self.frame2, width=100, height=24)
+            self.rfMaxDepthEntry.grid(row=0, column=4, padx=4, pady=4, sticky="w")
+
+            MinSamplesSplitLabel = ctk.CTkLabel(self.frame2, text="Min samples split:", text_color="#FFFFFF", font=SMALLFONT)
+            MinSamplesSplitLabel.grid(row=0, column=5, padx=(0, 4), pady=4, sticky="w")
+
+            self.rfMinSamplesSplitEntry = ctk.CTkEntry(self.frame2, width=100, height=24)
+            self.rfMinSamplesSplitEntry.grid(row=0, column=6, padx=4, pady=4, sticky="w")
+            
+            RandomStateLabel = ctk.CTkLabel(self.frame2, text="Random state:", text_color="#FFFFFF", font=SMALLFONT)
+            RandomStateLabel.grid(row=0, column=7, padx=(0, 4), pady=4, sticky="w")
+
+            self.rfRandomStateEntry = ctk.CTkEntry(self.frame2, width=100, height=24)
+            self.rfRandomStateEntry.grid(row=0, column=8, padx=4, pady=4, sticky="w")
+
+        elif choice == 'K-Nearest Neighbors (KNN)':
+            NNeighborsLabel = ctk.CTkLabel(self.frame2, text="N neighbors:", text_color="#FFFFFF", font=SMALLFONT)
+            NNeighborsLabel.grid(row=0, column=0, padx=(0, 4), pady=4, sticky="w")
+
+            self.knnNNeighborsEntry = ctk.CTkEntry(self.frame2, width=100, height=24)
+            self.knnNNeighborsEntry.grid(row=0, column=1, padx=4, pady=4, sticky="w")
+
+            AlgorithmLabel = ctk.CTkLabel(self.frame2, text="Algorithm:", text_color="#FFFFFF", font=SMALLFONT)
+            AlgorithmLabel.grid(row=0, column=2, padx=(0, 4), pady=4, sticky="w")
+
+            self.AlgorithmVar = ctk.StringVar(value="auto")
+            self.knnAlgorithmBox = ctk.CTkOptionMenu(master=self.frame2,
+                                       values=["auto", "ball_tree", "kd_tree", "brute"],
+                                       width=250,
+                                       variable=self.AlgorithmVar, 
+                                       corner_radius=0, text_color="#101010", bg_color="#FFFFFF", fg_color="#FFFFFF", font=SMALLFONT, height=48, button_color="#FFFFFF", button_hover_color="#FFFFFF", dropdown_font=SMALLFONT, dropdown_hover_color="#F0F0F0", dropdown_fg_color="#FFFFFF")
+            self.knnAlgorithmBox.grid(row=0, column=3, padx=4, pady=4, sticky="w")
+
+            LeafSizeLabel = ctk.CTkLabel(self.frame2, text="Leaf size:", text_color="#FFFFFF", font=SMALLFONT)
+            LeafSizeLabel.grid(row=0, column=4, padx=(0, 4), pady=4, sticky="w")
+
+            self.knnLeafSizeEntry = ctk.CTkEntry(self.frame2, width=100, height=24)
+            self.knnLeafSizeEntry.grid(row=0, column=5, padx=4, pady=4, sticky="w")
+            
+            MetricLabel = ctk.CTkLabel(self.frame2, text="Metric:", text_color="#FFFFFF", font=SMALLFONT)
+            MetricLabel.grid(row=0, column=6, padx=(0, 4), pady=4, sticky="w")
+
+            self.optionmenu_var2 = ctk.StringVar(value="minkowski")
+            self.knnMetricBox = ctk.CTkOptionMenu(master=self.frame2,
+                                        values=["euclidean", "manhattan", "chebyshev", "minkowski", "wminkowski", "seuclidean", "mahalanobis"],
+                                        width=250,
+                                        variable=self.optionmenu_var2, 
+                                        corner_radius=0, text_color="#101010", bg_color="#FFFFFF", fg_color="#FFFFFF", font=SMALLFONT, height=48, button_color="#FFFFFF", button_hover_color="#FFFFFF", dropdown_font=SMALLFONT, dropdown_hover_color="#F0F0F0", dropdown_fg_color="#FFFFFF")
+            self.knnMetricBox.grid(row=0, column=7, padx=4, pady=4, sticky="w")
+
+        elif choice == 'K-means':
+            NClustersLabel = ctk.CTkLabel(self.frame2, text="N clusters:", text_color="#FFFFFF", font=SMALLFONT)
+            NClustersLabel.grid(row=0, column=0, padx=(0, 4), pady=4, sticky="w")
+
+            self.kmNClustersEntry = ctk.CTkEntry(self.frame2, width=100, height=24)
+            self.kmNClustersEntry.grid(row=0, column=1, padx=4, pady=4, sticky="w")
+
+            MaxIterLabel = ctk.CTkLabel(self.frame2, text="Max iter:", text_color="#FFFFFF", font=SMALLFONT)
+            MaxIterLabel.grid(row=0, column=3, padx=(0, 4), pady=4, sticky="w")
+
+            self.kmMaxIterEntry = ctk.CTkEntry(self.frame2, width=100, height=24)
+            self.kmMaxIterEntry.grid(row=0, column=4, padx=4, pady=4, sticky="w")
+
+            AlgorithmLabel = ctk.CTkLabel(self.frame2, text="Algorithm:", text_color="#FFFFFF", font=SMALLFONT)
+            AlgorithmLabel.grid(row=0, column=5, padx=(0, 4), pady=4, sticky="w")
+
+            self.AlgorithmVar = ctk.StringVar(value="auto")
+            self.kmAlgorithmBox = ctk.CTkOptionMenu(master=self.frame2,
+                                       values=["auto", "full", "elkan"],
+                                       width=250,
+                                       variable=self.AlgorithmVar, 
+                                       corner_radius=0, text_color="#101010", bg_color="#FFFFFF", fg_color="#FFFFFF", font=SMALLFONT, height=48, button_color="#FFFFFF", button_hover_color="#FFFFFF", dropdown_font=SMALLFONT, dropdown_hover_color="#F0F0F0", dropdown_fg_color="#FFFFFF")
+            self.kmAlgorithmBox.grid(row=0, column=6, padx=4, pady=4, sticky="w")
+            
+            RandomStateLabel = ctk.CTkLabel(self.frame2, text="Random state:", text_color="#FFFFFF", font=SMALLFONT)
+            RandomStateLabel.grid(row=0, column=7, padx=(0, 4), pady=4, sticky="w")
+
+            self.kmRandomStateEntry = ctk.CTkEntry(self.frame2, width=100, height=24)
+            self.kmRandomStateEntry.grid(row=0, column=8, padx=4, pady=4, sticky="w")
+
+        elif choice == 'Support Vector Machine (SVM)':
+            CLabel = ctk.CTkLabel(self.frame2, text="C:", text_color="#FFFFFF", font=SMALLFONT)
+            CLabel.grid(row=0, column=0, padx=(0, 4), pady=4, sticky="w")
+
+            self.svmCEntry = ctk.CTkEntry(self.frame2, width=100, height=24)
+            self.svmCEntry.grid(row=0, column=1, padx=4, pady=4, sticky="w")
+
+            KernelLabel = ctk.CTkLabel(self.frame2, text="Kernel:", text_color="#FFFFFF", font=SMALLFONT)
+            KernelLabel.grid(row=0, column=3, padx=(0, 4), pady=4, sticky="w")
+
+            self.KernelVar = ctk.StringVar(value="rbf")
+            self.svmKernelBox = ctk.CTkOptionMenu(master=self.frame2,
+                                       values=["linear", "poly", "rbf", "sigmoid", "precomputed"],
+                                       width=250,
+                                       variable=self.KernelVar, 
+                                       corner_radius=0, text_color="#101010", bg_color="#FFFFFF", fg_color="#FFFFFF", font=SMALLFONT, height=48, button_color="#FFFFFF", button_hover_color="#FFFFFF", dropdown_font=SMALLFONT, dropdown_hover_color="#F0F0F0", dropdown_fg_color="#FFFFFF")
+            self.svmKernelBox.grid(row=0, column=4, padx=4, pady=4, sticky="w")
+
+            GammaLabel = ctk.CTkLabel(self.frame2, text="Gamma:", text_color="#FFFFFF", font=SMALLFONT)
+            GammaLabel.grid(row=0, column=5, padx=(0, 4), pady=4, sticky="w")
+
+            self.svmGammaEntry = ctk.CTkEntry(self.frame2, width=100, height=24)
+            self.svmGammaEntry.grid(row=0, column=6, padx=4, pady=4, sticky="w")
+            
+            RandomStateLabel = ctk.CTkLabel(self.frame2, text="Random state:", text_color="#FFFFFF", font=SMALLFONT)
+            RandomStateLabel.grid(row=0, column=7, padx=(0, 4), pady=4, sticky="w")
+
+            self.svmRandomStateEntry = ctk.CTkEntry(self.frame2, width=100, height=24)
+            self.svmRandomStateEntry.grid(row=0, column=8, padx=4, pady=4, sticky="w")
 
     def train_mlModel(self):
         global DATA
+
+        if DATA.mlModelType == 'Linear Regression':
+            DATA.mlModel = LinearRegression()
+
+        elif DATA.mlModelType == 'Decision Tree':
+            dtCriterion = self.dtCriterionBox.get()
+            dtMaxDepth = self.dtMaxDepthEntry.get()
+            dtMinSamplesSplit = self.dtMinSamplesSplitEntry.get()
+            dtRandomState = self.dtRandomStateEntry.get()
+
+            if dtCriterion == '' or dtCriterion == None:
+                dtCriterion = 'gini'
+            if dtMaxDepth == '':
+                dtMaxDepth = None
+            else:
+                try:
+                    dtMaxDepth = int(dtMaxDepth)
+                except:
+                    dtMaxDepth = None 
+            if dtMinSamplesSplit == '':
+                dtMinSamplesSplit = 2
+            else:
+                try:
+                    dtMinSamplesSplit = float(dtMinSamplesSplit)
+                except:
+                    dtMinSamplesSplit = 2
+            if dtRandomState == '':
+                dtRandomState = 42
+            else:
+                try:
+                    dtRandomState = int(dtRandomState)
+                except:
+                    dtRandomState = 42
+
+            DATA.mlModel = DecisionTreeClassifier(criterion=dtCriterion, max_depth=dtMaxDepth, min_samples_split=dtMinSamplesSplit, random_state=dtRandomState)
+
+        elif DATA.mlModelType == 'Logistic Regression':
+            lrSolver = self.lrSolverBox.get()
+            lrPenalty = self.lrPenaltyBox.get()
+            lrC = self.lrCEntry.get()
+            lrMaxIter = self.lrMaxIterEntry.get()
+            lrRandomState = self.lrRandomStateEntry.get()
+            
+            if lrSolver == '' or lrSolver == None:
+                lrSolver = 'lbfgs'
+            if lrPenalty == '' or lrPenalty == None:
+                lrPenalty = 'l2'
+            if lrC == '':
+                lrC = 1.0
+            else:
+                try:
+                    lrC = float(lrC)
+                except:
+                    lrC = 1.0
+            if lrMaxIter == '':
+                lrMaxIter = 100
+            else:
+                try:
+                    lrMaxIter = int(lrMaxIter)
+                except:
+                    lrMaxIter = 100
+            if lrRandomState == '':
+                lrRandomState = 42
+            else:
+                try:
+                    lrRandomState = int(lrRandomState)
+                except:
+                    lrRandomState = 42
+            
+            if (lrSolver in ['lbfgs', 'sag', 'newton-cg', 'newton-cholesky'] and lrPenalty not in ['l2', None]) or (lrSolver == 'liblinear' and lrPenalty not in ['l1', 'l2']):
+                tk.messagebox.showerror("Information", "Please choose a valid penalty for the chosen solver")
+                return
+            
+
+            DATA.mlModel = LogisticRegression(penalty=lrPenalty, C=lrC, max_iter=lrMaxIter, random_state=lrRandomState)
+
+        elif DATA.mlModelType == 'Random Forest':   
+            rfCriterion = self.rfCriterionBox.get()
+            rfMaxDepth = self.rfMaxDepthEntry.get()
+            rfMinSamplesSplit = self.rfMinSamplesSplitEntry.get()
+            rfRandomState = self.rfRandomStateEntry.get()
+
+            if rfCriterion == '' or rfCriterion == None:
+                rfCriterion = 'gini'
+            if rfMaxDepth == '':
+                rfMaxDepth = None
+            else:
+                try:
+                    rfMaxDepth = int(rfMaxDepth)
+                except:
+                    rfMaxDepth = None 
+            if rfMinSamplesSplit == '':
+                rfMinSamplesSplit = 2
+            else:
+                try:
+                    rfMinSamplesSplit = float(rfMinSamplesSplit)
+                except:
+                    rfMinSamplesSplit = 2
+            if rfRandomState == '':
+                rfRandomState = 42
+            else:
+                try:
+                    rfRandomState = int(rfRandomState)
+                except:
+                    rfRandomState = 42
+
+            DATA.mlModel = RandomForestClassifier(criterion=rfCriterion, max_depth=rfMaxDepth, min_samples_split=rfMinSamplesSplit, random_state=rfRandomState)
+
+        elif DATA.mlModelType == 'K-Nearest Neighbors (KNN)':
+            knnNNeighbors = self.knnNNeighborsEntry.get()
+            knnAlgorithm = self.knnAlgorithmBox.get()
+            knnLeafSize = self.knnLeafSizeEntry.get()
+            knnMetric = self.knnMetricBox.get()
+
+            if knnNNeighbors == '':
+                knnNNeighbors = 5
+            else:
+                try:
+                    knnNNeighbors = int(knnNNeighbors)
+                except:
+                    knnNNeighbors = 5
+            if knnAlgorithm == '' or knnAlgorithm == None:
+                knnAlgorithm = 'auto'
+            if knnLeafSize == '':
+                knnLeafSize = 30
+            else:
+                try:
+                    knnLeafSize = int(knnLeafSize)
+                except:
+                    knnLeafSize = 30
+            if knnMetric == '' or knnMetric == None:
+                knnMetric = 'minkowski'
+
+            DATA.mlModel = KNeighborsClassifier(n_neighbors=knnNNeighbors, algorithm=knnAlgorithm, leaf_size=knnLeafSize, metric=knnMetric)
+
+        elif DATA.mlModelType == 'K-means':
+            kmNClusters = self.kmNClustersEntry.get()
+            kmMaxIter = self.kmMaxIterEntry.get()
+            kmAlgorithm = self.kmAlgorithmBox.get()
+            kmRandomState = self.kmRandomStateEntry.get()
+
+            if kmNClusters == '':
+                kmNClusters = 8
+            else:
+                try:
+                    kmNClusters = int(kmNClusters)
+                except:
+                    kmNClusters = 8
+            if kmMaxIter == '':
+                kmMaxIter = 300
+            else:
+                try:
+                    kmMaxIter = int(kmMaxIter)
+                except:
+                    kmMaxIter = 300
+            if kmAlgorithm == '' or kmAlgorithm == None:
+                kmAlgorithm = 'auto'
+            if kmRandomState == '':
+                kmRandomState = 42
+            else:
+                try:
+                    kmRandomState = int(kmRandomState)
+                except:
+                    kmRandomState = 42
+
+            DATA.mlModel = KMeans(n_clusters=kmNClusters, max_iter=kmMaxIter, algorithm=kmAlgorithm, random_state=kmRandomState)
+
+        elif DATA.mlModelType == 'Support Vector Machine (SVM)':
+            svmC = self.svmCEntry.get()
+            svmKernel = self.svmKernelBox.get()
+            svmGamma = self.svmGammaEntry.get()
+            svmRandomState = self.svmRandomStateEntry.get()
+
+            if svmC == '':
+                svmC = 1.0
+            else:
+                try:
+                    svmC = float(svmC)
+                except:
+                    svmC = 1.0
+            if svmKernel == '' or svmKernel == None:
+                svmKernel = 'rbf'
+            if svmGamma == '':
+                svmGamma = 'scale'
+            else:
+                try:
+                    svmGamma = float(svmGamma)
+                except:
+                    svmGamma = 'scale'
+            if svmRandomState == '':
+                svmRandomState = 42
+            else:
+                try:
+                    svmRandomState = int(svmRandomState)
+                except:
+                    svmRandomState = 42
+
+            DATA.mlModel = svm.SVC(C=svmC, kernel=svmKernel, gamma=svmGamma, random_state=svmRandomState)
+
+        
 
         DATA.mlModel.fit(DATA.X_train, DATA.y_train)
         """ if DATA.X_train is None or DATA.y_train is None or DATA.X_test is None or DATA.y_test is None:
@@ -1250,42 +1614,42 @@ class MLPage(ctk.CTkFrame):
         print(DATA.mlModel)
         print(prediction)
 
-        if DATA.mlModelType == 'Linear Regression':
-            self.label1 = ctk.CTkLabel(self, text=f"Max error: {metrics.max_error(DATA.y_test, prediction)}", text_color="#FFFFFF", font=LARGEFONT)
+        if DATA.mlModelType in ['Linear Regression']:
+            self.label1 = ctk.CTkLabel(self.frame3, text=f"Max error: {metrics.max_error(DATA.y_test, prediction)}", text_color="#FFFFFF", font=LARGEFONT)
             self.label1.grid(row=2, column=0, padx=0, pady=8, sticky = "w")
 
-            self.label2 = ctk.CTkLabel(self, text=f"Mean absolute error: {metrics.mean_absolute_error(DATA.y_test, prediction)}", text_color="#FFFFFF", font=LARGEFONT)
+            self.label2 = ctk.CTkLabel(self.frame3, text=f"Mean absolute error: {metrics.mean_absolute_error(DATA.y_test, prediction)}", text_color="#FFFFFF", font=LARGEFONT)
             self.label2.grid(row=3, column=0, padx=0, pady=8, sticky = "w")
 
-            self.label3 = ctk.CTkLabel(self, text=f"Mean squared error: {metrics.mean_squared_error(DATA.y_test, prediction)}", text_color="#FFFFFF", font=LARGEFONT)
+            self.label3 = ctk.CTkLabel(self.frame3, text=f"Mean squared error: {metrics.mean_squared_error(DATA.y_test, prediction)}", text_color="#FFFFFF", font=LARGEFONT)
             self.label3.grid(row=4, column=0, padx=0, pady=8, sticky = "w")
 
-            self.label4 = ctk.CTkLabel(self, text=f"R2 score: {metrics.r2_score(DATA.y_test, prediction)}", text_color="#FFFFFF", font=LARGEFONT)
+            self.label4 = ctk.CTkLabel(self.frame3, text=f"R2 score: {metrics.r2_score(DATA.y_test, prediction)}", text_color="#FFFFFF", font=LARGEFONT)
             self.label4.grid(row=5, column=0, padx=0, pady=8, sticky = "w")
 
         else:
             cm = metrics.confusion_matrix(DATA.y_test, prediction)
             BER = 1 - (1/2 * ((cm[0][0] / (cm[0][0] + cm[1][0])) + (cm[1][1] / (cm[1][1] + cm[0][1]))))
     
-            self.label1 = ctk.CTkLabel(self, text=f"Balanced Error Rate: {BER}", text_color="#FFFFFF", font=LARGEFONT)
+            self.label1 = ctk.CTkLabel(self.frame3, text=f"Balanced Error Rate: {BER}", text_color="#FFFFFF", font=LARGEFONT)
             self.label1.grid(row=3, column=0, padx=0, pady=8, sticky = "w")
 
-            self.label2 = ctk.CTkLabel(self, text=f"Accuracy: {metrics.accuracy_score(DATA.y_test, prediction)}", text_color="#FFFFFF", font=LARGEFONT)
+            self.label2 = ctk.CTkLabel(self.frame3, text=f"Accuracy: {metrics.accuracy_score(DATA.y_test, prediction)}", text_color="#FFFFFF", font=LARGEFONT)
             self.label2.grid(row=3, column=0, padx=0, pady=8, sticky = "w")
 
-            self.label3 = ctk.CTkLabel(self, text=f"Precision: {metrics.precision_score(DATA.y_test, prediction)}", text_color="#FFFFFF", font=LARGEFONT)
+            self.label3 = ctk.CTkLabel(self.frame3, text=f"Precision: {metrics.precision_score(DATA.y_test, prediction)}", text_color="#FFFFFF", font=LARGEFONT)
             self.label3.grid(row=4, column=0, padx=0, pady=8, sticky = "w")
 
-            self.label4 = ctk.CTkLabel(self, text=f"Recall: {metrics.recall_score(DATA.y_test, prediction)}", text_color="#FFFFFF", font=LARGEFONT)
+            self.label4 = ctk.CTkLabel(self.frame3, text=f"Recall: {metrics.recall_score(DATA.y_test, prediction)}", text_color="#FFFFFF", font=LARGEFONT)
             self.label4.grid(row=5, column=0, padx=0, pady=8, sticky = "w")
 
-            self.label5 = ctk.CTkLabel(self, text=f"F1 score: {metrics.f1_score(DATA.y_test, prediction)}", text_color="#FFFFFF", font=LARGEFONT)
+            self.label5 = ctk.CTkLabel(self.frame3, text=f"F1 score: {metrics.f1_score(DATA.y_test, prediction)}", text_color="#FFFFFF", font=LARGEFONT)
             self.label5.grid(row=6, column=0, padx=0, pady=8, sticky = "w")
 
-            self.label6 = ctk.CTkLabel(self, text=f"AUC score: {metrics.roc_auc_score(DATA.y_test, prediction)}", text_color="#FFFFFF", font=LARGEFONT)
+            self.label6 = ctk.CTkLabel(self.frame3, text=f"AUC score: {metrics.roc_auc_score(DATA.y_test, prediction)}", text_color="#FFFFFF", font=LARGEFONT)
             self.label6.grid(row=7, column=0, padx=0, pady=8, sticky = "w")
     
-    def openSaveModelWindow(self):
+    """ def openSaveModelWindow(self):
         try:
             DATA.mlModel.predict(DATA.X_test)
         except NotFittedError:
@@ -1302,7 +1666,6 @@ class SaveModelTopLevel(ctk.CTkToplevel):
         self.resizable(False, False)
         self.overrideredirect(1)
         self.configure(bg_color="#191919", fg_color="#191919")
-        center(self, 320, 168)
         
         backImg = ImageTk.PhotoImage(Image.open("./assets/icons/back.png").resize((24, 24), Image.LANCZOS))
 
@@ -1352,7 +1715,7 @@ class SaveModelTopLevel(ctk.CTkToplevel):
             self.exitTopLevel()
         else:
             tk.messagebox.showerror("Information", "Please select a directory")
-            return
+            return """
         
 # DRIVER CODE
 app = App()
