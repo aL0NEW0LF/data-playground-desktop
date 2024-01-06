@@ -83,6 +83,10 @@ def read_data():
     DATA.file_data_read()
     print(DATA)
 
+def Exit():
+    plt.close()
+    app.quit()
+
 # UNUSED
 def kbestFeat_Selec_event():
     dialog = ctk.CTkInputDialog(text="Type in a number:", title="Test")
@@ -1726,11 +1730,6 @@ class MLPage(ctk.CTkFrame):
 
             self.showMetricsPlotsBtn.configure(state="normal")
 
-
-    # BUG: i get an error after ploting after testing the model, ploting metrics plots and closing the window
-    #       This error is indicating that your program is trying to execute a command called 2577533870784update, but this command does not exist. This command looks like it might be the result of 
-    #       some kind of string concatenation error, where a memory address (the number) is being concatenated with a command name (update). This could be happening if you're trying to update a 
-    #       widget after it has been destroyed.
     def showMetricsPlots(self):
         global DATA
         global app
@@ -1836,4 +1835,5 @@ class SaveModelTopLevel(ctk.CTkToplevel):
         
 # DRIVER CODE
 app = App()
+app.protocol("WM_DELETE_WINDOW", Exit)
 app.mainloop()
