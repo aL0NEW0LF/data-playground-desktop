@@ -1226,6 +1226,12 @@ class MLPage(ctk.CTkFrame):
 
         if choice == 'Linear Regression':
             self.showMetricsPlotsBtn.configure(state="disabled")
+
+            for widget in self.frame5.winfo_children():
+                widget.destroy()
+
+            for widget in self.frame6.winfo_children():
+                widget.destroy()
             
         if choice == 'Decision Tree':
             CriterionLabel = ctk.CTkLabel(self.frame2, text="Criterion:", text_color="#FFFFFF", font=SMALLFONT)
@@ -1747,10 +1753,7 @@ class MLPage(ctk.CTkFrame):
                 self.figure_canvas1.draw()
                 self.figure_canvas2.draw()
                 self.figure_canvas1.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=True)
-                self.figure_canvas2.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=True)
-
-            if app.window_closed:
-                return """
+                self.figure_canvas2.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=True) """
 
     def openSaveModelWindow(self):
         try:
