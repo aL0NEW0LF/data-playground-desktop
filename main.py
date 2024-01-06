@@ -20,7 +20,7 @@ from pyparsing import col
 from sklearn.calibration import LabelEncoder
 from sklearn.exceptions import NotFittedError
 from sklearn.model_selection import train_test_split
-from sklearn.naive_bayes import GaussianNB
+from sklearn.naive_bayes import BernoulliNB, GaussianNB, MultinomialNB
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.neighbors import KNeighborsClassifier
@@ -1233,7 +1233,19 @@ class MLPage(ctk.CTkFrame):
             for widget in self.frame6.winfo_children():
                 widget.destroy()
             
-        if choice == 'Decision Tree':
+        elif choice == 'Naive Bayes':
+            DisributionLabel = ctk.CTkLabel(self.frame2, text="Distribution:", text_color="#FFFFFF", font=SMALLFONT)
+            DisributionLabel.grid(row=0, column=0, padx=(0, 4), sticky="w")
+
+            self.DistributionVar = ctk.StringVar(value="Gaussian")
+            self.nbDistributionBox = ctk.CTkOptionMenu(master=self.frame2,
+                                        values=["Gaussian", "Multinomial", "Bernoulli"],
+                                        width=250,
+                                        variable=self.DistributionVar,
+                                        corner_radius=0, text_color="#101010", bg_color="#FFFFFF", fg_color="#FFFFFF", font=SMALLFONT, height=48, button_color="#FFFFFF", button_hover_color="#FFFFFF", dropdown_font=SMALLFONT, dropdown_hover_color="#F0F0F0", dropdown_fg_color="#FFFFFF")
+            self.nbDistributionBox.grid(row=0, column=1, padx=4, pady=0, sticky="w")
+
+        elif choice == 'Decision Tree':
             CriterionLabel = ctk.CTkLabel(self.frame2, text="Criterion:", text_color="#FFFFFF", font=SMALLFONT)
             CriterionLabel.grid(row=0, column=0, padx=(0, 4), pady=4, sticky="w")
 
@@ -1263,8 +1275,6 @@ class MLPage(ctk.CTkFrame):
 
             self.dtRandomStateEntry = ctk.CTkEntry(self.frame2, width=100, height=24)
             self.dtRandomStateEntry.grid(row=0, column=8, padx=4, sticky="w")
-
-            self.showMetricsPlotsBtn.configure(state="normal")
 
         elif choice == 'Logistic Regression':
             SolverLabel = ctk.CTkLabel(self.frame2, text="Solver:", text_color="#FFFFFF", font=SMALLFONT)
@@ -1307,8 +1317,6 @@ class MLPage(ctk.CTkFrame):
             self.lrRandomStateEntry = ctk.CTkEntry(self.frame2, width=100, height=24)
             self.lrRandomStateEntry.grid(row=0, column=9, padx=4, sticky="w")
 
-            self.showMetricsPlotsBtn.configure(state="normal")
-
         elif choice == 'Random Forest':
             CriterionLabel = ctk.CTkLabel(self.frame2, text="Criterion:", text_color="#FFFFFF", font=SMALLFONT)
             CriterionLabel.grid(row=0, column=0, padx=(0, 4), sticky="w")
@@ -1338,8 +1346,6 @@ class MLPage(ctk.CTkFrame):
 
             self.rfRandomStateEntry = ctk.CTkEntry(self.frame2, width=100, height=24)
             self.rfRandomStateEntry.grid(row=0, column=8, padx=4, sticky="w")
-
-            self.showMetricsPlotsBtn.configure(state="normal")
 
         elif choice == 'K-Nearest Neighbors (KNN)':
             NNeighborsLabel = ctk.CTkLabel(self.frame2, text="N neighbors:", text_color="#FFFFFF", font=SMALLFONT)
@@ -1376,8 +1382,6 @@ class MLPage(ctk.CTkFrame):
                                         corner_radius=0, text_color="#101010", bg_color="#FFFFFF", fg_color="#FFFFFF", font=SMALLFONT, height=48, button_color="#FFFFFF", button_hover_color="#FFFFFF", dropdown_font=SMALLFONT, dropdown_hover_color="#F0F0F0", dropdown_fg_color="#FFFFFF")
             self.knnMetricBox.grid(row=0, column=7, padx=4, pady=0, sticky="w")
 
-            self.showMetricsPlotsBtn.configure(state="normal")
-
         elif choice == 'K-means':
             NClustersLabel = ctk.CTkLabel(self.frame2, text="N clusters:", text_color="#FFFFFF", font=SMALLFONT)
             NClustersLabel.grid(row=0, column=0, padx=(0, 4), sticky="w")
@@ -1408,8 +1412,6 @@ class MLPage(ctk.CTkFrame):
             self.kmRandomStateEntry = ctk.CTkEntry(self.frame2, width=100, height=24)
             self.kmRandomStateEntry.grid(row=0, column=8, padx=4, sticky="w")
 
-            self.showMetricsPlotsBtn.configure(state="normal")
-
         elif choice == 'Support Vector Machine (SVM)':
             CLabel = ctk.CTkLabel(self.frame2, text="C:", text_color="#FFFFFF", font=SMALLFONT)
             CLabel.grid(row=0, column=0, padx=(0, 4), sticky="w")
@@ -1439,8 +1441,8 @@ class MLPage(ctk.CTkFrame):
 
             self.svmRandomStateEntry = ctk.CTkEntry(self.frame2, width=100, height=24)
             self.svmRandomStateEntry.grid(row=0, column=8, padx=4, sticky="w")
-
-            self.showMetricsPlotsBtn.configure(state="normal")
+        
+        self.showMetricsPlotsBtn.configure(state="disabled")
 
     def train_mlModel(self):
         global DATA
@@ -1451,6 +1453,16 @@ class MLPage(ctk.CTkFrame):
         
         if DATA.mlModelType == 'Linear Regression':
             DATA.mlModel = LinearRegression()
+
+        elif DATA.mlModelType == 'Naive Bayes':
+            nbDistribution = self.nbDistributionBox.get()
+
+            if nbDistribution == '' or nbDistribution == None or nbDistribution == 'Gaussian':
+                DATA.mlModel = GaussianNB()
+            elif nbDistribution == 'Multinomial':
+                DATA.mlModel = MultinomialNB()
+            elif nbDistribution == 'Bernoulli':
+                DATA.mlModel = BernoulliNB()
 
         elif DATA.mlModelType == 'Decision Tree':
             dtCriterion = self.dtCriterionBox.get()
@@ -1688,6 +1700,8 @@ class MLPage(ctk.CTkFrame):
             self.label4 = ctk.CTkLabel(self.frame4, text=f"R2 score: {round(metrics.r2_score(DATA.y_test, self.prediction), 4)}", text_color="#FFFFFF", font=LARGEFONT)
             self.label4.grid(row=5, column=0, padx=0, pady=8, sticky = "w")
 
+            self.showMetricsPlotsBtn.configure(state="disabled")
+
         else:
             self.cm = metrics.confusion_matrix(DATA.y_test, self.prediction)
             BER = 1 - (1/2 * ((self.cm[0][0] / (self.cm[0][0] + self.cm[1][0])) + (self.cm[1][1] / (self.cm[1][1] + self.cm[0][1]))))
@@ -1710,11 +1724,14 @@ class MLPage(ctk.CTkFrame):
             self.label6 = ctk.CTkLabel(self.frame4, text=f"AUC score: {round(metrics.roc_auc_score(DATA.y_test, self.prediction), 4)}", text_color="#FFFFFF", font=LARGEFONT)
             self.label6.grid(row=8, column=0, padx=0, pady=8, sticky = "w")
 
+            self.showMetricsPlotsBtn.configure(state="normal")
+
+
     # BUG: i get an error after ploting after testing the model, ploting metrics plots and closing the window
     #       This error is indicating that your program is trying to execute a command called 2577533870784update, but this command does not exist. This command looks like it might be the result of 
     #       some kind of string concatenation error, where a memory address (the number) is being concatenated with a command name (update). This could be happening if you're trying to update a 
     #       widget after it has been destroyed.
-    """ def showMetricsPlots(self):
+    def showMetricsPlots(self):
         global DATA
         global app
         
@@ -1753,7 +1770,7 @@ class MLPage(ctk.CTkFrame):
                 self.figure_canvas1.draw()
                 self.figure_canvas2.draw()
                 self.figure_canvas1.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=True)
-                self.figure_canvas2.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=True) """
+                self.figure_canvas2.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=True)
 
     def openSaveModelWindow(self):
         try:
