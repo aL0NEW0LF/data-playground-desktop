@@ -100,7 +100,7 @@ class App(ctk.CTk):
         self.iconbitmap('./assets/icons/machine-learning.ico')
         self.title("Data playground")
         self.minsize(1380, 720)
-        self.configure(fg_color="#161616")
+        self.configure(fg_color="#101010")
         """ self.wm_attributes('-type', 'splash')
         self.overrideredirect(True)
         
@@ -183,7 +183,6 @@ class StartPage(ctk.CTkFrame):
         UploadButton.grid(row=0, column=0, padx=20, pady=20, sticky="se")
 
     def button_click_controller(self, btn: ctk.CTkButton, controller):
-        # self.mlModel = MLModels[btn.cget('text')]
         global DATA 
 
         DATA.mlModelType = btn.cget('text')
@@ -208,7 +207,6 @@ class StartPage(ctk.CTkFrame):
 class DataProcessingPage(ctk.CTkFrame):
     def __init__(self, parent, controller):
         ctk.CTkFrame.__init__(self, parent)
-        backImg = ImageTk.PhotoImage(Image.open("./assets/icons/back.png").resize((24, 24), Image.LANCZOS))
 
         continueImg = ImageTk.PhotoImage(Image.open("./assets/icons/back.png").rotate(180).resize((24, 24), Image.LANCZOS))
 
@@ -242,7 +240,6 @@ class DataProcessingPage(ctk.CTkFrame):
         self.button5.grid(row=0, column=4, padx=4, pady=8, sticky="w")
 
         frame2 = ctk.CTkFrame(self, fg_color="#101010")
-        #frame2.configure(fg_color="#101010")
         frame2.grid(row=2, column=0, columnspan=5, ipadx=8, ipady=8, sticky="nsew")
 
         frame2.rowconfigure(0, weight=1)
@@ -1169,7 +1166,7 @@ class MLPage(ctk.CTkFrame):
         self.frame2.grid(row=2, column=0, pady=(1, 8), sticky="nsew")
         
         self.frame3 = ctk.CTkFrame(self, fg_color="#101010")
-        self.frame3.grid(row=3, column=0, pady=(8, 0), sticky="nsew")
+        self.frame3.grid(row=3, column=0, pady=0, sticky="nsew")
         
         self.rowconfigure(3, weight=1)
         self.frame3.columnconfigure(1, weight=1)
@@ -1180,7 +1177,7 @@ class MLPage(ctk.CTkFrame):
         self.frame4.grid(row=0, column=0, sticky="nsew")
 
         self.frame5 = ctk.CTkFrame(self.frame3, fg_color="#101010")
-        self.frame5.grid(row=0, column=1, padx=8,sticky="nsew")
+        self.frame5.grid(row=0, column=1, padx=(8, 0), sticky="nsew")
 
         self.frame6 = ctk.CTkFrame(self.frame3, fg_color="#101010")
         self.frame6.grid(row=0, column=2, padx=0, sticky="nsew")
@@ -1666,16 +1663,16 @@ class MLPage(ctk.CTkFrame):
         print(self.prediction)
 
         if DATA.mlModelType == 'Linear Regression':
-            self.label1 = ctk.CTkLabel(self.frame4, text=f"Max error: {round(metrics.max_error(DATA.y_test, self.prediction), 4)}", text_color="#FFFFFF", font=LARGEFONT)
+            self.label1 = ctk.CTkLabel(self.frame4, text=f"Max error: {round(metrics.max_error(DATA.y_test, self.prediction), 4)}", text_color="#FFFFFF", font=MEDIUMFONT)
             self.label1.grid(row=2, column=0, padx=0, pady=8, sticky = "w")
 
-            self.label2 = ctk.CTkLabel(self.frame4, text=f"Mean absolute error: {round(metrics.mean_absolute_error(DATA.y_test, self.prediction), 4)}", text_color="#FFFFFF", font=LARGEFONT)
+            self.label2 = ctk.CTkLabel(self.frame4, text=f"Mean absolute error: {round(metrics.mean_absolute_error(DATA.y_test, self.prediction), 4)}", text_color="#FFFFFF", font=MEDIUMFONT)
             self.label2.grid(row=3, column=0, padx=0, pady=8, sticky = "w")
 
-            self.label3 = ctk.CTkLabel(self.frame4, text=f"Mean squared error: {round(metrics.mean_squared_error(DATA.y_test, self.prediction), 4)}", text_color="#FFFFFF", font=LARGEFONT)
+            self.label3 = ctk.CTkLabel(self.frame4, text=f"Mean squared error: {round(metrics.mean_squared_error(DATA.y_test, self.prediction), 4)}", text_color="#FFFFFF", font=MEDIUMFONT)
             self.label3.grid(row=4, column=0, padx=0, pady=8, sticky = "w")
 
-            self.label4 = ctk.CTkLabel(self.frame4, text=f"R2 score: {round(metrics.r2_score(DATA.y_test, self.prediction), 4)}", text_color="#FFFFFF", font=LARGEFONT)
+            self.label4 = ctk.CTkLabel(self.frame4, text=f"R2 score: {round(metrics.r2_score(DATA.y_test, self.prediction), 4)}", text_color="#FFFFFF", font=MEDIUMFONT)
             self.label4.grid(row=5, column=0, padx=0, pady=8, sticky = "w")
 
             self.showMetricsPlotsBtn.configure(state="disabled")
@@ -1684,22 +1681,22 @@ class MLPage(ctk.CTkFrame):
             self.cm = metrics.confusion_matrix(DATA.y_test, self.prediction)
             BER = 1 - (1/2 * ((self.cm[0][0] / (self.cm[0][0] + self.cm[1][0])) + (self.cm[1][1] / (self.cm[1][1] + self.cm[0][1]))))
     
-            self.label1 = ctk.CTkLabel(self.frame4, text=f"Balanced Error Rate: {round(BER, 4)}", text_color="#FFFFFF", font=LARGEFONT)
+            self.label1 = ctk.CTkLabel(self.frame4, text=f"Balanced Error Rate: {round(BER, 4)}", text_color="#FFFFFF", font=MEDIUMFONT)
             self.label1.grid(row=3, column=0, padx=0, pady=8, sticky = "w")
 
-            self.label2 = ctk.CTkLabel(self.frame4, text=f"Accuracy: {round(metrics.accuracy_score(DATA.y_test, self.prediction), 4)}", text_color="#FFFFFF", font=LARGEFONT)
+            self.label2 = ctk.CTkLabel(self.frame4, text=f"Accuracy: {round(metrics.accuracy_score(DATA.y_test, self.prediction), 4)}", text_color="#FFFFFF", font=MEDIUMFONT)
             self.label2.grid(row=4, column=0, padx=0, pady=8, sticky = "w")
 
-            self.label3 = ctk.CTkLabel(self.frame4, text=f"Precision: {round(metrics.precision_score(DATA.y_test, self.prediction), 4)}", text_color="#FFFFFF", font=LARGEFONT)
+            self.label3 = ctk.CTkLabel(self.frame4, text=f"Precision: {round(metrics.precision_score(DATA.y_test, self.prediction), 4)}", text_color="#FFFFFF", font=MEDIUMFONT)
             self.label3.grid(row=5, column=0, padx=0, pady=8, sticky = "w")
 
-            self.label4 = ctk.CTkLabel(self.frame4, text=f"Recall: {round(metrics.recall_score(DATA.y_test, self.prediction), 4)}", text_color="#FFFFFF", font=LARGEFONT)
+            self.label4 = ctk.CTkLabel(self.frame4, text=f"Recall: {round(metrics.recall_score(DATA.y_test, self.prediction), 4)}", text_color="#FFFFFF", font=MEDIUMFONT)
             self.label4.grid(row=6, column=0, padx=0, pady=8, sticky = "w")
 
-            self.label5 = ctk.CTkLabel(self.frame4, text=f"F1 score: {round(metrics.f1_score(DATA.y_test, self.prediction), 4)}", text_color="#FFFFFF", font=LARGEFONT)
+            self.label5 = ctk.CTkLabel(self.frame4, text=f"F1 score: {round(metrics.f1_score(DATA.y_test, self.prediction), 4)}", text_color="#FFFFFF", font=MEDIUMFONT)
             self.label5.grid(row=7, column=0, padx=0, pady=8, sticky = "w")
 
-            self.label6 = ctk.CTkLabel(self.frame4, text=f"AUC score: {round(metrics.roc_auc_score(DATA.y_test, self.prediction), 4)}", text_color="#FFFFFF", font=LARGEFONT)
+            self.label6 = ctk.CTkLabel(self.frame4, text=f"AUC score: {round(metrics.roc_auc_score(DATA.y_test, self.prediction), 4)}", text_color="#FFFFFF", font=MEDIUMFONT)
             self.label6.grid(row=8, column=0, padx=0, pady=8, sticky = "w")
 
             self.showMetricsPlotsBtn.configure(state="normal")
@@ -1708,6 +1705,12 @@ class MLPage(ctk.CTkFrame):
         global DATA
         global app
         
+        for widget in self.frame5.winfo_children():
+            widget.destroy()
+
+        for widget in self.frame6.winfo_children():
+            widget.destroy()
+
         if DATA.mlModelType != 'Linear Regression' :
             if app.winfo_exists():
                 disp = metrics.ConfusionMatrixDisplay.from_predictions(y_true=DATA.y_test, y_pred=self.prediction, display_labels=["False", "True"], cmap=plt.cm.Blues)
@@ -1736,9 +1739,9 @@ class MLPage(ctk.CTkFrame):
                 self.axe2 = self.figure2.add_subplot()
 
                 roc_display.plot(ax=self.axe2)
-                self.axe1.legend([""], fontsize="x-large")
-                self.axe1.set_xlabel("")
-                self.axe1.set_title("ROC curve")
+                self.axe2.legend([""], fontsize="x-large")
+                self.axe2.set_xlabel("")
+                self.axe2.set_title("ROC curve")
 
                 self.figure_canvas1.draw()
                 self.figure_canvas2.draw()
