@@ -5,6 +5,12 @@ from sklearn.feature_selection import VarianceThreshold, SelectKBest, f_classif
 import tkinter as tk
 from enums import enums
 
+def get_dataframe_columns(df: list | pd.DataFrame):    
+    return df.columns.values.tolist()
+
+def get_dataframe_features(df: list | pd.DataFrame):    
+    return df.columns.values.tolist()
+
 def get_constant_columns(df: list | pd.DataFrame):
     return [col for col in df.columns if len(df[col].unique()) <= 1]
 
