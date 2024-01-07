@@ -54,4 +54,4 @@ python main.py
 > - [x] Model configuration
 > - [x] Model, metrics & data visualization after training
 > - [x] Better UI
-> - [x] Import ML model to use
+> - [ ] Import ML model to use
