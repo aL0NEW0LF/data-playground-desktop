@@ -2,6 +2,7 @@
 NOTE: This alpha version of the app is not meant to be used in production. It is only meant to be used for testing purposes, and making sure that the app is working as intended. So the development is done to make a
 specific workflow work.
 '''
+from assets.fonts.fonts import LARGEFONT, MEDIUMFONT, SMALLFONT
 from curses.ascii import isdigit
 from re import S
 import tkinter as tk
@@ -30,7 +31,7 @@ from sklearn import metrics, svm
 from sklearn.cluster import KMeans
 from logic.file_handling import file_handling as fh
 from tksheet import Sheet
-from logic.data_preprocessing import feature_selection_kBestFeatures, feature_selection_varianceThreshold, handle_missing_values, drop_duplicate_rows, drop_contant_columns, get_non_constant_columns, get_constant_columns, remove_outliers
+from logic.data_preprocessing import feature_selection_kBestFeatures, feature_selection_varianceThreshold, handle_missing_values, drop_duplicate_rows, drop_contant_columns, get_dataframe_columns, get_non_constant_columns, get_constant_columns, remove_outliers
 from enums import enums
 import matplotlib
 from typing import Protocol
@@ -42,11 +43,6 @@ from matplotlib.backends.backend_tkagg import (
     FigureCanvasTkAgg,
     NavigationToolbar2Tk
 )
-
-
-LARGEFONT = ("montserrat", 24)
-MEDIUMFONT = ("montserrat", 16)
-SMALLFONT = ("montserrat", 12)
 
 MLModels = {'Linear Regression': LinearRegression(), 'Decision Tree': DecisionTreeClassifier(), 'Naive Bayes': GaussianNB(), 'Support Vector Machine (SVM)': svm.SVC(), 'K-means': KMeans(), 'K-Nearest Neighbors (KNN)': KNeighborsClassifier(), 'Random Forest': RandomForestClassifier(), 'Logistic Regression': LogisticRegression()}
 DATA = fh()
@@ -90,16 +86,6 @@ def Exit():
 def kbestFeat_Selec_event():
     dialog = ctk.CTkInputDialog(text="Type in a number:", title="Test")
     print("Number:", dialog.get_input())
-
-def get_dataframe_columns():
-    global DATA
-    
-    return DATA.file_data.columns.values.tolist()
-
-def get_dataframe_features():
-    global DATA
-    
-    return DATA.X.columns.values.tolist()
 
 # MAIN APP
 class App(ctk.CTk):
@@ -209,7 +195,7 @@ class StartPage(ctk.CTkFrame):
         UploadAction()
         app.frames[DataProcessingPage].load_data()
 
-        app.frames[DataProcessingPage].combobox1.configure(values=get_dataframe_columns())
+        app.frames[DataProcessingPage].combobox1.configure(values=get_dataframe_columns(DATA.file_data))
 
         app.frames[DataProcessingPage].combobox1.configure(state='normal')
         app.frames[DataProcessingPage].combobox.configure(state='disabled')
@@ -278,7 +264,7 @@ class DataProcessingPage(ctk.CTkFrame):
         self.optionmenu_var = ctk.StringVar(value="Features selection")
         self.combobox = ctk.CTkOptionMenu(master=frame5,
                                        values=["Variance threshold", "K-best features"],
-                                       command=lambda x: self.optionmenu_callback(x, controller),
+                                       command=lambda x: self.optionmenu_callback(x),
                                        variable=self.optionmenu_var, 
                                        state='disabled', corner_radius=0, text_color="#101010", bg_color="#FFFFFF", fg_color="#FFFFFF", font=SMALLFONT, height=48, width=175, button_color="#FFFFFF", button_hover_color="#FFFFFF", dropdown_font=SMALLFONT, dropdown_hover_color="#F0F0F0", dropdown_fg_color="#FFFFFF")
         self.combobox.grid(row=0, column=0, padx=(0, 4), pady=(0, 8), sticky="w")
@@ -286,7 +272,7 @@ class DataProcessingPage(ctk.CTkFrame):
         self.optionmenu_var2 = ctk.StringVar(value="Preprocessing")
         self.combobox2 = ctk.CTkOptionMenu(master=frame5,
                                        values=["Missing values", "Duplicate rows", "Constant features", "Outliers", "Remove columns", "Label encoding"],
-                                       command=lambda x: self.optionmenu_callback(x, controller),
+                                       command=lambda x: self.optionmenu_callback(x),
                                        variable=self.optionmenu_var2, 
                                        state='disabled', corner_radius=0, text_color="#101010", bg_color="#FFFFFF", fg_color="#FFFFFF", font=SMALLFONT, height=48, width=175, button_color="#FFFFFF", button_hover_color="#FFFFFF", dropdown_font=SMALLFONT, dropdown_hover_color="#F0F0F0", dropdown_fg_color="#FFFFFF")
         self.combobox2.grid(row=0, column=1, padx=(4, 0), pady=(0, 8), sticky="w")
@@ -321,7 +307,7 @@ class DataProcessingPage(ctk.CTkFrame):
         UploadAction()
         self.load_data()
 
-        self.combobox1.configure(values=get_dataframe_columns())
+        self.combobox1.configure(values=get_dataframe_columns(DATA.file_data))
 
         self.combobox1.configure(state='normal')
         self.combobox.configure(state='disabled')
@@ -341,7 +327,7 @@ class DataProcessingPage(ctk.CTkFrame):
         else:
             self.sheet.set_sheet_data(data = DATA.file_data.values.tolist()) """
  
-    def optionmenu_callback(self, choice, controller):
+    def optionmenu_callback(self, choice):
         if 'DATA' not in globals() or DATA.file_data is None:
             tk.messagebox.showerror("Information", "Please upload a data file first")
             return
@@ -369,7 +355,7 @@ class DataProcessingPage(ctk.CTkFrame):
             self.frames[RemoveColumnsPage].load_checkboxes()
             self.show_frame(RemoveColumnsPage)
         elif choice == "Label encoding":
-            self.frames[LabelEncodingPage].combobox1.configure(values=get_dataframe_columns())
+            self.frames[LabelEncodingPage].combobox1.configure(values=get_dataframe_columns(DATA.file_data))
             self.show_frame(LabelEncodingPage)
 
     def VisPageSwitch(self, controller):
@@ -378,8 +364,8 @@ class DataProcessingPage(ctk.CTkFrame):
             return
         
         global app
-        app.frames[VisualizationPage].combobox1.configure(values=get_dataframe_columns())
-        app.frames[VisualizationPage].combobox2.configure(values=get_dataframe_columns())
+        app.frames[VisualizationPage].combobox1.configure(values=get_dataframe_columns(DATA.file_data))
+        app.frames[VisualizationPage].combobox2.configure(values=get_dataframe_columns(DATA.file_data))
         controller.show_frame(VisualizationPage)
 
     def SplitPageSwitch(self, controller):
@@ -546,8 +532,7 @@ class KbestfeatPage(ctk.CTkFrame):
         global app
 
         app.frames[DataProcessingPage].load_data()
-
-        controller.show_frame(DataProcessingPage)
+        controller.show_frame(BlankPage)
 
 class MissingValuesPage(ctk.CTkFrame):
     def __init__(self, parent, controller):
@@ -562,19 +547,19 @@ class MissingValuesPage(ctk.CTkFrame):
         self.textbox = ctk.CTkLabel(self, text="", text_color="#FFFFFF", font=SMALLFONT)
         self.textbox.grid(row=1, column=0, padx=0, pady=8, sticky="w")
         
-        button4 = ctk.CTkButton(self, text="Fill with the mean", command=lambda: self.values_handling(method=enums.FillMethod.MEAN), corner_radius=0, text_color="#101010", bg_color="#FFFFFF", fg_color="#FFFFFF", font=SMALLFONT, hover_color="#F0F0F0", height=32)
+        button4 = ctk.CTkButton(self, text="Fill with the mean", command=lambda: self.values_handling(controller, method=enums.FillMethod.MEAN), corner_radius=0, text_color="#101010", bg_color="#FFFFFF", fg_color="#FFFFFF", font=SMALLFONT, hover_color="#F0F0F0", height=32)
         button4.grid(row=2, column=0, padx=0, pady=(8, 4), ipadx=8, ipady=8, sticky="ew")
 
-        button5 = ctk.CTkButton(self, text="Fill with the median", command=lambda: self.values_handling(method=enums.FillMethod.MEDIAN), corner_radius=0, text_color="#101010", bg_color="#FFFFFF", fg_color="#FFFFFF", font=SMALLFONT, hover_color="#F0F0F0", height=32)
+        button5 = ctk.CTkButton(self, text="Fill with the median", command=lambda: self.values_handling(controller, method=enums.FillMethod.MEDIAN), corner_radius=0, text_color="#101010", bg_color="#FFFFFF", fg_color="#FFFFFF", font=SMALLFONT, hover_color="#F0F0F0", height=32)
         button5.grid(row=3, column=0, padx=0, pady=4, ipadx=8, ipady=8, sticky="ew")
 
-        button3 = ctk.CTkButton(self, text="Remove rows with missing values", command=lambda: self.values_handling(method=enums.FillMethod.DROP), corner_radius=0, text_color="#101010", bg_color="#FFFFFF", fg_color="#FFFFFF", font=SMALLFONT, hover_color="#F0F0F0", height=32)
+        button3 = ctk.CTkButton(self, text="Remove rows with missing values", command=lambda: self.values_handling(controller, method=enums.FillMethod.DROP), corner_radius=0, text_color="#101010", bg_color="#FFFFFF", fg_color="#FFFFFF", font=SMALLFONT, hover_color="#F0F0F0", height=32)
         button3.grid(row=4, column=0, padx=0, pady=4, ipadx=8, ipady=8, sticky="ew")
 
         button1 = ctk.CTkButton(self, text="Cancel", command=lambda: controller.show_frame(BlankPage), corner_radius=0, text_color="#101010", bg_color="#FFFFFF", fg_color="#FFFFFF", font=SMALLFONT, hover_color="#F0F0F0", height=48, width=56)
         button1.grid(row=5, column=0, padx=0, pady=4, sticky="ew")
 
-    def values_handling(self, value: int | float | str = None, method: enums.FillMethod = enums.FillMethod.MEAN):
+    def values_handling(self, controller, value: int | float | str = None, method: enums.FillMethod = enums.FillMethod.MEAN):
         global DATA
 
         handle_missing_values(DATA.file_data, value, method)
@@ -586,7 +571,7 @@ class MissingValuesPage(ctk.CTkFrame):
         
         global app
         app.frames[DataProcessingPage].load_data()
-    
+        controller.show_frame(BlankPage)
 
 class DuplicateRowsPage(ctk.CTkFrame):
     def __init__(self, parent, controller):
@@ -600,13 +585,13 @@ class DuplicateRowsPage(ctk.CTkFrame):
         self.textbox = ctk.CTkLabel(self, text="", text_color="#FFFFFF", font=SMALLFONT)
         self.textbox.grid(row=1, column=0, pady=8, sticky="w", columnspan=3)
 
-        button4 = ctk.CTkButton(self, text="Drop duplicate rows", command=lambda: self.drop_duplicate_rows(), corner_radius=0, text_color="#101010", bg_color="#FFFFFF", fg_color="#FFFFFF", font=SMALLFONT, hover_color="#F0F0F0", height=32)
+        button4 = ctk.CTkButton(self, text="Drop duplicate rows", command=lambda: self.drop_duplicate_rows(controller), corner_radius=0, text_color="#101010", bg_color="#FFFFFF", fg_color="#FFFFFF", font=SMALLFONT, hover_color="#F0F0F0", height=32)
         button4.grid(row=2, column=0, padx=0, pady=(8, 4), ipadx=8, ipady=8, sticky="ew")
 
         button1 = ctk.CTkButton(self, text="Cancel", command=lambda: controller.show_frame(BlankPage), corner_radius=0, text_color="#101010", bg_color="#FFFFFF", fg_color="#FFFFFF", font=SMALLFONT, hover_color="#F0F0F0", height=48)
         button1.grid(row=3, column=0, padx=0, pady=4, sticky="ew")
 
-    def drop_duplicate_rows(self):
+    def drop_duplicate_rows(self, controller):
         global DATA
 
         drop_duplicate_rows(DATA.file_data)
@@ -615,7 +600,7 @@ class DuplicateRowsPage(ctk.CTkFrame):
         
         global app
         app.frames[DataProcessingPage].load_data()
-
+        controller.show_frame(BlankPage)
 
 class ConstantFeaturesPage(ctk.CTkFrame):
     def __init__(self, parent, controller):
@@ -629,13 +614,13 @@ class ConstantFeaturesPage(ctk.CTkFrame):
         self.textbox = ctk.CTkLabel(self, text="", text_color="#FFFFFF", font=SMALLFONT)
         self.textbox.grid(row=1, column=0, pady=8, sticky="w")
 
-        button4 = ctk.CTkButton(self, text="Drop constant columns", command=lambda: self.drop_contant_columns(), corner_radius=0, text_color="#101010", bg_color="#FFFFFF", fg_color="#FFFFFF", font=SMALLFONT, hover_color="#F0F0F0", height=32)
+        button4 = ctk.CTkButton(self, text="Drop constant columns", command=lambda: self.drop_contant_columns(controller), corner_radius=0, text_color="#101010", bg_color="#FFFFFF", fg_color="#FFFFFF", font=SMALLFONT, hover_color="#F0F0F0", height=32)
         button4.grid(row=2, column=0, padx=0, pady=(8, 4), ipadx=8, ipady=8, sticky="ew")
 
         button1 = ctk.CTkButton(self, text="Cancel", command=lambda: controller.show_frame(BlankPage), corner_radius=0, text_color="#101010", bg_color="#FFFFFF", fg_color="#FFFFFF", font=SMALLFONT, hover_color="#F0F0F0", height=48)
         button1.grid(row=3, column=0, padx=0, pady=4, sticky="ew")
 
-    def drop_contant_columns(self):
+    def drop_contant_columns(self, controller):
         global DATA
         
         DATA.file_data = DATA.file_data[get_non_constant_columns(DATA.file_data)]
@@ -644,7 +629,7 @@ class ConstantFeaturesPage(ctk.CTkFrame):
         
         global app
         app.frames[DataProcessingPage].load_data()
-
+        controller.show_frame(BlankPage)
 
 class OutliersPage(ctk.CTkFrame):
     def __init__(self, parent, controller):
@@ -699,7 +684,7 @@ class RemoveColumnsPage(ctk.CTkFrame):
         button1.grid(row=3, column=0, padx=0, pady=4, sticky="ew")
 
     def load_checkboxes(self):
-        self.df_columns = get_dataframe_features()
+        self.df_columns = get_dataframe_columns(DATA.X)
 
         """ self.l = Checkbar(self.frame1, self.df_columns)
         self.l.pack(anchor = 'w') """
@@ -731,18 +716,7 @@ class RemoveColumnsPage(ctk.CTkFrame):
 
         global app
 
-        app.frames[DataProcessingPage].combobox1.configure(values=get_dataframe_columns())
-        app.frames[DataProcessingPage].load_data()
-        controller.show_frame(BlankPage)
-
-        self.checkbuttons.clear()
-        self.checkbuttons_vars.clear()
-        self.df_columns.clear()
-
-    def back_handler(self, controller):
-        global app
-
-        app.frames[DataProcessingPage].combobox1.configure(values=get_dataframe_columns())
+        app.frames[DataProcessingPage].combobox1.configure(values=get_dataframe_columns(DATA.file_data))
         app.frames[DataProcessingPage].load_data()
         controller.show_frame(BlankPage)
 
@@ -755,8 +729,6 @@ class LabelEncodingPage(ctk.CTkFrame):
         ctk.CTkFrame.__init__(self, parent)
         self.configure(fg_color="#101010", width=358)
         self.columnconfigure(0, weight=1)
-
-        backImg = ImageTk.PhotoImage(Image.open("./assets/icons/back.png").resize((24, 24), Image.LANCZOS))
 
         label = ctk.CTkLabel(self, text="Label encoding", text_color="#FFFFFF", font=LARGEFONT)
         label.grid(row=0, column=0, padx=0, pady=8, sticky="w")
