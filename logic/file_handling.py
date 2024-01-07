@@ -1,7 +1,4 @@
-from customtkinter import filedialog
-import os
 import pandas as pd
-import tkinter as tk
 import customtkinter as ctk
 from typing import Protocol
 
@@ -37,13 +34,6 @@ class file_handling:
 
     def __str__(self) -> str:
         return f"File path: {self.file_path}\nFile extension: {self.file_extension}\nFile data: {self.file_data}\nFile columns: {self.file_data.columns.values.tolist()}"
-        
-    """     def UploadAction(self):
-            self.file_path = filedialog.askopenfilename()
-            print('Selected:', self.file_path)
-            if not self.file_path:
-                return
-            _, self.file_extension = os.path.splitext(self.file_path) """
         
     def file_data_read(self):
         try:

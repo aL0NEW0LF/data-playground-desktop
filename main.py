@@ -1,23 +1,12 @@
-'''
-NOTE: This alpha version of the app is not meant to be used in production. It is only meant to be used for testing purposes, and making sure that the app is working as intended. So the development is done to make a
-specific workflow work.
-'''
 from assets.fonts.fonts import LARGEFONT, MEDIUMFONT, SMALLFONT
-from curses.ascii import isdigit
-from re import S
 import tkinter as tk
 from tkinter import ttk
 import os
-from turtle import st, width
-from webbrowser import get
 import customtkinter as ctk
 from PIL import ImageTk, Image
-import joblib
+from joblib import dump
 from matplotlib import pyplot as plt
-from matplotlib.font_manager import get_font
-from numpy import full, pad
-import pandas as pd
-from pyparsing import col
+from pandas import concat
 from sklearn.calibration import LabelEncoder
 from sklearn.exceptions import NotFittedError
 from sklearn.model_selection import train_test_split
@@ -34,7 +23,6 @@ from tksheet import Sheet
 from logic.data_preprocessing import feature_selection_kBestFeatures, feature_selection_varianceThreshold, handle_missing_values, drop_duplicate_rows, drop_contant_columns, get_dataframe_columns, get_non_constant_columns, get_constant_columns, remove_outliers
 from enums import enums
 import matplotlib
-from typing import Protocol
 
 matplotlib.use('TkAgg')
 
@@ -401,7 +389,7 @@ class DataProcessingPage(ctk.CTkFrame):
         DATA.X = DATA.file_data.drop(DATA.target_column, axis=1)
         DATA.y = DATA.file_data[DATA.target_column]
 
-        DATA.file_data = pd.concat([DATA.X, DATA.y], axis=1)
+        DATA.file_data = concat([DATA.X, DATA.y], axis=1)
 
         self.load_data()
 
@@ -1110,8 +1098,8 @@ class DataSplitPage(ctk.CTkFrame):
             
         DATA.X_train, DATA.X_test, DATA.y_train, DATA.y_test = train_test_split(DATA.X, DATA.y, test_size=k, random_state=random_state)
         
-        self.TrainSheet.set_sheet_data(data = pd.concat([DATA.X_train, DATA.y_train], axis=1).values.tolist())
-        self.TestSheet.set_sheet_data(data = pd.concat([DATA.X_test, DATA.y_test], axis=1).values.tolist())
+        self.TrainSheet.set_sheet_data(data = concat([DATA.X_train, DATA.y_train], axis=1).values.tolist())
+        self.TestSheet.set_sheet_data(data = concat([DATA.X_test, DATA.y_test], axis=1).values.tolist())
     
     def mlPage_switch(self, controller):
         global app
@@ -1803,7 +1791,7 @@ class SaveModelTopLevel(ctk.CTkToplevel):
                 tk.messagebox.showerror("Information", "Please enter a file name")
                 return
             
-            joblib.dump(DATA.file_data, self.SaveDirectory + "/" + self.FileName_entry.get() + ".sav")
+            dump(DATA.file_data, self.SaveDirectory + "/" + self.FileName_entry.get() + ".sav")
 
             self.exitTopLevel()
         else:
