@@ -1228,14 +1228,17 @@ class MLPage(ctk.CTkFrame):
         for widget in self.frame2.winfo_children():
             widget.destroy()
 
+        for widget in self.frame4.winfo_children():
+            widget.destroy()
+
+        for widget in self.frame5.winfo_children():
+            widget.destroy()
+
+        for widget in self.frame6.winfo_children():
+            widget.destroy()
+
         if choice == 'Linear Regression':
             self.showMetricsPlotsBtn.configure(state="disabled")
-
-            for widget in self.frame5.winfo_children():
-                widget.destroy()
-
-            for widget in self.frame6.winfo_children():
-                widget.destroy()
             
         elif choice == 'Naive Bayes':
             DisributionLabel = ctk.CTkLabel(self.frame2, text="Distribution:", text_color="#FFFFFF", font=SMALLFONT)
