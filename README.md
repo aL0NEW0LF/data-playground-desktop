@@ -46,11 +46,11 @@ python main.py
 > # TODO
 >
 > - [x] Choose target column right after uploading data
-> - [ ] Variance threshold feature selection
-> - [ ] More data processing
-> - [ ] More plots if possible
-> - [ ] Better error handling & conditions handling
-> - [ ] Add training & testing the model without spliting the data
-> - [ ] Model configuration
-> - [ ] Model, metrics & data visualization after training
-> - [ ] Better UI
+> - [x] Variance threshold feature selection
+> - [x] More data processing
+> - [x] More plots if possible
+> - [x] Better error handling & conditions handling
+> - [x] Add training & testing the model without spliting the data
+> - [x] Model configuration
+> - [x] Model, metrics & data visualization after training
+> - [x] Better UI
