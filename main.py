@@ -29,7 +29,6 @@ from sklearn.linear_model import LinearRegression
 from sklearn import metrics, svm
 from sklearn.cluster import KMeans
 from logic.file_handling import file_handling as fh
-from pandastable import Table, TableModel
 from tksheet import Sheet
 from logic.data_preprocessing import feature_selection_kBestFeatures, feature_selection_varianceThreshold, handle_missing_values, drop_duplicate_rows, drop_contant_columns, get_non_constant_columns, get_constant_columns, remove_outliers
 from enums import enums

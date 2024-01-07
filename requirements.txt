@@ -1,3 +1,4 @@
+altgraph==0.17.4
 contourpy==1.2.0
 customtkinter==5.2.1
 cycler==0.12.1
@@ -13,12 +14,14 @@ numpy==1.26.2
 openpyxl==3.1.2
 packaging==23.2
 pandas==2.1.4
-pandastable==0.13.1
 patsy==0.5.4
+pefile==2023.2.7
 Pillow==10.1.0
+pyinstaller-hooks-contrib==2023.11
 pyparsing==3.1.1
 python-dateutil==2.8.2
 pytz==2023.3.post1
+pywin32-ctypes==0.2.2
 scikit-learn==1.3.2
 scipy==1.11.4
 seaborn==0.13.0
