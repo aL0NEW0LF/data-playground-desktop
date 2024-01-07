@@ -4,6 +4,9 @@ from scipy import stats
 from sklearn.feature_selection import VarianceThreshold, SelectKBest, f_classif
 from enums import enums
 
+def get_non_numeric_columns(df: list | DataFrame):
+    return df.select_dtypes(exclude=['number']).columns.values.tolist()
+
 def get_dataframe_columns(df: list | DataFrame):    
     return df.columns.values.tolist()
 

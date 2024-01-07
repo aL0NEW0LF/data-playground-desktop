@@ -20,7 +20,7 @@ from sklearn import metrics, svm
 from sklearn.cluster import KMeans
 from logic.file_handling import file_handling as fh
 from tksheet import Sheet
-from logic.data_preprocessing import feature_selection_kBestFeatures, feature_selection_varianceThreshold, handle_missing_values, drop_duplicate_rows, drop_contant_columns, get_dataframe_columns, get_non_constant_columns, get_constant_columns, remove_outliers
+from logic.data_preprocessing import feature_selection_kBestFeatures, feature_selection_varianceThreshold, handle_missing_values, drop_duplicate_rows, drop_contant_columns, get_non_numeric_columns, get_dataframe_columns, get_non_constant_columns, get_constant_columns, remove_outliers
 from enums import enums
 import matplotlib
 
@@ -340,7 +340,7 @@ class DataProcessingPage(ctk.CTkFrame):
             self.frames[RemoveColumnsPage].load_checkboxes()
             self.show_frame(RemoveColumnsPage)
         elif choice == "Label encoding":
-            self.frames[LabelEncodingPage].combobox1.configure(values=get_dataframe_columns(DATA.file_data))
+            self.frames[LabelEncodingPage].combobox1.configure(values=get_non_numeric_columns(DATA.file_data))
             self.show_frame(LabelEncodingPage)
 
     def VisPageSwitch(self, controller):
