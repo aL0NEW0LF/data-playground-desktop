@@ -1,3 +1,4 @@
+from sklearn.feature_selection import VarianceThreshold
 from assets.fonts.fonts import LARGEFONT, MEDIUMFONT, SMALLFONT
 import tkinter as tk
 from tkinter import ttk
@@ -182,13 +183,9 @@ class StartPage(ctk.CTkFrame):
         UploadAction()
         app.frames[DataProcessingPage].load_data()
 
-        app.frames[DataProcessingPage].combobox1.configure(values=get_dataframe_columns(DATA.file_data))
+        app.frames[DataProcessingPage].TargetColumnCombobox.configure(values=get_dataframe_columns(DATA.file_data))
 
-        app.frames[DataProcessingPage].combobox1.configure(state='normal')
-        app.frames[DataProcessingPage].combobox.configure(state='disabled')
-        app.frames[DataProcessingPage].combobox2.configure(state='disabled')
-        app.frames[DataProcessingPage].button6.configure(state='disabled')
-        app.frames[DataProcessingPage].button5.configure(state='disabled')
+        app.frames[DataProcessingPage].TargetColumnCombobox.configure(state='normal')
 
         controller.show_frame(DataProcessingPage)
 
@@ -201,78 +198,78 @@ class DataProcessingPage(ctk.CTkFrame):
         self.columnconfigure(0, weight=1)
         self.rowconfigure(2, weight=1)
 
-        label = ctk.CTkLabel(self, text="Data processing", text_color="#FFFFFF", font=LARGEFONT, bg_color="#101010", fg_color="#101010")
-        label.grid(row=0, column=0, columnspan=5, padx=0, pady=8, sticky="nw")
+        Title = ctk.CTkLabel(self, text="Data processing", text_color="#FFFFFF", font=LARGEFONT, bg_color="#101010", fg_color="#101010")
+        Title.grid(row=0, column=0, columnspan=5, padx=0, pady=8, sticky="nw")
 
-        frame1 = ctk.CTkFrame(self, fg_color="#101010")
-        frame1.grid(row=1, column=0, sticky="ew")
+        ButtonsFrame = ctk.CTkFrame(self, fg_color="#101010")
+        ButtonsFrame.grid(row=1, column=0, sticky="ew")
 
-        self.button4 = ctk.CTkButton(frame1, text="Upload your data", command=lambda: self.upload_data(), corner_radius=0, text_color="#101010", bg_color="#FFFFFF", fg_color="#FFFFFF", font=SMALLFONT, hover_color="#F0F0F0", height=48)
-        self.button4.grid(row=0, column=0, padx=(0, 4), pady=8, sticky="w")
+        self.UploadButton = ctk.CTkButton(ButtonsFrame, text="Upload your data", command=lambda: self.upload_data(), corner_radius=0, text_color="#101010", bg_color="#FFFFFF", fg_color="#FFFFFF", font=SMALLFONT, hover_color="#F0F0F0", height=48)
+        self.UploadButton.grid(row=0, column=0, padx=(0, 4), pady=8, sticky="w")
 
-        self.optionmenu_var2 = ctk.StringVar(value="Target column")
-        self.combobox1 = ctk.CTkOptionMenu(master=frame1,
+        self.TargetColumnOptionmenuVar = ctk.StringVar(value="Target column")
+        self.TargetColumnCombobox = ctk.CTkOptionMenu(master=ButtonsFrame,
                                        values=[],
-                                       variable=self.optionmenu_var2, 
+                                       variable=self.TargetColumnOptionmenuVar, 
                                        state='disabled',
                                        command=lambda x: self.split_X_y(x), corner_radius=0, text_color="#101010", bg_color="#FFFFFF", fg_color="#FFFFFF", font=SMALLFONT, height=48, width=146, button_color="#FFFFFF", button_hover_color="#FFFFFF", dropdown_font=SMALLFONT, dropdown_hover_color="#F0F0F0", dropdown_fg_color="#FFFFFF")
-        self.combobox1.grid(row=0, column=1, padx=4, pady=8, sticky="w")
+        self.TargetColumnCombobox.grid(row=0, column=1, padx=4, pady=8, sticky="w")
 
-        self.button6 = ctk.CTkButton(frame1, text="Visualize", command=lambda: self.VisPageSwitch(controller=controller), state='disabled', corner_radius=0, text_color="#101010", bg_color="#FFFFFF", fg_color="#FFFFFF", font=SMALLFONT, hover_color="#F0F0F0", height=48)
-        self.button6.grid(row=0, column=2, padx=4, pady=8, sticky="w")
+        self.VisualizeButton = ctk.CTkButton(ButtonsFrame, text="Visualize", command=lambda: self.VisPageSwitch(controller=controller), state='disabled', corner_radius=0, text_color="#101010", bg_color="#FFFFFF", fg_color="#FFFFFF", font=SMALLFONT, hover_color="#F0F0F0", height=48)
+        self.VisualizeButton.grid(row=0, column=2, padx=4, pady=8, sticky="w")
 
-        self.button7 = ctk.CTkButton(frame1, text="Save dataset", command=lambda: self.show_frame(SaveDatasetPage), state='disabled', corner_radius=0, text_color="#101010", bg_color="#FFFFFF", fg_color="#FFFFFF", font=SMALLFONT, hover_color="#F0F0F0", height=48)
-        self.button7.grid(row=0, column=3, padx=4, pady=8, sticky="w")
+        self.SaveDatasetButton = ctk.CTkButton(ButtonsFrame, text="Save dataset", command=lambda: self.show_frame(SaveDatasetPage), state='disabled', corner_radius=0, text_color="#101010", bg_color="#FFFFFF", fg_color="#FFFFFF", font=SMALLFONT, hover_color="#F0F0F0", height=48)
+        self.SaveDatasetButton.grid(row=0, column=3, padx=4, pady=8, sticky="w")
 
-        self.button5 = ctk.CTkButton(frame1, image=continueImg, text="", command=lambda: self.SplitPageSwitch(controller), state='disabled', corner_radius=0, text_color="#101010", bg_color="#FFFFFF", fg_color="#FFFFFF", font=SMALLFONT, hover_color="#F0F0F0", height=48, width=56)
-        self.button5.grid(row=0, column=4, padx=4, pady=8, sticky="w")
+        self.ContinueButton = ctk.CTkButton(ButtonsFrame, image=continueImg, text="", command=lambda: self.SplitPageSwitch(controller), state='disabled', corner_radius=0, text_color="#101010", bg_color="#FFFFFF", fg_color="#FFFFFF", font=SMALLFONT, hover_color="#F0F0F0", height=48, width=56)
+        self.ContinueButton.grid(row=0, column=4, padx=4, pady=8, sticky="w")
 
-        frame2 = ctk.CTkFrame(self, fg_color="#101010")
-        frame2.grid(row=2, column=0, columnspan=5, ipadx=8, ipady=8, sticky="nsew")
+        DataProcessingMainFrame = ctk.CTkFrame(self, fg_color="#101010")
+        DataProcessingMainFrame.grid(row=2, column=0, columnspan=5, ipadx=8, ipady=8, sticky="nsew")
 
-        frame2.rowconfigure(0, weight=1)
-        frame2.columnconfigure(1, weight=1)
+        DataProcessingMainFrame.rowconfigure(0, weight=1)
+        DataProcessingMainFrame.columnconfigure(1, weight=1)
 
-        frame3 = ctk.CTkFrame(frame2, fg_color="#101010", width=358)
-        frame3.grid(row=0, column=0, padx=(0, 8), pady=0, ipadx=0, ipady=0, sticky="nw")
-        frame3.rowconfigure(1, weight=1)
+        ProcessingFrame = ctk.CTkFrame(DataProcessingMainFrame, fg_color="#101010", width=358)
+        ProcessingFrame.grid(row=0, column=0, padx=(0, 8), pady=0, ipadx=0, ipady=0, sticky="nw")
+        ProcessingFrame.rowconfigure(1, weight=1)
 
-        frame5 = ctk.CTkFrame(frame3, fg_color="#101010", width=358)
-        frame5.grid(row=0, column=0, padx=0, pady=0, ipadx=0, ipady=0, sticky="nw")
+        ProcessingButtonsFrame = ctk.CTkFrame(ProcessingFrame, fg_color="#101010", width=358)
+        ProcessingButtonsFrame.grid(row=0, column=0, padx=0, pady=0, ipadx=0, ipady=0, sticky="nw")
 
-        separator = ttk.Separator(frame3, orient='horizontal')
+        separator = ttk.Separator(ProcessingFrame, orient='horizontal')
         separator.grid(row=1, column=0, padx=0, pady=0, ipadx=0, ipady=0, sticky="ew")
 
-        self.frame6 = ctk.CTkFrame(frame3, fg_color="#191919", width=358)
-        self.frame6.grid(row=2, column=0, padx=0, pady=0, ipadx=0, ipady=0, sticky="nw")
+        self.ProcessingHandlingFrame = ctk.CTkFrame(ProcessingFrame, fg_color="#191919", width=358)
+        self.ProcessingHandlingFrame.grid(row=2, column=0, padx=0, pady=0, ipadx=0, ipady=0, sticky="nw")
 
-        self.optionmenu_var = ctk.StringVar(value="Features selection")
-        self.combobox = ctk.CTkOptionMenu(master=frame5,
+        self.FeatureSelectionOptionmenuVar = ctk.StringVar(value="Features selection")
+        self.FeatureSelectionCombobox = ctk.CTkOptionMenu(master=ProcessingButtonsFrame,
                                        values=["Variance threshold", "K-best features"],
                                        command=lambda x: self.optionmenu_callback(x),
-                                       variable=self.optionmenu_var, 
+                                       variable=self.FeatureSelectionOptionmenuVar, 
                                        state='disabled', corner_radius=0, text_color="#101010", bg_color="#FFFFFF", fg_color="#FFFFFF", font=SMALLFONT, height=48, width=175, button_color="#FFFFFF", button_hover_color="#FFFFFF", dropdown_font=SMALLFONT, dropdown_hover_color="#F0F0F0", dropdown_fg_color="#FFFFFF")
-        self.combobox.grid(row=0, column=0, padx=(0, 4), pady=(0, 8), sticky="w")
+        self.FeatureSelectionCombobox.grid(row=0, column=0, padx=(0, 4), pady=(0, 8), sticky="w")
 
-        self.optionmenu_var2 = ctk.StringVar(value="Preprocessing")
-        self.combobox2 = ctk.CTkOptionMenu(master=frame5,
+        self.ProcessingOptionmenuVar = ctk.StringVar(value="Preprocessing")
+        self.ProcessingCombobox = ctk.CTkOptionMenu(master=ProcessingButtonsFrame,
                                        values=["Missing values", "Duplicate rows", "Constant features", "Outliers", "Remove columns", "Label encoding"],
                                        command=lambda x: self.optionmenu_callback(x),
-                                       variable=self.optionmenu_var2, 
+                                       variable=self.ProcessingOptionmenuVar, 
                                        state='disabled', corner_radius=0, text_color="#101010", bg_color="#FFFFFF", fg_color="#FFFFFF", font=SMALLFONT, height=48, width=175, button_color="#FFFFFF", button_hover_color="#FFFFFF", dropdown_font=SMALLFONT, dropdown_hover_color="#F0F0F0", dropdown_fg_color="#FFFFFF")
-        self.combobox2.grid(row=0, column=1, padx=(4, 0), pady=(0, 8), sticky="w")
+        self.ProcessingCombobox.grid(row=0, column=1, padx=(4, 0), pady=(0, 8), sticky="w")
 
-        frame4 = ctk.CTkFrame(frame2, fg_color="#101010")
-        frame4.grid(row=0, column=1, ipadx=0, ipady=0, sticky="nsew")
+        SheetFrame = ctk.CTkFrame(DataProcessingMainFrame, fg_color="#101010")
+        SheetFrame.grid(row=0, column=1, ipadx=0, ipady=0, sticky="nsew")
 
-        self.sheet = Sheet(frame4, data = None)
+        self.sheet = Sheet(SheetFrame, data = None)
         self.sheet.enable_bindings()
         self.sheet.pack(side="top" , fill="both", expand=True)
 
         self.frames = {}
 
         for F in (VarianceThresholdPage, KbestfeatPage, MissingValuesPage, DuplicateRowsPage, ConstantFeaturesPage, OutliersPage, RemoveColumnsPage, LabelEncodingPage, SaveDatasetPage, BlankPage):
-            frame = F(self.frame6, self)
+            frame = F(self.ProcessingHandlingFrame, self)
 
             self.frames[F] = frame
 
@@ -292,13 +289,14 @@ class DataProcessingPage(ctk.CTkFrame):
         UploadAction()
         self.load_data()
 
-        self.combobox1.configure(values=get_dataframe_columns(DATA.file_data))
+        self.TargetColumnCombobox.configure(values=get_dataframe_columns(DATA.file_data))
 
-        self.combobox1.configure(state='normal')
-        self.combobox.configure(state='disabled')
-        self.combobox2.configure(state='disabled')
-        self.button6.configure(state='disabled')
-        self.button5.configure(state='disabled')
+        self.TargetColumnCombobox.configure(state='normal')
+        self.FeatureSelectionCombobox.configure(state='disabled')
+        self.ProcessingCombobox.configure(state='disabled')
+        self.VisualizeButton.configure(state='disabled')
+        self.SaveDatasetButton.configure(state='disabled')
+        self.ContinueButton.configure(state='disabled')
 
     def load_data(self):
         global app
@@ -306,7 +304,7 @@ class DataProcessingPage(ctk.CTkFrame):
         self.sheet.set_sheet_data(data = DATA.file_data.values.tolist())
 
         """ if self.sheet is None:
-            self.sheet = Sheet(self.frame2, data = DATA.file_data.values.tolist())
+            self.sheet = Sheet(self.ModelConfigFrame, data = DATA.file_data.values.tolist())
             self.sheet.enable_bindings()
             self.sheet.pack(side="top" , fill="both", expand=True)
         else:
@@ -340,7 +338,7 @@ class DataProcessingPage(ctk.CTkFrame):
             self.frames[RemoveColumnsPage].load_checkboxes()
             self.show_frame(RemoveColumnsPage)
         elif choice == "Label encoding":
-            self.frames[LabelEncodingPage].combobox1.configure(values=get_non_numeric_columns(DATA.file_data))
+            self.frames[LabelEncodingPage].ColumnsCombobox.configure(values=get_non_numeric_columns(DATA.file_data))
             self.show_frame(LabelEncodingPage)
 
     def VisPageSwitch(self, controller):
@@ -349,8 +347,8 @@ class DataProcessingPage(ctk.CTkFrame):
             return
         
         global app
-        app.frames[VisualizationPage].combobox1.configure(values=get_dataframe_columns(DATA.file_data))
-        app.frames[VisualizationPage].combobox2.configure(values=get_dataframe_columns(DATA.file_data))
+        app.frames[VisualizationPage].ColumnXCombobox.configure(values=get_dataframe_columns(DATA.file_data))
+        app.frames[VisualizationPage].ColumnYCombobox.configure(values=get_dataframe_columns(DATA.file_data))
         controller.show_frame(VisualizationPage)
 
     def SplitPageSwitch(self, controller):
@@ -393,11 +391,11 @@ class DataProcessingPage(ctk.CTkFrame):
 
         self.load_data()
 
-        self.combobox.configure(state='normal')
-        self.combobox2.configure(state='normal')
-        self.button6.configure(state='normal')
-        self.button5.configure(state='normal')
-        self.button7.configure(state='normal')
+        self.FeatureSelectionCombobox.configure(state='normal')
+        self.ProcessingCombobox.configure(state='normal')
+        self.VisualizeButton.configure(state='normal')
+        self.ContinueButton.configure(state='normal')
+        self.SaveDatasetButton.configure(state='normal')
 
 # FILLER PAGES ############################################################################################################################
 ###########################################################################################################################################
@@ -411,32 +409,31 @@ class BlankPage(ctk.CTkFrame):
 class VarianceThresholdPage(ctk.CTkFrame):
     def __init__(self, parent, controller):
         ctk.CTkFrame.__init__(self, parent)
-        backImg = ImageTk.PhotoImage(Image.open("./assets/icons/back.png").resize((24, 24), Image.LANCZOS))
+        BackImage = ImageTk.PhotoImage(Image.open("./assets/icons/back.png").resize((24, 24), Image.LANCZOS))
 
         self.columnconfigure(0, weight=1)
 
-        label = ctk.CTkLabel(self, text="Variance threshold", text_color="#FFFFFF", font=LARGEFONT)
-        label.grid(row=0, column=0, padx=0, pady=8, sticky="w")
+        Title = ctk.CTkLabel(self, text="Variance threshold", text_color="#FFFFFF", font=LARGEFONT)
+        Title.grid(row=0, column=0, padx=0, pady=8, sticky="w")
         
-        frame1 = ctk.CTkFrame(self, fg_color="#101010")
-        frame1.grid(row=1, column=0, ipadx=0, ipady=0, columnspan=3, sticky="ew")
+        EntryFrame = ctk.CTkFrame(self, fg_color="#101010")
+        EntryFrame.grid(row=1, column=0, ipadx=0, ipady=0, columnspan=3, sticky="ew")
 
-        frame1.columnconfigure(1, weight=1)
+        EntryFrame.columnconfigure(1, weight=1)
 
-        threshold_label = ctk.CTkLabel(frame1, text="Choose the variance threshold you want:", text_color="#FFFFFF", font=SMALLFONT)
-        threshold_label.grid(row=0, column=0, padx=(0, 4), pady=8)
+        ThresholdLabel = ctk.CTkLabel(EntryFrame, text="Choose the variance threshold you want:", text_color="#FFFFFF", font=SMALLFONT)
+        ThresholdLabel.grid(row=0, column=0, padx=(0, 4), pady=8)
 
-        threshold_entry = ctk.CTkEntry(frame1, width=100, corner_radius=0)
-        threshold_entry.grid(row=0, column=1, padx=(4, 0), pady=8, sticky="ew")
+        ThresholdEntry = ctk.CTkEntry(EntryFrame, width=100, corner_radius=0)
+        ThresholdEntry.grid(row=0, column=1, padx=(4, 0), pady=8, sticky="ew")
 
-        ApplyButton = ctk.CTkButton(self, text="Select features", command=lambda: self.apply_threshold(threshold_entry.get(), controller), corner_radius=0, text_color="#101010", bg_color="#FFFFFF", fg_color="#FFFFFF", font=SMALLFONT, hover_color="#F0F0F0", height=48)
+        ApplyButton = ctk.CTkButton(self, text="Select features", command=lambda: self.apply_threshold(ThresholdEntry.get(), controller), corner_radius=0, text_color="#101010", bg_color="#FFFFFF", fg_color="#FFFFFF", font=SMALLFONT, hover_color="#F0F0F0", height=48)
         ApplyButton.grid(row=2, column=0, padx=0, pady=(8, 4), sticky="ew")
 
-        CancelButton = ctk.CTkButton(self, image=backImg, text="", command=lambda: controller.show_frame(BlankPage), corner_radius=0, text_color="#101010", bg_color="#FFFFFF", fg_color="#FFFFFF", font=SMALLFONT, hover_color="#F0F0F0", height=48, width=56)
+        CancelButton = ctk.CTkButton(self, image=BackImage, text="", command=lambda: controller.show_frame(BlankPage), corner_radius=0, text_color="#101010", bg_color="#FFFFFF", fg_color="#FFFFFF", font=SMALLFONT, hover_color="#F0F0F0", height=48, width=56)
         CancelButton.grid(row=3, column=0, padx=0, pady=4, sticky="ew")
 
     def apply_threshold(self, k, controller):
-
         global DATA
 
         if k == "" or k is None:
@@ -471,25 +468,25 @@ class KbestfeatPage(ctk.CTkFrame):
 
         self.columnconfigure(0, weight=1)
 
-        label = ctk.CTkLabel(self, text="K-best features", text_color="#FFFFFF", font=LARGEFONT)
-        label.grid(row=0, column=0, padx=0, pady=8, sticky="w")
+        Title = ctk.CTkLabel(self, text="K-best features", text_color="#FFFFFF", font=LARGEFONT)
+        Title.grid(row=0, column=0, padx=0, pady=8, sticky="w")
 
-        frame = ctk.CTkFrame(self, fg_color="#101010")
-        frame.grid(row=1, column=0, ipadx=0, ipady=0, sticky="ew")
+        EntryFrame = ctk.CTkFrame(self, fg_color="#101010")
+        EntryFrame.grid(row=1, column=0, ipadx=0, ipady=0, sticky="ew")
         
-        frame.columnconfigure(1, weight=1)
+        EntryFrame.columnconfigure(1, weight=1)
 
-        label = ctk.CTkLabel(frame, text="Number of features you want to keep\n(Less than the number of actual\nfeatures):", text_color="#FFFFFF", font=SMALLFONT)
+        label = ctk.CTkLabel(EntryFrame, text="Number of features you want to keep\n(Less than the number of actual\nfeatures):", text_color="#FFFFFF", font=SMALLFONT)
         label.grid(row=0, column=0, padx=(0, 4), pady=8, sticky="w")
 
-        K_entry = ctk.CTkEntry(frame, width=100, corner_radius=0)
-        K_entry.grid(row=0, column=1, padx=(4, 0), pady=8, sticky="ew")
+        KEntry = ctk.CTkEntry(EntryFrame, width=100, corner_radius=0)
+        KEntry.grid(row=0, column=1, padx=(4, 0), pady=8, sticky="ew")
         
-        button2 = ctk.CTkButton(self, text="Select features", command=lambda: self.kbestFeat_Selec_event(K_entry.get(), controller), corner_radius=0, text_color="#101010", bg_color="#FFFFFF", fg_color="#FFFFFF", font=SMALLFONT, hover_color="#F0F0F0", height=48)
-        button2.grid(row=2, column=0, padx=0, pady=(8, 4), sticky="ew")
+        SelectionButton = ctk.CTkButton(self, text="Select features", command=lambda: self.kbestFeat_Selec_event(KEntry.get(), controller), corner_radius=0, text_color="#101010", bg_color="#FFFFFF", fg_color="#FFFFFF", font=SMALLFONT, hover_color="#F0F0F0", height=48)
+        SelectionButton.grid(row=2, column=0, padx=0, pady=(8, 4), sticky="ew")
 
-        button1 = ctk.CTkButton(self, text="Cancel", command=lambda: controller.show_frame(BlankPage), corner_radius=0, text_color="#101010", bg_color="#FFFFFF", fg_color="#FFFFFF", font=SMALLFONT, hover_color="#F0F0F0", height=48)
-        button1.grid(row=3, column=0, padx=0, pady=4, sticky="ew")
+        CancelButton = ctk.CTkButton(self, text="Cancel", command=lambda: controller.show_frame(BlankPage), corner_radius=0, text_color="#101010", bg_color="#FFFFFF", fg_color="#FFFFFF", font=SMALLFONT, hover_color="#F0F0F0", height=48)
+        CancelButton.grid(row=3, column=0, padx=0, pady=4, sticky="ew")
 
     def kbestFeat_Selec_event(self, k, controller):  
         global DATA
@@ -526,23 +523,23 @@ class MissingValuesPage(ctk.CTkFrame):
         self.columnconfigure(0, weight=1)
         self.columnconfigure(0, weight=1)
 
-        label = ctk.CTkLabel(self, text="Missing values", text_color="#FFFFFF", font=LARGEFONT)
-        label.grid(row=0, column=0, padx=0, pady=8, sticky="w")
+        Title = ctk.CTkLabel(self, text="Missing values", text_color="#FFFFFF", font=LARGEFONT)
+        Title.grid(row=0, column=0, padx=0, pady=8, sticky="w")
 
         self.textbox = ctk.CTkLabel(self, text="", text_color="#FFFFFF", font=SMALLFONT)
         self.textbox.grid(row=1, column=0, padx=0, pady=8, sticky="w")
         
-        button4 = ctk.CTkButton(self, text="Fill with the mean", command=lambda: self.values_handling(controller, method=enums.FillMethod.MEAN), corner_radius=0, text_color="#101010", bg_color="#FFFFFF", fg_color="#FFFFFF", font=SMALLFONT, hover_color="#F0F0F0", height=32)
-        button4.grid(row=2, column=0, padx=0, pady=(8, 4), ipadx=8, ipady=8, sticky="ew")
+        MeanFillButton = ctk.CTkButton(self, text="Fill with the mean", command=lambda: self.values_handling(controller, method=enums.FillMethod.MEAN), corner_radius=0, text_color="#101010", bg_color="#FFFFFF", fg_color="#FFFFFF", font=SMALLFONT, hover_color="#F0F0F0", height=32)
+        MeanFillButton.grid(row=2, column=0, padx=0, pady=(8, 4), ipadx=8, ipady=8, sticky="ew")
 
-        button5 = ctk.CTkButton(self, text="Fill with the median", command=lambda: self.values_handling(controller, method=enums.FillMethod.MEDIAN), corner_radius=0, text_color="#101010", bg_color="#FFFFFF", fg_color="#FFFFFF", font=SMALLFONT, hover_color="#F0F0F0", height=32)
-        button5.grid(row=3, column=0, padx=0, pady=4, ipadx=8, ipady=8, sticky="ew")
+        MedianFillButton = ctk.CTkButton(self, text="Fill with the median", command=lambda: self.values_handling(controller, method=enums.FillMethod.MEDIAN), corner_radius=0, text_color="#101010", bg_color="#FFFFFF", fg_color="#FFFFFF", font=SMALLFONT, hover_color="#F0F0F0", height=32)
+        MedianFillButton.grid(row=3, column=0, padx=0, pady=4, ipadx=8, ipady=8, sticky="ew")
 
-        button3 = ctk.CTkButton(self, text="Remove rows with missing values", command=lambda: self.values_handling(controller, method=enums.FillMethod.DROP), corner_radius=0, text_color="#101010", bg_color="#FFFFFF", fg_color="#FFFFFF", font=SMALLFONT, hover_color="#F0F0F0", height=32)
-        button3.grid(row=4, column=0, padx=0, pady=4, ipadx=8, ipady=8, sticky="ew")
+        RemoveButton = ctk.CTkButton(self, text="Remove rows with missing values", command=lambda: self.values_handling(controller, method=enums.FillMethod.DROP), corner_radius=0, text_color="#101010", bg_color="#FFFFFF", fg_color="#FFFFFF", font=SMALLFONT, hover_color="#F0F0F0", height=32)
+        RemoveButton.grid(row=4, column=0, padx=0, pady=4, ipadx=8, ipady=8, sticky="ew")
 
-        button1 = ctk.CTkButton(self, text="Cancel", command=lambda: controller.show_frame(BlankPage), corner_radius=0, text_color="#101010", bg_color="#FFFFFF", fg_color="#FFFFFF", font=SMALLFONT, hover_color="#F0F0F0", height=48, width=56)
-        button1.grid(row=5, column=0, padx=0, pady=4, sticky="ew")
+        CancelButton = ctk.CTkButton(self, text="Cancel", command=lambda: controller.show_frame(BlankPage), corner_radius=0, text_color="#101010", bg_color="#FFFFFF", fg_color="#FFFFFF", font=SMALLFONT, hover_color="#F0F0F0", height=48, width=56)
+        CancelButton.grid(row=5, column=0, padx=0, pady=4, sticky="ew")
 
     def values_handling(self, controller, value: int | float | str = None, method: enums.FillMethod = enums.FillMethod.MEAN):
         global DATA
@@ -564,17 +561,17 @@ class DuplicateRowsPage(ctk.CTkFrame):
         self.configure(fg_color="#101010", width=358)
         self.columnconfigure(0, weight=1)
 
-        label = ctk.CTkLabel(self, text="Duplicate Rows", text_color="#FFFFFF", font=LARGEFONT)
-        label.grid(row=0, column=0, padx=0, pady=8, sticky="w")
+        Title = ctk.CTkLabel(self, text="Duplicate Rows", text_color="#FFFFFF", font=LARGEFONT)
+        Title.grid(row=0, column=0, padx=0, pady=8, sticky="w")
 
         self.textbox = ctk.CTkLabel(self, text="", text_color="#FFFFFF", font=SMALLFONT)
         self.textbox.grid(row=1, column=0, pady=8, sticky="w", columnspan=3)
 
-        button4 = ctk.CTkButton(self, text="Drop duplicate rows", command=lambda: self.drop_duplicate_rows(controller), corner_radius=0, text_color="#101010", bg_color="#FFFFFF", fg_color="#FFFFFF", font=SMALLFONT, hover_color="#F0F0F0", height=32)
-        button4.grid(row=2, column=0, padx=0, pady=(8, 4), ipadx=8, ipady=8, sticky="ew")
+        DropButton = ctk.CTkButton(self, text="Drop duplicate rows", command=lambda: self.drop_duplicate_rows(controller), corner_radius=0, text_color="#101010", bg_color="#FFFFFF", fg_color="#FFFFFF", font=SMALLFONT, hover_color="#F0F0F0", height=32)
+        DropButton.grid(row=2, column=0, padx=0, pady=(8, 4), ipadx=8, ipady=8, sticky="ew")
 
-        button1 = ctk.CTkButton(self, text="Cancel", command=lambda: controller.show_frame(BlankPage), corner_radius=0, text_color="#101010", bg_color="#FFFFFF", fg_color="#FFFFFF", font=SMALLFONT, hover_color="#F0F0F0", height=48)
-        button1.grid(row=3, column=0, padx=0, pady=4, sticky="ew")
+        CancelButton = ctk.CTkButton(self, text="Cancel", command=lambda: controller.show_frame(BlankPage), corner_radius=0, text_color="#101010", bg_color="#FFFFFF", fg_color="#FFFFFF", font=SMALLFONT, hover_color="#F0F0F0", height=48)
+        CancelButton.grid(row=3, column=0, padx=0, pady=4, sticky="ew")
 
     def drop_duplicate_rows(self, controller):
         global DATA
@@ -593,17 +590,17 @@ class ConstantFeaturesPage(ctk.CTkFrame):
         self.configure(fg_color="#101010", width=358)
         self.columnconfigure(0, weight=1)
 
-        label = ctk.CTkLabel(self, text="Constant features", text_color="#FFFFFF", font=LARGEFONT)
-        label.grid(row=0, column=0, padx=0, pady=8, sticky="w")
+        Title = ctk.CTkLabel(self, text="Constant features", text_color="#FFFFFF", font=LARGEFONT)
+        Title.grid(row=0, column=0, padx=0, pady=8, sticky="w")
 
         self.textbox = ctk.CTkLabel(self, text="", text_color="#FFFFFF", font=SMALLFONT)
         self.textbox.grid(row=1, column=0, pady=8, sticky="w")
 
-        button4 = ctk.CTkButton(self, text="Drop constant columns", command=lambda: self.drop_contant_columns(controller), corner_radius=0, text_color="#101010", bg_color="#FFFFFF", fg_color="#FFFFFF", font=SMALLFONT, hover_color="#F0F0F0", height=32)
-        button4.grid(row=2, column=0, padx=0, pady=(8, 4), ipadx=8, ipady=8, sticky="ew")
+        DropButton = ctk.CTkButton(self, text="Drop constant columns", command=lambda: self.drop_contant_columns(controller), corner_radius=0, text_color="#101010", bg_color="#FFFFFF", fg_color="#FFFFFF", font=SMALLFONT, hover_color="#F0F0F0", height=32)
+        DropButton.grid(row=2, column=0, padx=0, pady=(8, 4), ipadx=8, ipady=8, sticky="ew")
 
-        button1 = ctk.CTkButton(self, text="Cancel", command=lambda: controller.show_frame(BlankPage), corner_radius=0, text_color="#101010", bg_color="#FFFFFF", fg_color="#FFFFFF", font=SMALLFONT, hover_color="#F0F0F0", height=48)
-        button1.grid(row=3, column=0, padx=0, pady=4, sticky="ew")
+        BackButton = ctk.CTkButton(self, text="Cancel", command=lambda: controller.show_frame(BlankPage), corner_radius=0, text_color="#101010", bg_color="#FFFFFF", fg_color="#FFFFFF", font=SMALLFONT, hover_color="#F0F0F0", height=48)
+        BackButton.grid(row=3, column=0, padx=0, pady=4, sticky="ew")
 
     def drop_contant_columns(self, controller):
         global DATA
@@ -622,17 +619,17 @@ class OutliersPage(ctk.CTkFrame):
         self.configure(fg_color="#101010", width=358)
         self.columnconfigure(0, weight=1)
 
-        label = ctk.CTkLabel(self, text="Outliers", text_color="#FFFFFF", font=LARGEFONT)
-        label.grid(row=0, column=0, padx=0, pady=8, sticky="w")
+        Title = ctk.CTkLabel(self, text="Outliers", text_color="#FFFFFF", font=LARGEFONT)
+        Title.grid(row=0, column=0, padx=0, pady=8, sticky="w")
 
-        button4 = ctk.CTkButton(self, text="Drop outliers based on z-score", command=lambda: self.outliers_handling(controller), corner_radius=0, text_color="#101010", bg_color="#FFFFFF", fg_color="#FFFFFF", font=SMALLFONT, hover_color="#F0F0F0", height=32)
-        button4.grid(row=1, column=0, padx=0, pady=(0, 4), ipadx=8, ipady=8, sticky="ew")
+        ZScoreDropButton = ctk.CTkButton(self, text="Drop outliers based on z-score", command=lambda: self.outliers_handling(controller), corner_radius=0, text_color="#101010", bg_color="#FFFFFF", fg_color="#FFFFFF", font=SMALLFONT, hover_color="#F0F0F0", height=32)
+        ZScoreDropButton.grid(row=1, column=0, padx=0, pady=(0, 4), ipadx=8, ipady=8, sticky="ew")
 
-        button5 = ctk.CTkButton(self, text="Drop outliers based on percentiles", command=lambda: self.outliers_handling(controller, method=enums.OutlierMethod.IQR), corner_radius=0, text_color="#101010", bg_color="#FFFFFF", fg_color="#FFFFFF", font=SMALLFONT, hover_color="#F0F0F0", height=32)
-        button5.grid(row=2, column=0, padx=0, pady=4, ipadx=8, ipady=8, sticky="ew")
+        PercentileDropButton = ctk.CTkButton(self, text="Drop outliers based on percentiles", command=lambda: self.outliers_handling(controller, method=enums.OutlierMethod.IQR), corner_radius=0, text_color="#101010", bg_color="#FFFFFF", fg_color="#FFFFFF", font=SMALLFONT, hover_color="#F0F0F0", height=32)
+        PercentileDropButton.grid(row=2, column=0, padx=0, pady=4, ipadx=8, ipady=8, sticky="ew")
 
-        button1 = ctk.CTkButton(self, text="Cancel", command=lambda: controller.show_frame(BlankPage), corner_radius=0, text_color="#101010", bg_color="#FFFFFF", fg_color="#FFFFFF", font=SMALLFONT, hover_color="#F0F0F0", height=48)
-        button1.grid(row=3, column=0, padx=0, pady=4, sticky="ew")
+        CancelButton = ctk.CTkButton(self, text="Cancel", command=lambda: controller.show_frame(BlankPage), corner_radius=0, text_color="#101010", bg_color="#FFFFFF", fg_color="#FFFFFF", font=SMALLFONT, hover_color="#F0F0F0", height=48)
+        CancelButton.grid(row=3, column=0, padx=0, pady=4, sticky="ew")
 
 
     def outliers_handling(self, controller, method: enums.OutlierMethod = enums.OutlierMethod.ZSCORE):
@@ -656,36 +653,29 @@ class RemoveColumnsPage(ctk.CTkFrame):
         self.checkbuttons = []
         self.df_columns = []
 
-        label = ctk.CTkLabel(self, text="Remove columns", text_color="#FFFFFF", font=LARGEFONT)
-        label.grid(row=0, column=0, padx=0, pady=8, sticky="w")
+        Title = ctk.CTkLabel(self, text="Remove columns", text_color="#FFFFFF", font=LARGEFONT)
+        Title.grid(row=0, column=0, padx=0, pady=8, sticky="w")
 
-        self.frame1 = ctk.CTkScrollableFrame(self, fg_color="#101010")
-        self.frame1.grid(row=1, column=0, ipadx=8, ipady=8, pady=8, sticky="ew")
+        self.CheckboxesFrame = ctk.CTkScrollableFrame(self, fg_color="#101010")
+        self.CheckboxesFrame.grid(row=1, column=0, ipadx=8, ipady=8, pady=8, sticky="ew")
         
-        button4 = ctk.CTkButton(self, text="Remove columns", command=lambda: self.remove_columns(controller), corner_radius=0, text_color="#101010", bg_color="#FFFFFF", fg_color="#FFFFFF", font=SMALLFONT, hover_color="#F0F0F0", height=32)
-        button4.grid(row=2, column=0, padx=0, pady=(8, 4), ipadx=8, ipady=8, sticky="ew")
+        RemoveButton = ctk.CTkButton(self, text="Remove columns", command=lambda: self.remove_columns(controller), corner_radius=0, text_color="#101010", bg_color="#FFFFFF", fg_color="#FFFFFF", font=SMALLFONT, hover_color="#F0F0F0", height=32)
+        RemoveButton.grid(row=2, column=0, padx=0, pady=(8, 4), ipadx=8, ipady=8, sticky="ew")
 
-        button1 = ctk.CTkButton(self, text="Cancel", command=lambda: controller.show_frame(BlankPage), corner_radius=0, text_color="#101010", bg_color="#FFFFFF", fg_color="#FFFFFF", font=SMALLFONT, hover_color="#F0F0F0", height=48)
-        button1.grid(row=3, column=0, padx=0, pady=4, sticky="ew")
+        CancelButton = ctk.CTkButton(self, text="Cancel", command=lambda: controller.show_frame(BlankPage), corner_radius=0, text_color="#101010", bg_color="#FFFFFF", fg_color="#FFFFFF", font=SMALLFONT, hover_color="#F0F0F0", height=48)
+        CancelButton.grid(row=3, column=0, padx=0, pady=4, sticky="ew")
 
     def load_checkboxes(self):
         self.df_columns = get_dataframe_columns(DATA.X)
-
-        """ self.l = Checkbar(self.frame1, self.df_columns)
-        self.l.pack(anchor = 'w') """
-
-        """ for x in range(len(self.df_columns)):
-            self.l = ctk.CTkCheckBox(self.frame1, text=self.df_columns[x][0], variable=self.df_columns[x],command=lambda x=self.df_columns[x]:self.selected_df_columns.append(x), onvalue="on", offvalue="off")
-            self.l.pack(anchor = 'w') """
         
-        for checkbutton in self.frame1.winfo_children():
+        for checkbutton in self.CheckboxesFrame.winfo_children():
             checkbutton.destroy()
 
         self.checkbuttons_vars = [tk.BooleanVar() for value in self.df_columns]
 
         self.checkbuttons = []
         for index, value in enumerate(self.df_columns):
-            self.checkbutton = ctk.CTkCheckBox(self.frame1, text=value, variable=self.checkbuttons_vars[index], text_color="#FFFFFF", corner_radius=0, font=SMALLFONT, border_color="#F0F0F0", hover_color="#F0F0F0", fg_color="#FFFFFF")
+            self.checkbutton = ctk.CTkCheckBox(self.CheckboxesFrame, text=value, variable=self.checkbuttons_vars[index], text_color="#FFFFFF", corner_radius=0, font=SMALLFONT, border_color="#F0F0F0", hover_color="#F0F0F0", fg_color="#FFFFFF")
             self.checkbutton.pack(side="top", anchor="center", expand=True, fill="both", padx=0, pady=4)
             self.checkbuttons.append(self.checkbutton)
 
@@ -701,7 +691,7 @@ class RemoveColumnsPage(ctk.CTkFrame):
 
         global app
 
-        app.frames[DataProcessingPage].combobox1.configure(values=get_dataframe_columns(DATA.file_data))
+        app.frames[DataProcessingPage].TargetColumnCombobox.configure(values=get_dataframe_columns(DATA.file_data))
         app.frames[DataProcessingPage].load_data()
         controller.show_frame(BlankPage)
 
@@ -715,20 +705,20 @@ class LabelEncodingPage(ctk.CTkFrame):
         self.configure(fg_color="#101010", width=358)
         self.columnconfigure(0, weight=1)
 
-        label = ctk.CTkLabel(self, text="Label encoding", text_color="#FFFFFF", font=LARGEFONT)
-        label.grid(row=0, column=0, padx=0, pady=8, sticky="w")
+        Title = ctk.CTkLabel(self, text="Label encoding", text_color="#FFFFFF", font=LARGEFONT)
+        Title.grid(row=0, column=0, padx=0, pady=8, sticky="w")
 
         self.optionmenu_var2 = ctk.StringVar(value="Column X")
-        self.combobox1 = ctk.CTkOptionMenu(master=self,
+        self.ColumnsCombobox = ctk.CTkOptionMenu(master=self,
                                        values=[],
                                        command=lambda x: self.Column_choice_handler(x, controller),
                                        variable=self.optionmenu_var2,
                                        width=150,
                                        corner_radius=0, text_color="#101010", bg_color="#FFFFFF", fg_color="#FFFFFF", font=SMALLFONT, height=32, button_color="#FFFFFF", button_hover_color="#FFFFFF", dropdown_font=SMALLFONT, dropdown_hover_color="#F0F0F0", dropdown_fg_color="#FFFFFF")
-        self.combobox1.grid(row=1, column=0, padx=0, pady=(8, 4), ipadx=8, ipady=8, sticky="ew")
+        self.ColumnsCombobox.grid(row=1, column=0, padx=0, pady=(8, 4), ipadx=8, ipady=8, sticky="ew")
 
-        button1 = ctk.CTkButton(self, text="Cancel", command=lambda: controller.show_frame(BlankPage), corner_radius=0, text_color="#101010", bg_color="#FFFFFF", fg_color="#FFFFFF", font=SMALLFONT, hover_color="#F0F0F0", height=48)
-        button1.grid(row=2, column=0, padx=0, pady=4, sticky="ew")
+        CancelButton = ctk.CTkButton(self, text="Cancel", command=lambda: controller.show_frame(BlankPage), corner_radius=0, text_color="#101010", bg_color="#FFFFFF", fg_color="#FFFFFF", font=SMALLFONT, hover_color="#F0F0F0", height=48)
+        CancelButton.grid(row=2, column=0, padx=0, pady=4, sticky="ew")
 
     def Column_choice_handler(self, choice: str, controller):
         global app
@@ -746,68 +736,68 @@ class VisualizationPage(ctk.CTkFrame):
     def __init__(self, parent, controller):
         ctk.CTkFrame.__init__(self, parent)
         
-        backImg = ImageTk.PhotoImage(Image.open("./assets/icons/back.png").resize((24, 24), Image.LANCZOS))
+        BackImage = ImageTk.PhotoImage(Image.open("./assets/icons/back.png").resize((24, 24), Image.LANCZOS))
         # prepare data
         self.visPlotType = None
         self.visColumnX = None
         self.visColumnY = None
 
-        label = ctk.CTkLabel(self, text="Visualization", text_color="#FFFFFF", font=LARGEFONT)
-        label.grid(row=0, column=0, padx=0, pady=8, sticky="w")
+        Title = ctk.CTkLabel(self, text="Visualization", text_color="#FFFFFF", font=LARGEFONT)
+        Title.grid(row=0, column=0, padx=0, pady=8, sticky="w")
 
         self.columnconfigure(0, weight=1)
         self.rowconfigure(2, weight=1)
 
-        frame1 = ctk.CTkFrame(self, fg_color="#101010")
-        frame1.grid(row=1, column=0, ipadx=0, ipady=0, columnspan=3, sticky="ew")
+        ButtonsFrame = ctk.CTkFrame(self, fg_color="#101010")
+        ButtonsFrame.grid(row=1, column=0, ipadx=0, ipady=0, columnspan=3, sticky="ew")
 
-        button1 = ctk.CTkButton(frame1, image=backImg, text="", command=lambda: controller.show_frame(DataProcessingPage), corner_radius=0, text_color="#101010", bg_color="#FFFFFF", fg_color="#FFFFFF", font=SMALLFONT, hover_color="#F0F0F0", height=48, width=56)
-        button1.grid(row=0, column=0, padx=(0, 4), pady=8, sticky="w")
+        CancelButton = ctk.CTkButton(ButtonsFrame, image=BackImage, text="", command=lambda: controller.show_frame(DataProcessingPage), corner_radius=0, text_color="#101010", bg_color="#FFFFFF", fg_color="#FFFFFF", font=SMALLFONT, hover_color="#F0F0F0", height=48, width=56)
+        CancelButton.grid(row=0, column=0, padx=(0, 4), pady=8, sticky="w")
 
-        self.optionmenu_var = ctk.StringVar(value="Plot type")
-        self.combobox = ctk.CTkOptionMenu(master=frame1,
+        self.PlotTypeOptionmenuVar = ctk.StringVar(value="Plot type")
+        self.PlotTypeCombobox = ctk.CTkOptionMenu(master=ButtonsFrame,
                                        values=["Scatter plot", "Histogram", "Bar chart", "Line chart", "Box plot"],
                                        command=lambda x: self.plotType_optionmenu_callback(x),
-                                       variable=self.optionmenu_var,
+                                       variable=self.PlotTypeOptionmenuVar,
                                        width=150, corner_radius=0, text_color="#101010", bg_color="#FFFFFF", fg_color="#FFFFFF", font=SMALLFONT, height=32, button_color="#FFFFFF", button_hover_color="#FFFFFF", dropdown_font=SMALLFONT, dropdown_hover_color="#F0F0F0", dropdown_fg_color="#FFFFFF")
-        self.combobox.grid(row=0, column=3, padx=4, pady=8, ipadx=8, ipady=8, sticky="w")
+        self.PlotTypeCombobox.grid(row=0, column=3, padx=4, pady=8, ipadx=8, ipady=8, sticky="w")
 
-        self.optionmenu_var2 = ctk.StringVar(value="Column X")
-        self.combobox1 = ctk.CTkOptionMenu(master=frame1,
+        self.ColumnXOptionmenuVar = ctk.StringVar(value="Column X")
+        self.ColumnXCombobox = ctk.CTkOptionMenu(master=ButtonsFrame,
                                        values=[],
                                        command=lambda x: self.columnX_optionmenu_callback(x),
-                                       variable=self.optionmenu_var2,
+                                       variable=self.ColumnXOptionmenuVar,
                                        width=150, state='disabled', corner_radius=0, text_color="#101010", bg_color="#FFFFFF", fg_color="#FFFFFF", font=SMALLFONT, height=32, button_color="#FFFFFF", button_hover_color="#FFFFFF", dropdown_font=SMALLFONT, dropdown_hover_color="#F0F0F0", dropdown_fg_color="#FFFFFF")
-        self.combobox1.grid(row=0, column=4, padx=4, pady=8, ipadx=8, ipady=8, sticky="w")
+        self.ColumnXCombobox.grid(row=0, column=4, padx=4, pady=8, ipadx=8, ipady=8, sticky="w")
 
-        self.optionmenu_var3 = ctk.StringVar(value="Column Y")
-        self.combobox2 = ctk.CTkOptionMenu(master=frame1,
+        self.ColumnYOptionmenuVar = ctk.StringVar(value="Column Y")
+        self.ColumnYCombobox = ctk.CTkOptionMenu(master=ButtonsFrame,
                                        values=[],
                                        command=lambda x: self.columnY_optionmenu_callback(x),
-                                       variable=self.optionmenu_var3,
+                                       variable=self.ColumnYOptionmenuVar,
                                        width=150, state='disabled', corner_radius=0, text_color="#101010", bg_color="#FFFFFF", fg_color="#FFFFFF", font=SMALLFONT, height=32, button_color="#FFFFFF", button_hover_color="#FFFFFF", dropdown_font=SMALLFONT, dropdown_hover_color="#F0F0F0", dropdown_fg_color="#FFFFFF")
-        self.combobox2.grid(row=0, column=5, padx=4, pady=8, ipadx=8, ipady=8, sticky="w")
+        self.ColumnYCombobox.grid(row=0, column=5, padx=4, pady=8, ipadx=8, ipady=8, sticky="w")
 
-        label1 = ctk.CTkLabel(frame1, text="Bins number:", text_color="#FFFFFF", font=SMALLFONT)
-        label1.grid(row=0, column=6, padx=0, pady=8, sticky="w")
+        BinsNbrLabel = ctk.CTkLabel(ButtonsFrame, text="Bins number:", text_color="#FFFFFF", font=SMALLFONT)
+        BinsNbrLabel.grid(row=0, column=6, padx=0, pady=8, sticky="w")
 
-        self.K_entry = ctk.CTkEntry(frame1, width=100, state='disabled')
-        self.K_entry.grid(row=0, column=7, padx=8, pady=8)
+        self.BinsEntry = ctk.CTkEntry(ButtonsFrame, width=100, state='disabled')
+        self.BinsEntry.grid(row=0, column=7, padx=8, pady=8)
 
-        button3 = ctk.CTkButton(frame1, text="Plot", command=lambda: self.plot(self.K_entry.get()), corner_radius=0, text_color="#101010", bg_color="#FFFFFF", fg_color="#FFFFFF", font=SMALLFONT, hover_color="#F0F0F0", height=32)
-        button3.grid(row=0, column=8, padx=4, pady=8, ipadx=8, ipady=8, sticky="w")
+        PlotButton = ctk.CTkButton(ButtonsFrame, text="Plot", command=lambda: self.plot(self.BinsEntry.get()), corner_radius=0, text_color="#101010", bg_color="#FFFFFF", fg_color="#FFFFFF", font=SMALLFONT, hover_color="#F0F0F0", height=32)
+        PlotButton.grid(row=0, column=8, padx=4, pady=8, ipadx=8, ipady=8, sticky="w")
 
-        frame2 = ctk.CTkFrame(self, fg_color="#101010")
-        frame2.grid(row=2, column=0, columnspan=5, ipadx=8, ipady=8, sticky="nsew")
+        PlotFrame = ctk.CTkFrame(self, fg_color="#101010")
+        PlotFrame.grid(row=2, column=0, columnspan=5, ipadx=8, ipady=8, sticky="nsew")
 
         self.figure = Figure(dpi=100)
 
         # create FigureCanvasTkAgg object
-        self.figure_canvas = FigureCanvasTkAgg(self.figure, frame2)
+        self.figure_canvas = FigureCanvasTkAgg(self.figure, PlotFrame)
         self.figure_canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=True)
 
         # create the toolbar
-        self.toolbar = NavigationToolbar2Tk(self.figure_canvas, frame2)
+        self.toolbar = NavigationToolbar2Tk(self.figure_canvas, PlotFrame)
         self.toolbar.update()
         # create axes
         self.axes = self.figure.add_subplot()
@@ -822,25 +812,25 @@ class VisualizationPage(ctk.CTkFrame):
         print(self.visPlotType)
         
         if self.visPlotType == "Scatter plot":
-            self.K_entry.configure(state="disabled")
-            self.combobox1.configure(state="normal")
-            self.combobox2.configure(state="normal")
+            self.BinsEntry.configure(state="disabled")
+            self.ColumnXCombobox.configure(state="normal")
+            self.ColumnYCombobox.configure(state="normal")
         elif self.visPlotType == "Histogram":
-            self.K_entry.configure(state="normal")
-            self.combobox1.configure(state="normal")
-            self.combobox2.configure(state="disabled")
+            self.BinsEntry.configure(state="normal")
+            self.ColumnXCombobox.configure(state="normal")
+            self.ColumnYCombobox.configure(state="disabled")
         elif self.visPlotType == "Bar chart":
-            self.K_entry.configure(state="disabled")
-            self.combobox1.configure(state="normal")
-            self.combobox2.configure(state="normal")
+            self.BinsEntry.configure(state="disabled")
+            self.ColumnXCombobox.configure(state="normal")
+            self.ColumnYCombobox.configure(state="normal")
         elif self.visPlotType == "Line chart":
-            self.K_entry.configure(state="disabled")
-            self.combobox1.configure(state="normal")
-            self.combobox2.configure(state="normal")
+            self.BinsEntry.configure(state="disabled")
+            self.ColumnXCombobox.configure(state="normal")
+            self.ColumnYCombobox.configure(state="normal")
         elif self.visPlotType == "Box plot":
-            self.K_entry.configure(state="disabled")
-            self.combobox1.configure(state="normal")
-            self.combobox2.configure(state="disabled")
+            self.BinsEntry.configure(state="disabled")
+            self.ColumnXCombobox.configure(state="normal")
+            self.ColumnYCombobox.configure(state="disabled")
 
     def columnX_optionmenu_callback(self, choice):
         """ if 'DATA' not in globals() or DATA.file_data is None:
@@ -915,28 +905,28 @@ class SaveDatasetPage(ctk.CTkFrame):
 
         self.columnconfigure(0, weight=1)
 
-        label = ctk.CTkLabel(self, text="Save dataset", text_color="#FFFFFF", font=LARGEFONT)
-        label.grid(row=0, column=0, padx=0, pady=8, sticky="w")
+        Title = ctk.CTkLabel(self, text="Save dataset", text_color="#FFFFFF", font=LARGEFONT)
+        Title.grid(row=0, column=0, padx=0, pady=8, sticky="w")
 
-        frame = ctk.CTkFrame(self, fg_color="#101010")
-        frame.grid(row=1, column=0, ipadx=0, ipady=0, columnspan=3, sticky="ew")
+        EntryFrame = ctk.CTkFrame(self, fg_color="#101010")
+        EntryFrame.grid(row=1, column=0, ipadx=0, ipady=0, columnspan=3, sticky="ew")
 
-        frame.columnconfigure(1, weight=1)
+        EntryFrame.columnconfigure(1, weight=1)
 
-        label1 = ctk.CTkLabel(frame, text="File name:", text_color="#FFFFFF", font=SMALLFONT)
-        label1.grid(row=0, column=0, padx=(0, 10), pady=8, sticky = "w")
+        EntryLabel = ctk.CTkLabel(EntryFrame, text="File name:", text_color="#FFFFFF", font=SMALLFONT)
+        EntryLabel.grid(row=0, column=0, padx=(0, 10), pady=8, sticky = "w")
 
-        self.K_entry = ctk.CTkEntry(frame, width=100, height=24, corner_radius=0)
-        self.K_entry.grid(row=0, column=1, padx=(8, 0), pady=8, sticky="ew")   
+        self.FileNameEntry = ctk.CTkEntry(EntryFrame, width=100, height=24, corner_radius=0)
+        self.FileNameEntry.grid(row=0, column=1, padx=(8, 0), pady=8, sticky="ew")   
         
-        button1 = ctk.CTkButton(self, text="Choose directory", command=lambda: self.SelectSaveDirectory(), corner_radius=0, text_color="#101010", bg_color="#FFFFFF", fg_color="#FFFFFF", font=SMALLFONT, hover_color="#F0F0F0", height=48, width=56)
-        button1.grid(row=2, column=0, padx=0, pady=(8, 4), sticky="ew")
+        ChooseDirButton = ctk.CTkButton(self, text="Choose directory", command=lambda: self.SelectSaveDirectory(), corner_radius=0, text_color="#101010", bg_color="#FFFFFF", fg_color="#FFFFFF", font=SMALLFONT, hover_color="#F0F0F0", height=48, width=56)
+        ChooseDirButton.grid(row=2, column=0, padx=0, pady=(8, 4), sticky="ew")
 
-        button3 = ctk.CTkButton(self, text="Save file", command=lambda: self.SaveFile(controller), corner_radius=0, text_color="#101010", bg_color="#FFFFFF", fg_color="#FFFFFF", font=SMALLFONT, hover_color="#F0F0F0", height=48, width=56)
-        button3.grid(row=3, column=0, padx=0, pady=4, sticky="ew")
+        SaveFileButton = ctk.CTkButton(self, text="Save file", command=lambda: self.SaveFile(controller), corner_radius=0, text_color="#101010", bg_color="#FFFFFF", fg_color="#FFFFFF", font=SMALLFONT, hover_color="#F0F0F0", height=48, width=56)
+        SaveFileButton.grid(row=3, column=0, padx=0, pady=4, sticky="ew")
 
-        button2 = ctk.CTkButton(self, text="Cancel", command=lambda: controller.show_frame(BlankPage), corner_radius=0, text_color="#101010", bg_color="#FFFFFF", fg_color="#FFFFFF", font=SMALLFONT, hover_color="#F0F0F0", height=48, width=56)
-        button2.grid(row=4, column=0, padx=0, pady=4, sticky="ew")
+        CancelButton = ctk.CTkButton(self, text="Cancel", command=lambda: controller.show_frame(BlankPage), corner_radius=0, text_color="#101010", bg_color="#FFFFFF", fg_color="#FFFFFF", font=SMALLFONT, hover_color="#F0F0F0", height=48, width=56)
+        CancelButton.grid(row=4, column=0, padx=0, pady=4, sticky="ew")
 
     def SelectSaveDirectory(self):
         self.SaveDirectory = ctk.filedialog.askdirectory()
@@ -948,11 +938,11 @@ class SaveDatasetPage(ctk.CTkFrame):
             if self.SaveDirectory == None or self.SaveDirectory == '':
                 tk.messagebox.showerror("Information", "Please select a directory")
                 return
-            elif self.K_entry.get() == None or self.K_entry.get() == '':
+            elif self.FileNameEntry.get() == None or self.FileNameEntry.get() == '':
                 tk.messagebox.showerror("Information", "Please enter a file name")
                 return
             
-            DATA.file_data.to_excel(self.SaveDirectory + "/" + self.K_entry.get() + ".xlsx", index=False)
+            DATA.file_data.to_excel(self.SaveDirectory + "/" + self.FileNameEntry.get() + ".xlsx", index=False)
 
             controller.show_frame(BlankPage)
 
@@ -963,71 +953,70 @@ class SaveDatasetPage(ctk.CTkFrame):
 class DataSplitPage(ctk.CTkFrame):
     def __init__(self, parent, controller):
         ctk.CTkFrame.__init__(self, parent)
-        backImg = ImageTk.PhotoImage(Image.open("./assets/icons/back.png").resize((24, 24), Image.LANCZOS))
+        BackImage = ImageTk.PhotoImage(Image.open("./assets/icons/back.png").resize((24, 24), Image.LANCZOS))
         continueImg = ImageTk.PhotoImage(Image.open("./assets/icons/back.png").rotate(180).resize((24, 24), Image.LANCZOS))
 
         self.columnconfigure(0, weight=1)
         self.rowconfigure(4, weight=1)
 
-        label = ctk.CTkLabel(self, text="Data splitting", text_color="#FFFFFF", font=LARGEFONT)
-        label.grid(row=0, column=0, padx=0, pady=8, sticky = "w")
+        Title = ctk.CTkLabel(self, text="Data splitting", text_color="#FFFFFF", font=LARGEFONT)
+        Title.grid(row=0, column=0, padx=0, pady=8, sticky = "w")
 
-        frame1 = ctk.CTkFrame(self, fg_color="#101010")
-        frame1.grid(row=1, column=0, ipadx=0, ipady=0, columnspan=3, sticky="ew")
+        ButtonsFrame = ctk.CTkFrame(self, fg_color="#101010")
+        ButtonsFrame.grid(row=1, column=0, ipadx=0, ipady=0, columnspan=3, sticky="ew")
 
-        button1 = ctk.CTkButton(frame1, image=backImg, text="", command=lambda: controller.show_frame(DataProcessingPage), corner_radius=0, text_color="#101010", bg_color="#FFFFFF", fg_color="#FFFFFF", font=SMALLFONT, hover_color="#F0F0F0", height=48, width=56)
-        button1.grid(row=0, column=0, padx=(0, 4), pady=8, sticky="w")
+        BackButton = ctk.CTkButton(ButtonsFrame, image=BackImage, text="", command=lambda: controller.show_frame(DataProcessingPage), corner_radius=0, text_color="#101010", bg_color="#FFFFFF", fg_color="#FFFFFF", font=SMALLFONT, hover_color="#F0F0F0", height=48, width=56)
+        BackButton.grid(row=0, column=0, padx=(0, 4), pady=8, sticky="w")
 
-        button2 = ctk.CTkButton(frame1, text="Split data", command=lambda: self.split_train_test(K_entry.get(), K_entry1.get()), corner_radius=0, text_color="#101010", bg_color="#FFFFFF", fg_color="#FFFFFF", font=SMALLFONT, hover_color="#F0F0F0", height=48, width=56)
-        button2.grid(row=0, column=1, padx=4, pady=8, sticky = "w")
+        SplitDataButton = ctk.CTkButton(ButtonsFrame, text="Split data", command=lambda: self.split_train_test(RatioEntry.get(), RandomStateEntry.get()), corner_radius=0, text_color="#101010", bg_color="#FFFFFF", fg_color="#FFFFFF", font=SMALLFONT, hover_color="#F0F0F0", height=48, width=56)
+        SplitDataButton.grid(row=0, column=1, padx=4, pady=8, sticky = "w")
 
-        button5 = ctk.CTkButton(frame1, image=continueImg, text="", command=lambda: self.mlPage_switch(controller), corner_radius=0, text_color="#101010", bg_color="#FFFFFF", fg_color="#FFFFFF", font=SMALLFONT, hover_color="#F0F0F0", height=48, width=56)
-        button5.grid(row=0, column=2, padx=4, pady=8, sticky="w")
+        ContinueButton = ctk.CTkButton(ButtonsFrame, image=continueImg, text="", command=lambda: self.mlPage_switch(controller), corner_radius=0, text_color="#101010", bg_color="#FFFFFF", fg_color="#FFFFFF", font=SMALLFONT, hover_color="#F0F0F0", height=48, width=56)
+        ContinueButton.grid(row=0, column=2, padx=4, pady=8, sticky="w")
 
-        frame5 = ctk.CTkFrame(self, fg_color="#101010")
-        frame5.grid(row=2, column=0, ipadx=0, ipady=0, columnspan=3, sticky="ew")
+        RatioEntryFrame = ctk.CTkFrame(self, fg_color="#101010")
+        RatioEntryFrame.grid(row=2, column=0, ipadx=0, ipady=0, columnspan=3, sticky="ew")
 
-        label1 = ctk.CTkLabel(frame5, text="Test data ratio(default: 0.2):", text_color="#FFFFFF", font=SMALLFONT)
-        label1.grid(row=0, column=0, padx=(0, 8), pady=8, sticky = "w")
+        RatioLabel = ctk.CTkLabel(RatioEntryFrame, text="Test data ratio(default: 0.2):", text_color="#FFFFFF", font=SMALLFONT)
+        RatioLabel.grid(row=0, column=0, padx=(0, 8), pady=8, sticky = "w")
 
-        K_entry = ctk.CTkEntry(frame5, width=100, height=24)
-        K_entry.grid(row=0, column=1, padx=8)
+        RatioEntry = ctk.CTkEntry(RatioEntryFrame, width=100, height=24)
+        RatioEntry.grid(row=0, column=1, padx=8)
 
-        frame6 = ctk.CTkFrame(self, fg_color="#101010")
-        frame6.grid(row=3, column=0, ipadx=0, ipady=0, columnspan=3, sticky="ew")
+        RandomStateEntryFrame = ctk.CTkFrame(self, fg_color="#101010")
+        RandomStateEntryFrame.grid(row=3, column=0, ipadx=0, ipady=0, columnspan=3, sticky="ew")
 
-        label2 = ctk.CTkLabel(frame6, text="Random state(default: 42):", text_color="#FFFFFF", font=SMALLFONT)
-        label2.grid(row=0, column=0, padx=(0, 8), pady=8, sticky = "w")
+        RandomStateLabel = ctk.CTkLabel(RandomStateEntryFrame, text="Random state(default: 42):", text_color="#FFFFFF", font=SMALLFONT)
+        RandomStateLabel.grid(row=0, column=0, padx=(0, 8), pady=8, sticky = "w")
 
-        K_entry1 = ctk.CTkEntry(frame6, width=100, height=24)
-        K_entry1.grid(row=0, column=1, padx=8)
+        RandomStateEntry = ctk.CTkEntry(RandomStateEntryFrame, width=100, height=24)
+        RandomStateEntry.grid(row=0, column=1, padx=8)
 
-        frame2 = ctk.CTkFrame(self, fg_color="#101010")
-        #frame2.configure(fg_color="#101010")
-        frame2.grid(row=4, column=0, columnspan=3,sticky="nsew")
+        SheetsFrame = ctk.CTkFrame(self, fg_color="#101010")
+        SheetsFrame.grid(row=4, column=0, columnspan=3,sticky="nsew")
 
-        frame2.columnconfigure(0, weight=1)
-        frame2.columnconfigure(1, weight=1)
+        SheetsFrame.columnconfigure(0, weight=1)
+        SheetsFrame.columnconfigure(1, weight=1)
 
-        frame2.rowconfigure(0, weight=1)
+        SheetsFrame.rowconfigure(0, weight=1)
         
-        frame3 = ctk.CTkFrame(frame2, fg_color="#101010")
-        frame3.grid(row=0, column=0, padx=(0, 12), sticky="nsew")
+        TrainFrame = ctk.CTkFrame(SheetsFrame, fg_color="#101010")
+        TrainFrame.grid(row=0, column=0, padx=(0, 12), sticky="nsew")
         
-        frame4 = ctk.CTkFrame(frame2, fg_color="#101010")
-        frame4.grid(row=0, column=1, padx=(12, 0), sticky="nsew")
+        TestFrame = ctk.CTkFrame(SheetsFrame, fg_color="#101010")
+        TestFrame.grid(row=0, column=1, padx=(12, 0), sticky="nsew")
 
-        label1 = ctk.CTkLabel(frame3, text="Training data", pady=   24 , text_color="#FFFFFF", font=LARGEFONT)
-        label1.pack(side="top", fill="both")
+        TrainLabel = ctk.CTkLabel(TrainFrame, text="Training data", pady=   24 , text_color="#FFFFFF", font=LARGEFONT)
+        TrainLabel.pack(side="top", fill="both")
 
-        self.TrainSheet = Sheet(frame3, data = None)
+        self.TrainSheet = Sheet(TrainFrame, data = None)
         self.TrainSheet.enable_bindings()
         self.TrainSheet.pack(side="top" , fill="both", expand=True)
 
-        label2 = ctk.CTkLabel(frame4, text="Testing data", pady=24  , text_color="#FFFFFF", font=LARGEFONT)
-        label2.pack(side="top", fill="both")
+        TestLabel = ctk.CTkLabel(TestFrame, text="Testing data", pady=24  , text_color="#FFFFFF", font=LARGEFONT)
+        TestLabel.pack(side="top", fill="both")
 
-        self.TestSheet = Sheet(frame4, data = None)
+        self.TestSheet = Sheet(TestFrame, data = None)
         self.TestSheet.enable_bindings()
         self.TestSheet.pack(side="top" , fill="both", expand=True)
 
@@ -1059,44 +1048,45 @@ class DataSplitPage(ctk.CTkFrame):
         global app
         global DATA
         
-        if (k != '' and k != None) and (random_state != '' and random_state != None):
-            try:
-                k = float(k)
-                random_state = int(random_state)
+        if DATA.X_train is None or DATA.y_train is None or DATA.X_test is None or DATA.y_test is None or DATA.X is None or DATA.y is None:
+            if (k != '' and k != None) and (random_state != '' and random_state != None):
+                try:
+                    k = float(k)
+                    random_state = int(random_state)
 
-                if k <= 0 or k >= 1:
-                    tk.messagebox.showerror("Value", "The value you chose for k is invalid")
+                    if k <= 0 or k >= 1:
+                        tk.messagebox.  showerror("Value", "The value you chose for k is invalid")
+                        return
+                except ValueError:
+                    tk.messagebox.showerror("Information", "Please enter a valid value for k and random state")
                     return
-            except ValueError:
-                tk.messagebox.showerror("Information", "Please enter a valid value for k and random state")
-                return
-        
-        elif (k != '' and k != None) and (random_state == '' or random_state == None):
-            try:
-                k = float(k)
-
-                if k <= 0 or k >= 1:
-                    tk.messagebox.showerror("Value", "The value you chose for k is invalid")
-                    return
-                
-                random_state = 42
-            except ValueError:
-                tk.messagebox.showerror("Information", "Please enter a valid value for k")
-                return
-        
-        elif (k == '' or k == None) and (random_state != '' and random_state != None):
-            try:
-                random_state = int(random_state)
-                k = 0.2
-            except ValueError:
-                tk.messagebox.showerror("Information", "Please enter a valid value for random state")
-                return
-        
-        else:
-            k = 0.2
-            random_state = 42
             
-        DATA.X_train, DATA.X_test, DATA.y_train, DATA.y_test = train_test_split(DATA.X, DATA.y, test_size=k, random_state=random_state)
+            elif (k != '' and k != None) and (random_state == '' or random_state == None):
+                try:
+                    k = float(k)
+
+                    if k <= 0 or k >= 1:
+                        tk.messagebox.showerror("Value", "The value you chose for k is invalid")
+                        return
+                    
+                    random_state = 42
+                except ValueError:
+                    tk.messagebox.showerror("Information", "Please enter a valid value for k")
+                    return
+            
+            elif (k == '' or k == None) and (random_state != '' and random_state != None):
+                try:
+                    random_state = int(random_state)
+                    k = 0.2
+                except ValueError:
+                    tk.messagebox.showerror("Information", "Please enter a valid value for random state")
+                    return
+            
+            else:
+                k = 0.2
+                random_state = 42
+                
+            DATA.X_train, DATA.X_test, DATA.y_train, DATA.y_test = train_test_split(DATA.X, DATA.y, test_size=k, random_state=random_state)
         
         self.TrainSheet.set_sheet_data(data = concat([DATA.X_train, DATA.y_train], axis=1).values.tolist())
         self.TestSheet.set_sheet_data(data = concat([DATA.X_test, DATA.y_test], axis=1).values.tolist())
@@ -1109,66 +1099,66 @@ class DataSplitPage(ctk.CTkFrame):
             tk.messagebox.showerror("Information", "Please split the data first")
             return
 
-        app.frames[MLPage].label.configure(text=DATA.mlModelType)
+        app.frames[MLPage].Title.configure(text=DATA.mlModelType)
         controller.show_frame(MLPage)
 
 class MLPage(ctk.CTkFrame):
     def __init__(self, parent, controller):
         ctk.CTkFrame.__init__(self, parent)
-        backImg = ImageTk.PhotoImage(Image.open("./assets/icons/back.png").resize((24, 24), Image.LANCZOS))
+        BackImage = ImageTk.PhotoImage(Image.open("./assets/icons/back.png").resize((24, 24), Image.LANCZOS))
 
         self.columnconfigure(0, weight=1)
         self.rowconfigure(3, weight=1)
 
-        self.label = ctk.CTkLabel(self, text="Machine learning", text_color="#FFFFFF", font=LARGEFONT)
-        self.label.grid(row=0, column=0, padx=0, pady=8, sticky = "w")
+        self.Title = ctk.CTkLabel(self, text="Machine learning", text_color="#FFFFFF", font=LARGEFONT)
+        self.Title.grid(row=0, column=0, padx=0, pady=8, sticky = "w")
 
-        self.frame1 = ctk.CTkFrame(self, fg_color="#101010")
-        self.frame1.grid(row=1, column=0, ipadx=0, ipady=0, columnspan=3, sticky="ew")
+        self.ButtonsFrame = ctk.CTkFrame(self, fg_color="#101010")
+        self.ButtonsFrame.grid(row=1, column=0, ipadx=0, ipady=0, columnspan=3, sticky="ew")
 
-        button1 = ctk.CTkButton(self.frame1, image=backImg, text="", command=lambda: controller.show_frame(DataSplitPage), corner_radius=0, text_color="#101010", bg_color="#FFFFFF", fg_color="#FFFFFF", font=SMALLFONT, hover_color="#F0F0F0", height=48, width=56)
-        button1.grid(row=0, column=0, padx=(0, 4), pady=8, sticky = "w")
+        BackButton = ctk.CTkButton(self.ButtonsFrame, image=BackImage, text="", command=lambda: controller.show_frame(DataSplitPage), corner_radius=0, text_color="#101010", bg_color="#FFFFFF", fg_color="#FFFFFF", font=SMALLFONT, hover_color="#F0F0F0", height=48, width=56)
+        BackButton.grid(row=0, column=0, padx=(0, 4), pady=8, sticky = "w")
 
-        self.optionmenu_var2 = ctk.StringVar(value="Model type")
-        self.combobox2 = ctk.CTkOptionMenu(master=self.frame1,
+        self.ModelTypeOptionmenuVar = ctk.StringVar(value="Model type")
+        self.ModelTypeCombobox = ctk.CTkOptionMenu(master=self.ButtonsFrame,
                                        values=["Linear Regression", "Logistic Regression", "Decision Tree", "Naive Bayes", "Random Forest", "K-Nearest Neighbors (KNN)", "K-means", "Support Vector Machine (SVM)"],
                                        command=lambda x: self.optionmenu_callback(x),
                                        width=250,
-                                       variable=self.optionmenu_var2, 
+                                       variable=self.ModelTypeOptionmenuVar, 
                                         corner_radius=0, text_color="#101010", bg_color="#FFFFFF", fg_color="#FFFFFF", font=SMALLFONT, height=48, button_color="#FFFFFF", button_hover_color="#FFFFFF", dropdown_font=SMALLFONT, dropdown_hover_color="#F0F0F0", dropdown_fg_color="#FFFFFF")
-        self.combobox2.grid(row=0, column=1, padx=4, pady=8, sticky="w")
+        self.ModelTypeCombobox.grid(row=0, column=1, padx=4, pady=8, sticky="w")
 
-        button2 = ctk.CTkButton(self.frame1, text="Train model", command=lambda: self.train_mlModel(), corner_radius=0, text_color="#101010", bg_color="#FFFFFF", fg_color="#FFFFFF", font=SMALLFONT, hover_color="#F0F0F0", height=48)
-        button2.grid(row=0, column=2, padx=4, pady=8, sticky = "w")
+        TrainButton = ctk.CTkButton(self.ButtonsFrame, text="Train model", command=lambda: self.train_mlModel(), corner_radius=0, text_color="#101010", bg_color="#FFFFFF", fg_color="#FFFFFF", font=SMALLFONT, hover_color="#F0F0F0", height=48)
+        TrainButton.grid(row=0, column=2, padx=4, pady=8, sticky = "w")
         
-        self.button3 = ctk.CTkButton(self.frame1, text="Test model", command=lambda: self.test_mlModel(), corner_radius=0, text_color="#101010", bg_color="#FFFFFF", fg_color="#FFFFFF", font=SMALLFONT, hover_color="#F0F0F0", height=48, state="disabled")
-        self.button3.grid(row=0, column=3, padx=4, pady=8, sticky = "w")
+        self.TestButton = ctk.CTkButton(self.ButtonsFrame, text="Test model", command=lambda: self.test_mlModel(), corner_radius=0, text_color="#101010", bg_color="#FFFFFF", fg_color="#FFFFFF", font=SMALLFONT, hover_color="#F0F0F0", height=48, state="disabled")
+        self.TestButton.grid(row=0, column=3, padx=4, pady=8, sticky = "w")
 
-        self.button4 = ctk.CTkButton(self.frame1, text="Save model", command=lambda: self.openSaveModelWindow(), corner_radius=0, text_color="#101010", bg_color="#FFFFFF", fg_color="#FFFFFF", font=SMALLFONT, hover_color="#F0F0F0", height=48, state="disabled")
-        self.button4.grid(row=0, column=4, padx=4, pady=8, sticky = "w")
+        self.SaveModelButton = ctk.CTkButton(self.ButtonsFrame, text="Save model", command=lambda: self.openSaveModelWindow(), corner_radius=0, text_color="#101010", bg_color="#FFFFFF", fg_color="#FFFFFF", font=SMALLFONT, hover_color="#F0F0F0", height=48, state="disabled")
+        self.SaveModelButton.grid(row=0, column=4, padx=4, pady=8, sticky = "w")
 
-        self.showMetricsPlotsBtn = ctk.CTkButton(self.frame1, text="Show classification metrics plots", command=lambda: self.showMetricsPlots(), corner_radius=0, text_color="#101010", bg_color="#FFFFFF", fg_color="#FFFFFF", font=SMALLFONT, hover_color="#F0F0F0", height=48, state="disabled")
+        self.showMetricsPlotsBtn = ctk.CTkButton(self.ButtonsFrame, text="Show classification metrics plots", command=lambda: self.showMetricsPlots(), corner_radius=0, text_color="#101010", bg_color="#FFFFFF", fg_color="#FFFFFF", font=SMALLFONT, hover_color="#F0F0F0", height=48, state="disabled")
         self.showMetricsPlotsBtn.grid(row=0, column=5, padx=4, pady=8, sticky = "w")
         
-        self.frame2 = ctk.CTkFrame(self, fg_color="#101010", height=48)
-        self.frame2.grid(row=2, column=0, pady=(1, 8), sticky="nsew")
+        self.ModelConfigFrame = ctk.CTkFrame(self, fg_color="#101010", height=48)
+        self.ModelConfigFrame.grid(row=2, column=0, pady=(1, 8), sticky="nsew")
         
-        self.frame3 = ctk.CTkFrame(self, fg_color="#101010")
-        self.frame3.grid(row=3, column=0, pady=0, sticky="nsew")
+        self.MetricsFrame = ctk.CTkFrame(self, fg_color="#101010")
+        self.MetricsFrame.grid(row=3, column=0, pady=0, sticky="nsew")
         
         self.rowconfigure(3, weight=1)
-        self.frame3.columnconfigure(1, weight=1)
-        self.frame3.columnconfigure(2, weight=1)
-        self.frame3.rowconfigure(0, weight=1)
+        self.MetricsFrame.columnconfigure(1, weight=1)
+        self.MetricsFrame.columnconfigure(2, weight=1)
+        self.MetricsFrame.rowconfigure(0, weight=1)
 
-        self.frame4 = ctk.CTkFrame(self.frame3, fg_color="#101010")
-        self.frame4.grid(row=0, column=0, sticky="nsew")
+        self.NumericMetricsFrame = ctk.CTkFrame(self.MetricsFrame, fg_color="#101010")
+        self.NumericMetricsFrame.grid(row=0, column=0, sticky="nsew")
 
-        self.frame5 = ctk.CTkFrame(self.frame3, fg_color="#101010")
-        self.frame5.grid(row=0, column=1, padx=(8, 0), sticky="nsew")
+        self.ConfusionMatrixFrame = ctk.CTkFrame(self.MetricsFrame, fg_color="#101010")
+        self.ConfusionMatrixFrame.grid(row=0, column=1, padx=(8, 0), sticky="nsew")
 
-        self.frame6 = ctk.CTkFrame(self.frame3, fg_color="#101010")
-        self.frame6.grid(row=0, column=2, padx=0, sticky="nsew")
+        self.ROCCurveFrame = ctk.CTkFrame(self.MetricsFrame, fg_color="#101010")
+        self.ROCCurveFrame.grid(row=0, column=2, padx=0, sticky="nsew")
 
     def optionmenu_callback(self, choice: str):
         global DATA
@@ -1181,27 +1171,27 @@ class MLPage(ctk.CTkFrame):
         
         DATA.mlModelType = choice
         
-        for widget in self.frame2.winfo_children():
+        for widget in self.ModelConfigFrame.winfo_children():
             widget.destroy()
 
-        for widget in self.frame4.winfo_children():
+        for widget in self.NumericMetricsFrame.winfo_children():
             widget.destroy()
 
-        for widget in self.frame5.winfo_children():
+        for widget in self.ConfusionMatrixFrame.winfo_children():
             widget.destroy()
 
-        for widget in self.frame6.winfo_children():
+        for widget in self.ROCCurveFrame.winfo_children():
             widget.destroy()
 
         if choice == 'Linear Regression':
             self.showMetricsPlotsBtn.configure(state="disabled")
             
         elif choice == 'Naive Bayes':
-            DisributionLabel = ctk.CTkLabel(self.frame2, text="Distribution:", text_color="#FFFFFF", font=SMALLFONT)
+            DisributionLabel = ctk.CTkLabel(self.ModelConfigFrame, text="Distribution:", text_color="#FFFFFF", font=SMALLFONT)
             DisributionLabel.grid(row=0, column=0, padx=(0, 4), sticky="w")
 
             self.DistributionVar = ctk.StringVar(value="Gaussian")
-            self.nbDistributionBox = ctk.CTkOptionMenu(master=self.frame2,
+            self.nbDistributionBox = ctk.CTkOptionMenu(master=self.ModelConfigFrame,
                                         values=["Gaussian", "Multinomial", "Bernoulli"],
                                         width=250,
                                         variable=self.DistributionVar,
@@ -1209,11 +1199,11 @@ class MLPage(ctk.CTkFrame):
             self.nbDistributionBox.grid(row=0, column=1, padx=4, pady=0, sticky="w")
 
         elif choice == 'Decision Tree':
-            CriterionLabel = ctk.CTkLabel(self.frame2, text="Criterion:", text_color="#FFFFFF", font=SMALLFONT)
+            CriterionLabel = ctk.CTkLabel(self.ModelConfigFrame, text="Criterion:", text_color="#FFFFFF", font=SMALLFONT)
             CriterionLabel.grid(row=0, column=0, padx=(0, 4), pady=4, sticky="w")
 
             self.optionmenu_var2 = ctk.StringVar(value="gini")
-            self.dtCriterionBox = ctk.CTkOptionMenu(master=self.frame2,
+            self.dtCriterionBox = ctk.CTkOptionMenu(master=self.ModelConfigFrame,
                                        values=["gini", "entropy", "log_loss"],
                                        width=250,
                                        command=lambda x: print(x),
@@ -1221,124 +1211,124 @@ class MLPage(ctk.CTkFrame):
                                        corner_radius=0, text_color="#101010", bg_color="#FFFFFF", fg_color="#FFFFFF", font=SMALLFONT, height=48, button_color="#FFFFFF", button_hover_color="#FFFFFF", dropdown_font=SMALLFONT, dropdown_hover_color="#F0F0F0", dropdown_fg_color="#FFFFFF")
             self.dtCriterionBox.grid(row=0, column=1, padx=4, pady=0, sticky="w")
 
-            MaxDepthLabel = ctk.CTkLabel(self.frame2, text="Max depth:", text_color="#FFFFFF", font=SMALLFONT)
+            MaxDepthLabel = ctk.CTkLabel(self.ModelConfigFrame, text="Max depth:", text_color="#FFFFFF", font=SMALLFONT)
             MaxDepthLabel.grid(row=0, column=3, padx=(0, 4), sticky="w")
 
-            self.dtMaxDepthEntry = ctk.CTkEntry(self.frame2, width=100, height=24)
+            self.dtMaxDepthEntry = ctk.CTkEntry(self.ModelConfigFrame, width=100, height=24)
             self.dtMaxDepthEntry.grid(row=0, column=4, padx=4, sticky="w")
 
-            MinSamplesSplitLabel = ctk.CTkLabel(self.frame2, text="Min samples split:", text_color="#FFFFFF", font=SMALLFONT)
+            MinSamplesSplitLabel = ctk.CTkLabel(self.ModelConfigFrame, text="Min samples split:", text_color="#FFFFFF", font=SMALLFONT)
             MinSamplesSplitLabel.grid(row=0, column=5, padx=(0, 4), sticky="w")
 
-            self.dtMinSamplesSplitEntry = ctk.CTkEntry(self.frame2, width=100, height=24)
+            self.dtMinSamplesSplitEntry = ctk.CTkEntry(self.ModelConfigFrame, width=100, height=24)
             self.dtMinSamplesSplitEntry.grid(row=0, column=6, padx=4, sticky="w")
             
-            RandomStateLabel = ctk.CTkLabel(self.frame2, text="Random state:", text_color="#FFFFFF", font=SMALLFONT)
+            RandomStateLabel = ctk.CTkLabel(self.ModelConfigFrame, text="Random state:", text_color="#FFFFFF", font=SMALLFONT)
             RandomStateLabel.grid(row=0, column=7, padx=(0, 4), sticky="w")
 
-            self.dtRandomStateEntry = ctk.CTkEntry(self.frame2, width=100, height=24)
+            self.dtRandomStateEntry = ctk.CTkEntry(self.ModelConfigFrame, width=100, height=24)
             self.dtRandomStateEntry.grid(row=0, column=8, padx=4, sticky="w")
 
         elif choice == 'Logistic Regression':
-            SolverLabel = ctk.CTkLabel(self.frame2, text="Solver:", text_color="#FFFFFF", font=SMALLFONT)
+            SolverLabel = ctk.CTkLabel(self.ModelConfigFrame, text="Solver:", text_color="#FFFFFF", font=SMALLFONT)
             SolverLabel.grid(row=0, column=0, padx=(0, 4), sticky="w")
 
             self.SolverVar = ctk.StringVar(value="lbfgs")
-            self.lrSolverBox = ctk.CTkOptionMenu(master=self.frame2,
+            self.lrSolverBox = ctk.CTkOptionMenu(master=self.ModelConfigFrame,
                                         values=["lbfgs", "liblinear", "sag", "saga", 'newton-cg', 'newton-cholesky'],
                                         width=250,
                                         variable=self.SolverVar, 
                                         corner_radius=0, text_color="#101010", bg_color="#FFFFFF", fg_color="#FFFFFF", font=SMALLFONT, height=48, button_color="#FFFFFF", button_hover_color="#FFFFFF", dropdown_font=SMALLFONT, dropdown_hover_color="#F0F0F0", dropdown_fg_color="#FFFFFF")
             self.lrSolverBox.grid(row=0, column=1, padx=4, pady=0, sticky="w")            
 
-            PenaltyLabel = ctk.CTkLabel(self.frame2, text="Penalty:", text_color="#FFFFFF", font=SMALLFONT)
+            PenaltyLabel = ctk.CTkLabel(self.ModelConfigFrame, text="Penalty:", text_color="#FFFFFF", font=SMALLFONT)
             PenaltyLabel.grid(row=0, column=2, padx=(0, 4), sticky="w")
 
             self.PenaltyVar = ctk.StringVar(value="l2")
-            self.lrPenaltyBox = ctk.CTkOptionMenu(master=self.frame2,
+            self.lrPenaltyBox = ctk.CTkOptionMenu(master=self.ModelConfigFrame,
                                        values=["l1", "l2", "elasticnet", "none"],
                                        width=250,
                                        variable=self.PenaltyVar, 
                                        corner_radius=0, text_color="#101010", bg_color="#FFFFFF", fg_color="#FFFFFF", font=SMALLFONT, height=48, button_color="#FFFFFF", button_hover_color="#FFFFFF", dropdown_font=SMALLFONT, dropdown_hover_color="#F0F0F0", dropdown_fg_color="#FFFFFF")
             self.lrPenaltyBox.grid(row=0, column=3, padx=4, sticky="w")
 
-            CLabel = ctk.CTkLabel(self.frame2, text="C:", text_color="#FFFFFF", font=SMALLFONT)
+            CLabel = ctk.CTkLabel(self.ModelConfigFrame, text="C:", text_color="#FFFFFF", font=SMALLFONT)
             CLabel.grid(row=0, column=4, padx=(0, 4), sticky="w")
 
-            self.lrCEntry = ctk.CTkEntry(self.frame2, width=100, height=24)
+            self.lrCEntry = ctk.CTkEntry(self.ModelConfigFrame, width=100, height=24)
             self.lrCEntry.grid(row=0, column=5, padx=4, sticky="w")
 
-            MaxIterLabel = ctk.CTkLabel(self.frame2, text="Max iter:", text_color="#FFFFFF", font=SMALLFONT)
+            MaxIterLabel = ctk.CTkLabel(self.ModelConfigFrame, text="Max iter:", text_color="#FFFFFF", font=SMALLFONT)
             MaxIterLabel.grid(row=0, column=6, padx=(0, 4), sticky="w")
 
-            self.lrMaxIterEntry = ctk.CTkEntry(self.frame2, width=100, height=24)
+            self.lrMaxIterEntry = ctk.CTkEntry(self.ModelConfigFrame, width=100, height=24)
             self.lrMaxIterEntry.grid(row=0, column=7, padx=4, sticky="w")
             
-            RandomStateLabel = ctk.CTkLabel(self.frame2, text="Random state:", text_color="#FFFFFF", font=SMALLFONT)
+            RandomStateLabel = ctk.CTkLabel(self.ModelConfigFrame, text="Random state:", text_color="#FFFFFF", font=SMALLFONT)
             RandomStateLabel.grid(row=0, column=8, padx=(0, 4), sticky="w")
 
-            self.lrRandomStateEntry = ctk.CTkEntry(self.frame2, width=100, height=24)
+            self.lrRandomStateEntry = ctk.CTkEntry(self.ModelConfigFrame, width=100, height=24)
             self.lrRandomStateEntry.grid(row=0, column=9, padx=4, sticky="w")
 
         elif choice == 'Random Forest':
-            CriterionLabel = ctk.CTkLabel(self.frame2, text="Criterion:", text_color="#FFFFFF", font=SMALLFONT)
+            CriterionLabel = ctk.CTkLabel(self.ModelConfigFrame, text="Criterion:", text_color="#FFFFFF", font=SMALLFONT)
             CriterionLabel.grid(row=0, column=0, padx=(0, 4), sticky="w")
 
             self.CriterionVar = ctk.StringVar(value="gini")
-            self.rfCriterionBox = ctk.CTkOptionMenu(master=self.frame2,
+            self.rfCriterionBox = ctk.CTkOptionMenu(master=self.ModelConfigFrame,
                                        values=["gini", "entropy"],
                                        width=250,
                                        variable=self.CriterionVar, 
                                        corner_radius=0, text_color="#101010", bg_color="#FFFFFF", fg_color="#FFFFFF", font=SMALLFONT, height=48, button_color="#FFFFFF", button_hover_color="#FFFFFF", dropdown_font=SMALLFONT, dropdown_hover_color="#F0F0F0", dropdown_fg_color="#FFFFFF")
             self.rfCriterionBox.grid(row=0, column=1, padx=4, pady=0, sticky="w")
 
-            MaxDepthLabel = ctk.CTkLabel(self.frame2, text="Max depth:", text_color="#FFFFFF", font=SMALLFONT)
+            MaxDepthLabel = ctk.CTkLabel(self.ModelConfigFrame, text="Max depth:", text_color="#FFFFFF", font=SMALLFONT)
             MaxDepthLabel.grid(row=0, column=3, padx=(0, 4), sticky="w")
 
-            self.rfMaxDepthEntry = ctk.CTkEntry(self.frame2, width=100, height=24)
+            self.rfMaxDepthEntry = ctk.CTkEntry(self.ModelConfigFrame, width=100, height=24)
             self.rfMaxDepthEntry.grid(row=0, column=4, padx=4, sticky="w")
 
-            MinSamplesSplitLabel = ctk.CTkLabel(self.frame2, text="Min samples split:", text_color="#FFFFFF", font=SMALLFONT)
+            MinSamplesSplitLabel = ctk.CTkLabel(self.ModelConfigFrame, text="Min samples split:", text_color="#FFFFFF", font=SMALLFONT)
             MinSamplesSplitLabel.grid(row=0, column=5, padx=(0, 4), sticky="w")
 
-            self.rfMinSamplesSplitEntry = ctk.CTkEntry(self.frame2, width=100, height=24)
+            self.rfMinSamplesSplitEntry = ctk.CTkEntry(self.ModelConfigFrame, width=100, height=24)
             self.rfMinSamplesSplitEntry.grid(row=0, column=6, padx=4, sticky="w")
             
-            RandomStateLabel = ctk.CTkLabel(self.frame2, text="Random state:", text_color="#FFFFFF", font=SMALLFONT)
+            RandomStateLabel = ctk.CTkLabel(self.ModelConfigFrame, text="Random state:", text_color="#FFFFFF", font=SMALLFONT)
             RandomStateLabel.grid(row=0, column=7, padx=(0, 4), sticky="w")
 
-            self.rfRandomStateEntry = ctk.CTkEntry(self.frame2, width=100, height=24)
+            self.rfRandomStateEntry = ctk.CTkEntry(self.ModelConfigFrame, width=100, height=24)
             self.rfRandomStateEntry.grid(row=0, column=8, padx=4, sticky="w")
 
         elif choice == 'K-Nearest Neighbors (KNN)':
-            NNeighborsLabel = ctk.CTkLabel(self.frame2, text="N neighbors:", text_color="#FFFFFF", font=SMALLFONT)
+            NNeighborsLabel = ctk.CTkLabel(self.ModelConfigFrame, text="N neighbors:", text_color="#FFFFFF", font=SMALLFONT)
             NNeighborsLabel.grid(row=0, column=0, padx=(0, 4), sticky="w")
 
-            self.knnNNeighborsEntry = ctk.CTkEntry(self.frame2, width=100, height=24)
+            self.knnNNeighborsEntry = ctk.CTkEntry(self.ModelConfigFrame, width=100, height=24)
             self.knnNNeighborsEntry.grid(row=0, column=1, padx=4, sticky="w")
 
-            AlgorithmLabel = ctk.CTkLabel(self.frame2, text="Algorithm:", text_color="#FFFFFF", font=SMALLFONT)
+            AlgorithmLabel = ctk.CTkLabel(self.ModelConfigFrame, text="Algorithm:", text_color="#FFFFFF", font=SMALLFONT)
             AlgorithmLabel.grid(row=0, column=2, padx=(0, 4), sticky="w")
 
             self.AlgorithmVar = ctk.StringVar(value="auto")
-            self.knnAlgorithmBox = ctk.CTkOptionMenu(master=self.frame2,
+            self.knnAlgorithmBox = ctk.CTkOptionMenu(master=self.ModelConfigFrame,
                                        values=["auto", "ball_tree", "kd_tree", "brute"],
                                        width=250,
                                        variable=self.AlgorithmVar, 
                                        corner_radius=0, text_color="#101010", bg_color="#FFFFFF", fg_color="#FFFFFF", font=SMALLFONT, height=48, button_color="#FFFFFF", button_hover_color="#FFFFFF", dropdown_font=SMALLFONT, dropdown_hover_color="#F0F0F0", dropdown_fg_color="#FFFFFF")
             self.knnAlgorithmBox.grid(row=0, column=3, padx=4, pady=0, sticky="w")
 
-            LeafSizeLabel = ctk.CTkLabel(self.frame2, text="Leaf size:", text_color="#FFFFFF", font=SMALLFONT)
+            LeafSizeLabel = ctk.CTkLabel(self.ModelConfigFrame, text="Leaf size:", text_color="#FFFFFF", font=SMALLFONT)
             LeafSizeLabel.grid(row=0, column=4, padx=(0, 4), sticky="w")
 
-            self.knnLeafSizeEntry = ctk.CTkEntry(self.frame2, width=100, height=24)
+            self.knnLeafSizeEntry = ctk.CTkEntry(self.ModelConfigFrame, width=100, height=24)
             self.knnLeafSizeEntry.grid(row=0, column=5, padx=4, sticky="w")
             
-            MetricLabel = ctk.CTkLabel(self.frame2, text="Metric:", text_color="#FFFFFF", font=SMALLFONT)
+            MetricLabel = ctk.CTkLabel(self.ModelConfigFrame, text="Metric:", text_color="#FFFFFF", font=SMALLFONT)
             MetricLabel.grid(row=0, column=6, padx=(0, 4), sticky="w")
 
             self.optionmenu_var2 = ctk.StringVar(value="minkowski")
-            self.knnMetricBox = ctk.CTkOptionMenu(master=self.frame2,
+            self.knnMetricBox = ctk.CTkOptionMenu(master=self.ModelConfigFrame,
                                         values=["euclidean", "manhattan", "chebyshev", "minkowski", "wminkowski", "seuclidean", "mahalanobis"],
                                         width=250,
                                         variable=self.optionmenu_var2, 
@@ -1346,63 +1336,63 @@ class MLPage(ctk.CTkFrame):
             self.knnMetricBox.grid(row=0, column=7, padx=4, pady=0, sticky="w")
 
         elif choice == 'K-means':
-            NClustersLabel = ctk.CTkLabel(self.frame2, text="N clusters:", text_color="#FFFFFF", font=SMALLFONT)
+            NClustersLabel = ctk.CTkLabel(self.ModelConfigFrame, text="N clusters:", text_color="#FFFFFF", font=SMALLFONT)
             NClustersLabel.grid(row=0, column=0, padx=(0, 4), sticky="w")
 
-            self.kmNClustersEntry = ctk.CTkEntry(self.frame2, width=100, height=24)
+            self.kmNClustersEntry = ctk.CTkEntry(self.ModelConfigFrame, width=100, height=24)
             self.kmNClustersEntry.grid(row=0, column=1, padx=4, sticky="w")
 
-            MaxIterLabel = ctk.CTkLabel(self.frame2, text="Max iter:", text_color="#FFFFFF", font=SMALLFONT)
+            MaxIterLabel = ctk.CTkLabel(self.ModelConfigFrame, text="Max iter:", text_color="#FFFFFF", font=SMALLFONT)
             MaxIterLabel.grid(row=0, column=3, padx=(0, 4), sticky="w")
 
-            self.kmMaxIterEntry = ctk.CTkEntry(self.frame2, width=100, height=24)
+            self.kmMaxIterEntry = ctk.CTkEntry(self.ModelConfigFrame, width=100, height=24)
             self.kmMaxIterEntry.grid(row=0, column=4, padx=4, sticky="w")
 
-            AlgorithmLabel = ctk.CTkLabel(self.frame2, text="Algorithm:", text_color="#FFFFFF", font=SMALLFONT)
+            AlgorithmLabel = ctk.CTkLabel(self.ModelConfigFrame, text="Algorithm:", text_color="#FFFFFF", font=SMALLFONT)
             AlgorithmLabel.grid(row=0, column=5, padx=(0, 4), sticky="w")
 
             self.AlgorithmVar = ctk.StringVar(value="auto")
-            self.kmAlgorithmBox = ctk.CTkOptionMenu(master=self.frame2,
+            self.kmAlgorithmBox = ctk.CTkOptionMenu(master=self.ModelConfigFrame,
                                        values=["auto", "full", "elkan"],
                                        width=250,
                                        variable=self.AlgorithmVar, 
                                        corner_radius=0, text_color="#101010", bg_color="#FFFFFF", fg_color="#FFFFFF", font=SMALLFONT, height=48, button_color="#FFFFFF", button_hover_color="#FFFFFF", dropdown_font=SMALLFONT, dropdown_hover_color="#F0F0F0", dropdown_fg_color="#FFFFFF")
             self.kmAlgorithmBox.grid(row=0, column=6, padx=4, pady=0, sticky="w")
             
-            RandomStateLabel = ctk.CTkLabel(self.frame2, text="Random state:", text_color="#FFFFFF", font=SMALLFONT)
+            RandomStateLabel = ctk.CTkLabel(self.ModelConfigFrame, text="Random state:", text_color="#FFFFFF", font=SMALLFONT)
             RandomStateLabel.grid(row=0, column=7, padx=(0, 4), sticky="w")
 
-            self.kmRandomStateEntry = ctk.CTkEntry(self.frame2, width=100, height=24)
+            self.kmRandomStateEntry = ctk.CTkEntry(self.ModelConfigFrame, width=100, height=24)
             self.kmRandomStateEntry.grid(row=0, column=8, padx=4, sticky="w")
 
         elif choice == 'Support Vector Machine (SVM)':
-            CLabel = ctk.CTkLabel(self.frame2, text="C:", text_color="#FFFFFF", font=SMALLFONT)
+            CLabel = ctk.CTkLabel(self.ModelConfigFrame, text="C:", text_color="#FFFFFF", font=SMALLFONT)
             CLabel.grid(row=0, column=0, padx=(0, 4), sticky="w")
 
-            self.svmCEntry = ctk.CTkEntry(self.frame2, width=100, height=24)
+            self.svmCEntry = ctk.CTkEntry(self.ModelConfigFrame, width=100, height=24)
             self.svmCEntry.grid(row=0, column=1, padx=4, sticky="w")
 
-            KernelLabel = ctk.CTkLabel(self.frame2, text="Kernel:", text_color="#FFFFFF", font=SMALLFONT)
+            KernelLabel = ctk.CTkLabel(self.ModelConfigFrame, text="Kernel:", text_color="#FFFFFF", font=SMALLFONT)
             KernelLabel.grid(row=0, column=3, padx=(0, 4), sticky="w")
 
             self.KernelVar = ctk.StringVar(value="rbf")
-            self.svmKernelBox = ctk.CTkOptionMenu(master=self.frame2,
+            self.svmKernelBox = ctk.CTkOptionMenu(master=self.ModelConfigFrame,
                                        values=["linear", "poly", "rbf", "sigmoid", "precomputed"],
                                        width=250,
                                        variable=self.KernelVar, 
                                        corner_radius=0, text_color="#101010", bg_color="#FFFFFF", fg_color="#FFFFFF", font=SMALLFONT, height=48, button_color="#FFFFFF", button_hover_color="#FFFFFF", dropdown_font=SMALLFONT, dropdown_hover_color="#F0F0F0", dropdown_fg_color="#FFFFFF")
             self.svmKernelBox.grid(row=0, column=4, padx=4, pady=0, sticky="w")
 
-            GammaLabel = ctk.CTkLabel(self.frame2, text="Gamma:", text_color="#FFFFFF", font=SMALLFONT)
+            GammaLabel = ctk.CTkLabel(self.ModelConfigFrame, text="Gamma:", text_color="#FFFFFF", font=SMALLFONT)
             GammaLabel.grid(row=0, column=5, padx=(0, 4), sticky="w")
 
-            self.svmGammaEntry = ctk.CTkEntry(self.frame2, width=100, height=24)
+            self.svmGammaEntry = ctk.CTkEntry(self.ModelConfigFrame, width=100, height=24)
             self.svmGammaEntry.grid(row=0, column=6, padx=4, sticky="w")
             
-            RandomStateLabel = ctk.CTkLabel(self.frame2, text="Random state:", text_color="#FFFFFF", font=SMALLFONT)
+            RandomStateLabel = ctk.CTkLabel(self.ModelConfigFrame, text="Random state:", text_color="#FFFFFF", font=SMALLFONT)
             RandomStateLabel.grid(row=0, column=7, padx=(0, 4), sticky="w")
 
-            self.svmRandomStateEntry = ctk.CTkEntry(self.frame2, width=100, height=24)
+            self.svmRandomStateEntry = ctk.CTkEntry(self.ModelConfigFrame, width=100, height=24)
             self.svmRandomStateEntry.grid(row=0, column=8, padx=4, sticky="w")
         
         self.showMetricsPlotsBtn.configure(state="disabled")
@@ -1410,9 +1400,18 @@ class MLPage(ctk.CTkFrame):
     def train_mlModel(self):
         global DATA
 
-        if self.combobox2.get() == 'Model type':
+        if self.ModelTypeCombobox.get() == 'Model type':
             tk.messagebox.showerror("Information", "Please choose a model type")
             return
+        
+        for widget in self.NumericMetricsFrame.winfo_children():
+            widget.destroy()
+
+        for widget in self.ConfusionMatrixFrame.winfo_children():
+            widget.destroy()
+
+        for widget in self.ROCCurveFrame.winfo_children():
+            widget.destroy()
         
         if DATA.mlModelType == 'Linear Regression':
             DATA.mlModel = LinearRegression()
@@ -1626,8 +1625,8 @@ class MLPage(ctk.CTkFrame):
 
         DATA.mlModel.fit(DATA.X_train, DATA.y_train)
 
-        self.button3.configure(state="normal")
-        self.button4.configure(state="normal")
+        self.TestButton.configure(state="normal")
+        self.SaveModelButton.configure(state="normal")
         """ if DATA.X_train is None or DATA.y_train is None or DATA.X_test is None or DATA.y_test is None:
             print('DATA.X', DATA.X)
             print('DATA.y', DATA.y)
@@ -1651,17 +1650,17 @@ class MLPage(ctk.CTkFrame):
         print(self.prediction)
 
         if DATA.mlModelType == 'Linear Regression':
-            self.label1 = ctk.CTkLabel(self.frame4, text=f"Max error: {round(metrics.max_error(DATA.y_test, self.prediction), 4)}", text_color="#FFFFFF", font=MEDIUMFONT)
-            self.label1.grid(row=2, column=0, padx=0, pady=8, sticky = "w")
+            self.MaxErrorLabel = ctk.CTkLabel(self.NumericMetricsFrame, text=f"Max error: {round(metrics.max_error(DATA.y_test, self.prediction), 4)}", text_color="#FFFFFF", font=MEDIUMFONT)
+            self.MaxErrorLabel.grid(row=2, column=0, padx=0, pady=8, sticky = "w")
 
-            self.label2 = ctk.CTkLabel(self.frame4, text=f"Mean absolute error: {round(metrics.mean_absolute_error(DATA.y_test, self.prediction), 4)}", text_color="#FFFFFF", font=MEDIUMFONT)
-            self.label2.grid(row=3, column=0, padx=0, pady=8, sticky = "w")
+            self.MAELabel = ctk.CTkLabel(self.NumericMetricsFrame, text=f"Mean absolute error: {round(metrics.mean_absolute_error(DATA.y_test, self.prediction), 4)}", text_color="#FFFFFF", font=MEDIUMFONT)
+            self.MAELabel.grid(row=3, column=0, padx=0, pady=8, sticky = "w")
 
-            self.label3 = ctk.CTkLabel(self.frame4, text=f"Mean squared error: {round(metrics.mean_squared_error(DATA.y_test, self.prediction), 4)}", text_color="#FFFFFF", font=MEDIUMFONT)
-            self.label3.grid(row=4, column=0, padx=0, pady=8, sticky = "w")
+            self.MSELabel = ctk.CTkLabel(self.NumericMetricsFrame, text=f"Mean squared error: {round(metrics.mean_squared_error(DATA.y_test, self.prediction), 4)}", text_color="#FFFFFF", font=MEDIUMFONT)
+            self.MSELabel.grid(row=4, column=0, padx=0, pady=8, sticky = "w")
 
-            self.label4 = ctk.CTkLabel(self.frame4, text=f"R2 score: {round(metrics.r2_score(DATA.y_test, self.prediction), 4)}", text_color="#FFFFFF", font=MEDIUMFONT)
-            self.label4.grid(row=5, column=0, padx=0, pady=8, sticky = "w")
+            self.R2Label = ctk.CTkLabel(self.NumericMetricsFrame, text=f"R2 score: {round(metrics.r2_score(DATA.y_test, self.prediction), 4)}", text_color="#FFFFFF", font=MEDIUMFONT)
+            self.R2Label.grid(row=5, column=0, padx=0, pady=8, sticky = "w")
 
             self.showMetricsPlotsBtn.configure(state="disabled")
 
@@ -1669,23 +1668,23 @@ class MLPage(ctk.CTkFrame):
             self.cm = metrics.confusion_matrix(DATA.y_test, self.prediction)
             BER = 1 - (1/2 * ((self.cm[0][0] / (self.cm[0][0] + self.cm[1][0])) + (self.cm[1][1] / (self.cm[1][1] + self.cm[0][1]))))
     
-            self.label1 = ctk.CTkLabel(self.frame4, text=f"Balanced Error Rate: {round(BER, 4)}", text_color="#FFFFFF", font=MEDIUMFONT)
-            self.label1.grid(row=3, column=0, padx=0, pady=8, sticky = "w")
+            self.BERLabel = ctk.CTkLabel(self.NumericMetricsFrame, text=f"Balanced Error Rate: {round(BER, 4)}", text_color="#FFFFFF", font=MEDIUMFONT)
+            self.BERLabel.grid(row=3, column=0, padx=0, pady=8, sticky = "w")
 
-            self.label2 = ctk.CTkLabel(self.frame4, text=f"Accuracy: {round(metrics.accuracy_score(DATA.y_test, self.prediction), 4)}", text_color="#FFFFFF", font=MEDIUMFONT)
-            self.label2.grid(row=4, column=0, padx=0, pady=8, sticky = "w")
+            self.AccuracyLabel = ctk.CTkLabel(self.NumericMetricsFrame, text=f"Accuracy: {round(metrics.accuracy_score(DATA.y_test, self.prediction), 4)}", text_color="#FFFFFF", font=MEDIUMFONT)
+            self.AccuracyLabel.grid(row=4, column=0, padx=0, pady=8, sticky = "w")
 
-            self.label3 = ctk.CTkLabel(self.frame4, text=f"Precision: {round(metrics.precision_score(DATA.y_test, self.prediction), 4)}", text_color="#FFFFFF", font=MEDIUMFONT)
-            self.label3.grid(row=5, column=0, padx=0, pady=8, sticky = "w")
+            self.PrecisionLabel = ctk.CTkLabel(self.NumericMetricsFrame, text=f"Precision: {round(metrics.precision_score(DATA.y_test, self.prediction), 4)}", text_color="#FFFFFF", font=MEDIUMFONT)
+            self.PrecisionLabel.grid(row=5, column=0, padx=0, pady=8, sticky = "w")
 
-            self.label4 = ctk.CTkLabel(self.frame4, text=f"Recall: {round(metrics.recall_score(DATA.y_test, self.prediction), 4)}", text_color="#FFFFFF", font=MEDIUMFONT)
-            self.label4.grid(row=6, column=0, padx=0, pady=8, sticky = "w")
+            self.RecallLabel = ctk.CTkLabel(self.NumericMetricsFrame, text=f"Recall: {round(metrics.recall_score(DATA.y_test, self.prediction), 4)}", text_color="#FFFFFF", font=MEDIUMFONT)
+            self.RecallLabel.grid(row=6, column=0, padx=0, pady=8, sticky = "w")
 
-            self.label5 = ctk.CTkLabel(self.frame4, text=f"F1 score: {round(metrics.f1_score(DATA.y_test, self.prediction), 4)}", text_color="#FFFFFF", font=MEDIUMFONT)
-            self.label5.grid(row=7, column=0, padx=0, pady=8, sticky = "w")
+            self.F1ScoreLabel = ctk.CTkLabel(self.NumericMetricsFrame, text=f"F1 score: {round(metrics.f1_score(DATA.y_test, self.prediction), 4)}", text_color="#FFFFFF", font=MEDIUMFONT)
+            self.F1ScoreLabel.grid(row=7, column=0, padx=0, pady=8, sticky = "w")
 
-            self.label6 = ctk.CTkLabel(self.frame4, text=f"AUC score: {round(metrics.roc_auc_score(DATA.y_test, self.prediction), 4)}", text_color="#FFFFFF", font=MEDIUMFONT)
-            self.label6.grid(row=8, column=0, padx=0, pady=8, sticky = "w")
+            self.AUCScoreLabel = ctk.CTkLabel(self.NumericMetricsFrame, text=f"AUC score: {round(metrics.roc_auc_score(DATA.y_test, self.prediction), 4)}", text_color="#FFFFFF", font=MEDIUMFONT)
+            self.AUCScoreLabel.grid(row=8, column=0, padx=0, pady=8, sticky = "w")
 
             self.showMetricsPlotsBtn.configure(state="normal")
 
@@ -1693,10 +1692,10 @@ class MLPage(ctk.CTkFrame):
         global DATA
         global app
         
-        for widget in self.frame5.winfo_children():
+        for widget in self.ConfusionMatrixFrame.winfo_children():
             widget.destroy()
 
-        for widget in self.frame6.winfo_children():
+        for widget in self.ROCCurveFrame.winfo_children():
             widget.destroy()
 
         if DATA.mlModelType != 'Linear Regression' :
@@ -1708,7 +1707,7 @@ class MLPage(ctk.CTkFrame):
                 self.figure1 = Figure()
 
                 # create FigureCanvasTkAgg object
-                self.figure_canvas1 = FigureCanvasTkAgg(self.figure1, self.frame5)
+                self.figure_canvas1 = FigureCanvasTkAgg(self.figure1, self.ConfusionMatrixFrame)
 
                 # create axes
                 self.axe1 = self.figure1.add_subplot()
@@ -1721,7 +1720,7 @@ class MLPage(ctk.CTkFrame):
                 self.figure2 = Figure()
 
                 # create FigureCanvasTkAgg object
-                self.figure_canvas2 = FigureCanvasTkAgg(self.figure2, self.frame6)
+                self.figure_canvas2 = FigureCanvasTkAgg(self.figure2, self.ROCCurveFrame)
 
                 # create axes
                 self.axe2 = self.figure2.add_subplot()
@@ -1751,32 +1750,32 @@ class SaveModelTopLevel(ctk.CTkToplevel):
         ctk.CTkToplevel.__init__(self)
         
         self.resizable(False, False)
-        self.geometry("300x270")
+        self.geometry("300x218")
         self.iconbitmap('./assets/icons/machine-learning.ico')
         self.configure(bg_color="#101010", fg_color="#101010", width=200)
         self.title("Save model")
 
         self.columnconfigure(0, weight=1)
 
-        label = ctk.CTkLabel(self, text="Save model", text_color="#FFFFFF", font=LARGEFONT)
-        label.grid(row=0, column=0, padx=8, pady=8, sticky="w")
+        Title = ctk.CTkLabel(self, text="Save model", text_color="#FFFFFF", font=LARGEFONT)
+        Title.grid(row=0, column=0, padx=8, pady=8, sticky="w")
 
-        frame = ctk.CTkFrame(self, fg_color="#191919")
-        frame.grid(row=1, column=0, ipadx=0, ipady=0, columnspan=3, sticky="ew")
+        EntryFrame = ctk.CTkFrame(self, fg_color="#191919")
+        EntryFrame.grid(row=1, column=0, ipadx=0, ipady=0, columnspan=3, sticky="ew")
 
-        frame.columnconfigure(1, weight=1)
+        EntryFrame.columnconfigure(1, weight=1)
 
-        label1 = ctk.CTkLabel(frame, text="File name:", text_color="#FFFFFF", font=SMALLFONT)
-        label1.grid(row=0, column=0, padx=8, pady=8, sticky = "w")
+        Label = ctk.CTkLabel(EntryFrame, text="File name:", text_color="#FFFFFF", font=SMALLFONT)
+        Label.grid(row=0, column=0, padx=8, pady=8, sticky = "w")
 
-        self.FileName_entry = ctk.CTkEntry(frame, width=100, height=24)
+        self.FileName_entry = ctk.CTkEntry(EntryFrame, width=100, height=24)
         self.FileName_entry.grid(row=0, column=1, padx=8, pady=8, sticky="ew")
 
-        button1 = ctk.CTkButton(self, text="Choose directory", command=lambda: self.SelectSaveDirectory(), corner_radius=0, text_color="#101010", bg_color="#FFFFFF", fg_color="#FFFFFF", font=SMALLFONT, hover_color="#F0F0F0", height=48, width=56)
-        button1.grid(row=2, column=0, padx=8, pady=(8, 4), sticky="ew")
+        ChooseDirButton = ctk.CTkButton(self, text="Choose directory", command=lambda: self.SelectSaveDirectory(), corner_radius=0, text_color="#101010", bg_color="#FFFFFF", fg_color="#FFFFFF", font=SMALLFONT, hover_color="#F0F0F0", height=48, width=56)
+        ChooseDirButton.grid(row=2, column=0, padx=8, pady=(8, 4), sticky="ew")
 
-        button3 = ctk.CTkButton(self, text="Save file", command=lambda: self.SaveFile(), corner_radius=0, text_color="#101010", bg_color="#FFFFFF", fg_color="#FFFFFF", font=SMALLFONT, hover_color="#F0F0F0", height=48, width=56)
-        button3.grid(row=3, column=0, padx=8, pady=4, sticky="ew")
+        SaveFileButton = ctk.CTkButton(self, text="Save file", command=lambda: self.SaveFile(), corner_radius=0, text_color="#101010", bg_color="#FFFFFF", fg_color="#FFFFFF", font=SMALLFONT, hover_color="#F0F0F0", height=48, width=56)
+        SaveFileButton.grid(row=3, column=0, padx=8, pady=4, sticky="ew")
 
     def SelectSaveDirectory(self):
         self.SaveDirectory = ctk.filedialog.askdirectory()
