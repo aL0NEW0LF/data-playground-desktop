@@ -157,10 +157,6 @@ class StartPage(ctk.CTkFrame):
         frame.configure(fg_color="#101010")
         frame.place(relx=0.5, rely=0.5, anchor="c")
 
-        """ frame.grid_rowconfigure(1, weight=1)
-        frame.grid_columnconfigure((2, 0), weight=1) """
-
-
         UploadButton = ctk.CTkButton(frame,
                                          text="Upload your dataset",
                                          height=70,
@@ -283,9 +279,6 @@ class DataProcessingPage(ctk.CTkFrame):
         frame = self.frames[cont]
         frame.configure(fg_color="#101010", width=358)
         frame.tkraise()
-        """ self.frame6.winfo_children()[0].destroy()
-        frame = cont(self.frame6, self)
-        frame.grid(row=0, column=0, sticky="nsew") """
 
     def upload_data(self):
         UploadAction()
@@ -304,13 +297,6 @@ class DataProcessingPage(ctk.CTkFrame):
         global app
         global DATA
         self.sheet.set_sheet_data(data = DATA.file_data.values.tolist())
-
-        """ if self.sheet is None:
-            self.sheet = Sheet(self.ModelConfigFrame, data = DATA.file_data.values.tolist())
-            self.sheet.enable_bindings()
-            self.sheet.pack(side="top" , fill="both", expand=True)
-        else:
-            self.sheet.set_sheet_data(data = DATA.file_data.values.tolist()) """
  
     def optionmenu_callback(self, choice):
         if 'DATA' not in globals() or DATA.file_data is None:
@@ -460,23 +446,8 @@ class VarianceThresholdPage(ctk.CTkFrame):
         print(f"Variance thresholding applied successfully. "
                                        f"Updated dataset shape: {DATA.file_data.shape}")
         
-
-        """ float_columns = DATA.file_data.select_dtypes(include=['float']).columns
-        print(f"Float columns: {float_columns.values}")
-
-        if len(float_columns.values) > 0:
-            DATA.file_data[float_columns.values] = feature_selection_varianceThreshold(DATA.file_data[float_columns.values], k)
-            print(f"New DataFrame shape: {DATA.file_data.shape}")
-
-            global app
-            app.frames[DataProcessingPage].load_data()
-
-            print(f"Variance thresholding applied successfully. "
-                f"Updated dataset shape: {DATA.file_data.shape}") """
-        
         print(DATA.file_data)
         print(DATA.file_data.dtypes)
-
 
         controller.show_frame(BlankPage)
 
