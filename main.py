@@ -24,6 +24,7 @@ from tksheet import Sheet
 from logic.data_preprocessing import feature_selection_kBestFeatures, feature_selection_varianceThreshold, handle_missing_values, drop_duplicate_rows, drop_contant_columns, get_non_numeric_columns, get_dataframe_columns, get_non_constant_columns, get_constant_columns, remove_outliers
 from enums import enums
 import matplotlib
+from numpy import float64, float32
 
 matplotlib.use('TkAgg')
 
@@ -52,7 +53,8 @@ def UploadAction():
             DATA.file_extension = file_extension
 
             DATA.file_data_read()
-            print(DATA)
+            print(DATA.file_data)
+            print(DATA.file_data.dtypes)
         return
 
     except ValueError:
@@ -458,6 +460,24 @@ class VarianceThresholdPage(ctk.CTkFrame):
         print(f"Variance thresholding applied successfully. "
                                        f"Updated dataset shape: {DATA.file_data.shape}")
         
+
+        """ float_columns = DATA.file_data.select_dtypes(include=['float']).columns
+        print(f"Float columns: {float_columns.values}")
+
+        if len(float_columns.values) > 0:
+            DATA.file_data[float_columns.values] = feature_selection_varianceThreshold(DATA.file_data[float_columns.values], k)
+            print(f"New DataFrame shape: {DATA.file_data.shape}")
+
+            global app
+            app.frames[DataProcessingPage].load_data()
+
+            print(f"Variance thresholding applied successfully. "
+                f"Updated dataset shape: {DATA.file_data.shape}") """
+        
+        print(DATA.file_data)
+        print(DATA.file_data.dtypes)
+
+
         controller.show_frame(BlankPage)
 
 
@@ -1792,7 +1812,6 @@ class SaveModelTopLevel(ctk.CTkToplevel):
             
             dump(DATA.file_data, self.SaveDirectory + "/" + self.FileName_entry.get() + ".sav")
 
-            self.exitTopLevel()
         else:
             tk.messagebox.showerror("Information", "Please select a directory")
             return

@@ -1,5 +1,6 @@
+import select
 from pandas import DataFrame, concat
-from numpy import abs, percentile
+from numpy import abs, percentile, delete
 from scipy import stats
 from sklearn.feature_selection import VarianceThreshold, SelectKBest, f_classif
 from enums import enums
@@ -61,13 +62,21 @@ def feature_selection_kBestFeatures(df: list | DataFrame, k: int):
 
     return concat([DataFrame(skb.fit_transform(X, y)), DataFrame(y)], axis=1)
 
-def feature_selection_varianceThreshold(df, threshold):
+def feature_selection_varianceThreshold(df: list | DataFrame, threshold):
     X = df.iloc[:, :-1]
     y = df.iloc[:, -1]
-    vt = VarianceThreshold(threshold=threshold)
+    
+    float_columns = X.select_dtypes(include=['float']).columns.values
+    print(f"Float columns: {float_columns}")
 
-    selected_data = vt.fit_transform(X)
+    if len(float_columns) > 0:
+        vt = VarianceThreshold(threshold=threshold)
 
-    selected_data = concat([DataFrame(selected_data), DataFrame(y)], axis=1)
+        vt.fit(X[float_columns])
 
+        selected_data = X.drop(delete(float_columns, vt.get_support(indices=True)), axis=1)
+        selected_data = concat([DataFrame(selected_data), DataFrame(y)], axis=1)
+    else:
+        selected_data = df
+        
     return selected_data

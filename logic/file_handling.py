@@ -45,12 +45,12 @@ class file_handling:
                 self.file_data = pd.read_json(self.file_path)
             elif self.file_extension == '.txt':
                 self.file_data = pd.read_csv(self.file_path, sep=' ', header=None)
-            return None
+            return
 
         except ValueError:
             ctk.messagebox.showerror("Information", "The file you have chosen is invalid")
-            return None
+            return
         except FileNotFoundError:
             ctk.messagebox.showerror("Information", f"No such file as {self.file_path}")
-            return None
+            return
         
