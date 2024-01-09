@@ -58,34 +58,11 @@ class App(ctk.CTk):
     def __init__(self, *args, **kwargs):
         ctk.CTk.__init__(self, *args, **kwargs)
 
-        """ CloseImg = ImageTk.PhotoImage(Image.open("./assets/icons/close.png").resize((12, 12), Image.LANCZOS))
-        MinimizeImg = ImageTk.PhotoImage(Image.open("./assets/icons/minimize.png").resize((12, 12), Image.LANCZOS))
-        self.FullscreenImg = ImageTk.PhotoImage(Image.open("./assets/icons/fullscreen.png").resize((12, 12), Image.LANCZOS))
-        self.MinscreenImg = ImageTk.PhotoImage(Image.open("./assets/icons/minscreen.png").resize((12, 12), Image.LANCZOS)) """
         self.geometry("1380x720")
         self.iconbitmap('./assets/icons/machine-learning.ico')
         self.title("Data playground")
         self.minsize(1380, 720)
         self.configure(fg_color="#101010")
-        """ self.wm_attributes('-type', 'splash')
-        self.overrideredirect(True)
-        
-        title_bar = ctk.CTkFrame(self, width=self.winfo_width(), height=32,corner_radius=0)
-        title_bar.configure(fg_color="#101010")
-        title_bar.pack(side="top", fill="x")
-
-        ButtonsFrame = ctk.CTkFrame(title_bar, height=32,corner_radius=0)
-        ButtonsFrame.configure(fg_color="#101010")
-        ButtonsFrame.pack(side="right", padx=0, pady=0)
-
-        minimizeBtn = ctk.CTkButton(ButtonsFrame, text="", image=MinimizeImg, command=lambda: self.Iconify(), corner_radius=0, text_color="#FFFFFF", bg_color="#101010", fg_color="#101010", font=SMALLFONT, hover_color="#3d3d3d", height=32, width=40)
-        minimizeBtn.grid(row=0, column=0, padx=0, pady=0, sticky="e")
-
-        self.fullscreenBtn = ctk.CTkButton(ButtonsFrame, text="", image=self.FullscreenImg, command=lambda: self.maximize(), corner_radius=0, text_color="#FFFFFF", bg_color="#101010", fg_color="#101010", font=SMALLFONT, hover_color="#3d3d3d", height=32, width=40)
-        self.fullscreenBtn.grid(row=0, column=1, padx=0, pady=0, sticky="e")
-
-        closeBtn = ctk.CTkButton(ButtonsFrame, text="", image=CloseImg, command=lambda: self.destroy(), corner_radius=0, text_color="#FFFFFF", bg_color="#101010", fg_color="#101010", font=SMALLFONT, hover_color="#ff5757", height=32, width=40)
-        closeBtn.grid(row=0, column=2, padx=0, pady=0, sticky="e") """
 
         container = ctk.CTkFrame(self, width=self.winfo_width(), height=self.winfo_height())
         container.configure(fg_color="#101010")
@@ -109,19 +86,6 @@ class App(ctk.CTk):
         frame = self.frames[cont]
         frame.configure(fg_color="#101010")
         frame.tkraise()
-
-    """ def maximize(self):
-        self.wm_state('zoomed')
-        self.fullscreenBtn.configure(image=self.MinscreenImg, command=lambda: self.minimize())
-
-    def minimize(self):
-        self.wm_state('normal')
-        self.fullscreenBtn.configure(image=self.FullscreenImg, command=lambda: self.maximize())
-
-    def Iconify(self):
-        self.update_idletasks()
-        self.overrideredirect(False)
-        self.wm_state('iconic') """
     
 # first window frame startpage
 class StartPage(ctk.CTkFrame):
@@ -1148,30 +1112,6 @@ class DataSplitPage(ctk.CTkFrame):
         self.TestSheet.enable_bindings()
         self.TestSheet.pack(side="top" , fill="both", expand=True)
 
-    """ def split_X_y(self):
-        global DATA
-
-        target_column = self.optionmenu_var2.get()
-        target_column_type = DATA.file_data[target_column].dtype.name
-
-        print(target_column_type)
-
-        if DATA.mlModelType == 'Linear Regression':
-            if target_column_type != 'int64' and target_column_type != 'float64' and target_column_type != 'int32' and target_column_type != 'float32':
-                tk.messagebox.showerror("Information", "Please choose a valid target column for linear regression")
-                return
-        else: 
-            if target_column_type == 'float64' or target_column_type == 'float32':
-                tk.messagebox.showerror("Information", "Please choose a valid target column for classification")
-                return
-
-        if target_column is None or target_column == "":
-            tk.messagebox.showerror("Information", "Choose a target class")
-            return
-
-        DATA.X = DATA.file_data.drop(target_column, axis=1)
-        DATA.y = DATA.file_data[target_column] """
-
     def split_train_test(self, k='', random_state=''):
         global app
         global DATA
@@ -1827,24 +1767,9 @@ class MLPage(ctk.CTkFrame):
 
         self.TestButton.configure(state="normal")
         self.SaveModelButton.configure(state="normal")
-        """ if DATA.X_train is None or DATA.y_train is None or DATA.X_test is None or DATA.y_test is None:
-            print('DATA.X', DATA.X)
-            print('DATA.y', DATA.y)
-            DATA.mlModel.fit(DATA.X, DATA.y)
-            print('Model fitted')
-        else:
-            DATA.mlModel.fit(DATA.X_train, DATA.y_train)
-            print('Model fitted') """
 
     def test_mlModel(self):
         global DATA
-
-        """ if DATA.X_train is None or DATA.y_train is None or DATA.X_test is None or DATA.y_test is None:
-            print('DATA.X', DATA.X)
-            print('DATA.y', DATA.y)
-            prediction = DATA.mlModel.predict(DATA.X)
-        else:
-            prediction = DATA.mlModel.predict(DATA.X_test) """
         
         try:
             if DATA.X_train is None or DATA.y_train is None or DATA.X_test is None or DATA.y_test is None or DATA.X is None or DATA.y is None:
