@@ -45,8 +45,10 @@ python main.py
 > - [x] More data processing
 > - [x] More plots if possible
 > - [x] Better error handling & conditions handling
-> - [ ] Add training & testing the model without spliting the data
+> - [x] Add training & testing the model without spliting the data
 > - [x] Model configuration
 > - [x] Model, metrics & data visualization after training
 > - [x] Better UI
-> - [ ] Import ML model to use
+> - [x] Import ML model to use
+> - [ ] Add log file to record every step of the process and be able to return
+> - [x] Fix the 'K-means' workflow, with more visualization of the results
