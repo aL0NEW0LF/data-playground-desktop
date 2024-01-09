@@ -5,7 +5,7 @@ from tkinter import ttk
 import os
 import customtkinter as ctk
 from PIL import ImageTk, Image
-from joblib import dump
+from joblib import dump, load
 from matplotlib import pyplot as plt
 from pandas import concat
 from sklearn.calibration import LabelEncoder
@@ -38,8 +38,8 @@ MLModels = {'Linear Regression': LinearRegression(), 'Decision Tree': DecisionTr
 DATA = fh()
 
 # WRAPPER FUNCTIONS
-def UploadAction():
-    file_path = ctk.filedialog.askopenfilename(filetypes=[("Excel files", "*.xlsx"), ("CSV files", "*.csv"), ("JSON files", "*.json"), ("Text files", "*.txt")])
+def UploadAction(type: str = 'file'):
+    file_path = ctk.filedialog.askopenfilename(filetypes=[("Excel files", "*.xlsx"), ("CSV files", "*.csv"), ("JSON files", "*.json"), ("Text files", "*.txt")] if type == 'file' else [(".SAV files", "*.sav")])
     _, file_extension = os.path.splitext(file_path)
 
     return file_path, file_extension
@@ -268,7 +268,6 @@ class DataProcessingPage(ctk.CTkFrame):
                                                           button_hover_color="#FFFFFF", dropdown_font=SMALLFONT,
                                                           dropdown_hover_color="#F0F0F0", dropdown_fg_color="#FFFFFF",
                                                           dropdown_text_color="#101010")
-
         self.FeatureSelectionCombobox.grid(row=0, column=0, padx=(0, 4), pady=(0, 8), sticky="w")
 
         self.ProcessingOptionmenuVar = ctk.StringVar(value="Preprocessing")
@@ -282,7 +281,6 @@ class DataProcessingPage(ctk.CTkFrame):
                                                     width=175, button_color="#FFFFFF", button_hover_color="#FFFFFF",
                                                     dropdown_font=SMALLFONT, dropdown_hover_color="#F0F0F0",
                                                     dropdown_fg_color="#FFFFFF", dropdown_text_color="#101010")
-
         self.ProcessingCombobox.grid(row=0, column=1, padx=(4, 0), pady=(0, 8), sticky="w")
 
         SheetFrame = ctk.CTkFrame(DataProcessingMainFrame, fg_color="#101010")
@@ -1267,10 +1265,10 @@ class MLPage(ctk.CTkFrame):
                                                    dropdown_fg_color="#FFFFFF", dropdown_text_color="#101010")
         self.ModelTypeCombobox.grid(row=0, column=1, padx=4, pady=8, sticky="w")
 
-        TrainButton = ctk.CTkButton(self.ButtonsFrame, text="Train model", command=lambda: self.train_mlModel(),
+        self.TrainButton = ctk.CTkButton(self.ButtonsFrame, text="Train model", command=lambda: self.train_mlModel(),
                                     corner_radius=0, text_color="#101010", bg_color="#FFFFFF", fg_color="#FFFFFF",
-                                    font=SMALLFONT, hover_color="#F0F0F0", height=48)
-        TrainButton.grid(row=0, column=2, padx=4, pady=8, sticky="w")
+                                    font=SMALLFONT, hover_color="#F0F0F0", height=48, state="disabled")
+        self.TrainButton.grid(row=0, column=2, padx=4, pady=8, sticky="w")
 
         self.TestButton = ctk.CTkButton(self.ButtonsFrame, text="Test model", command=lambda: self.test_mlModel(),
                                         corner_radius=0, text_color="#101010", bg_color="#FFFFFF", fg_color="#FFFFFF",
@@ -1289,18 +1287,15 @@ class MLPage(ctk.CTkFrame):
                                                  font=SMALLFONT, hover_color="#F0F0F0", height=48, state="disabled")
         self.showMetricsPlotsBtn.grid(row=0, column=5, padx=4, pady=8, sticky="w")
 
+        self.ImportModelButton = ctk.CTkButton(self.ButtonsFrame, text="Import a model",
+                                                 command=lambda: self.importModelHandler(), corner_radius=0,
+                                                 text_color="#101010", bg_color="#FFFFFF", fg_color="#FFFFFF",
+                                                 font=SMALLFONT, hover_color="#F0F0F0", height=48)
+        self.ImportModelButton.grid(row=0, column=6, padx=4, pady=8, sticky="w")
+
         self.ModelConfigFrame = ctk.CTkFrame(self, fg_color="#101010", height=48)
         self.ModelConfigFrame.grid(row=2, column=0, pady=(1, 8), sticky="nsew")
 
-        self.MetricsFrame = ctk.CTkFrame(self, fg_color="#101010")
-        self.MetricsFrame.grid(row=3, column=0, pady=0, sticky="nsew")
-
-        self.showMetricsPlotsBtn = ctk.CTkButton(self.ButtonsFrame, text="Show classification metrics plots", command=lambda: self.showMetricsPlots(), corner_radius=0, text_color="#101010", bg_color="#FFFFFF", fg_color="#FFFFFF", font=SMALLFONT, hover_color="#F0F0F0", height=48, state="disabled")
-        self.showMetricsPlotsBtn.grid(row=0, column=5, padx=4, pady=8, sticky = "w")
-        
-        self.ModelConfigFrame = ctk.CTkFrame(self, fg_color="#101010", height=48)
-        self.ModelConfigFrame.grid(row=2, column=0, pady=(1, 8), sticky="nsew")
-        
         self.MetricsFrame = ctk.CTkFrame(self, fg_color="#101010")
         self.MetricsFrame.grid(row=3, column=0, pady=0, sticky="nsew")
         
@@ -1596,6 +1591,9 @@ class MLPage(ctk.CTkFrame):
             self.svmRandomStateEntry = ctk.CTkEntry(self.ModelConfigFrame, width=100, height=24)
             self.svmRandomStateEntry.grid(row=0, column=8, padx=4, sticky="w")
         
+        self.TrainButton.configure(state="normal")
+        self.TestButton.configure(state="disabled")
+        self.SaveModelButton.configure(state="disabled")
         self.showMetricsPlotsBtn.configure(state="disabled")
 
     def train_mlModel(self):
@@ -1912,6 +1910,7 @@ class MLPage(ctk.CTkFrame):
                                               text_color="#FFFFFF", font=MEDIUMFONT)
             self.AUCScoreLabel.grid(row=8, column=0, padx=0, pady=8, sticky="w")
 
+            self.SaveModelButton.configure(state="normal")
             self.showMetricsPlotsBtn.configure(state="normal")
 
     def showMetricsPlots(self):
@@ -1961,9 +1960,45 @@ class MLPage(ctk.CTkFrame):
                 self.figure_canvas1.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=True)
                 self.figure_canvas2.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=True)
 
+    def importModelHandler(self):
+        file_path, file_extension = UploadAction(type="model")
+
+        if file_path == None or file_path == '':
+            return
+        
+        if file_extension != '.sav':
+            tk.messagebox.showerror("Information", "Please select a valid file")
+            return
+        
+        global DATA
+
+        DATA.mlModel = load(file_path)
+
+        self.TrainButton.configure(state="normal")
+        self.TestButton.configure(state="normal")
+        self.SaveModelButton.configure(state="normal")
+        self.showMetricsPlotsBtn.configure(state="disabled")
+
+        self.ModelTypeCombobox.set('Model type')
+
+        for widget in self.ModelConfigFrame.winfo_children():
+            widget.destroy()
+
+        for widget in self.NumericMetricsFrame.winfo_children():
+            widget.destroy()
+
+        for widget in self.ConfusionMatrixFrame.winfo_children():
+            widget.destroy()
+        
+        for widget in self.ROCCurveFrame.winfo_children():
+            widget.destroy()
+
     def openSaveModelWindow(self):
         try:
-            DATA.mlModel.predict(DATA.X_test)
+            if DATA.X_train is None or DATA.y_train is None or DATA.X_test is None or DATA.y_test is None:
+                DATA.mlModel.predict(DATA.X)
+            else:
+                DATA.mlModel.predict(DATA.X_test)
         except NotFittedError:
             tk.messagebox.showerror("Information", "Please train your model")
             return
@@ -2020,7 +2055,10 @@ class SaveModelTopLevel(ctk.CTkToplevel):
                 tk.messagebox.showerror("Information", "Please enter a file name")
                 return
             
-            dump(DATA.file_data, self.SaveDirectory + "/" + self.FileName_entry.get() + ".sav")
+            dump(DATA.mlModel, self.SaveDirectory + "/" + self.FileName_entry.get() + ".sav")
+
+            self.destroy()
+            self.update()
 
         else:
             tk.messagebox.showerror("Information", "Please select a directory")
