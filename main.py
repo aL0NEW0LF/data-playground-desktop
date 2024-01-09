@@ -132,13 +132,11 @@ class StartPage(ctk.CTkFrame):
         frame.configure(fg_color="#101010")
         frame.place(relx=0.5, rely=0.5, anchor="c")
 
-        label = ctk.CTkLabel(self,
-                             text="Let's get started! Please upload your dataset\n\n( Files supported: \t.xlsx .csv .json .txt )",
+        label = ctk.CTkLabel(frame,
+                             text="Let's get started! Please upload your dataset\n\n(Files supported: .xlsx / .csv / .json / .txt)",
                              text_color="#FFFFFF", font=LARGEFONT,
                              fg_color="#101010")
-        label.grid(row=0, column=0, columnspan=5, padx=0, pady=(100, 8), sticky="n")
-
-        self.columnconfigure(2, weight=1)
+        label.grid(row=0, column=0, padx=0, pady=(100, 8), sticky="n")
 
         UploadButton = ctk.CTkButton(frame,
                                      text="Upload your dataset",
@@ -150,7 +148,7 @@ class StartPage(ctk.CTkFrame):
                                      font=LARGEFONT,
                                      hover_color="#F0F0F0")
         UploadButton.configure(command=lambda: self.upload_data(controller))
-        UploadButton.grid(row=0, column=0, padx=20, pady=20, sticky="se")
+        UploadButton.grid(row=1, column=0, padx=20, pady=36, sticky="nsew")
 
     def button_click_controller(self, btn: ctk.CTkButton, controller):
         global DATA 
