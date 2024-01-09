@@ -1225,9 +1225,9 @@ class DataSplitPage(ctk.CTkFrame):
         global app
         global DATA
 
-        if DATA.X_train is None or DATA.y_train is None or DATA.X_test is None or DATA.y_test is None or DATA.X is None or DATA.y is None:
+        """ if DATA.X_train is None or DATA.y_train is None or DATA.X_test is None or DATA.y_test is None or DATA.X is None or DATA.y is None:
             tk.messagebox.showerror("Information", "Please split the data first")
-            return
+            return """
 
         app.frames[MLPage].Title.configure(text=DATA.mlModelType)
         controller.show_frame(MLPage)
@@ -1822,9 +1822,10 @@ class MLPage(ctk.CTkFrame):
 
             DATA.mlModel = svm.SVC(C=svmC, kernel=svmKernel, gamma=svmGamma, random_state=svmRandomState)
 
-        
-
-        DATA.mlModel.fit(DATA.X_train, DATA.y_train)
+        if DATA.X_train is None or DATA.y_train is None or DATA.X_test is None or DATA.y_test is None or DATA.X is None or DATA.y is None:
+            DATA.mlModel.fit(DATA.X, DATA.y)
+        else:
+            DATA.mlModel.fit(DATA.X_train, DATA.y_train)
 
         self.TestButton.configure(state="normal")
         self.SaveModelButton.configure(state="normal")
@@ -1846,35 +1847,37 @@ class MLPage(ctk.CTkFrame):
             prediction = DATA.mlModel.predict(DATA.X)
         else:
             prediction = DATA.mlModel.predict(DATA.X_test) """
-        self.prediction = DATA.mlModel.predict(DATA.X_test)
-        print(DATA.mlModel)
-        print(self.prediction)
+        
+        if DATA.X_train is None or DATA.y_train is None or DATA.X_test is None or DATA.y_test is None or DATA.X is None or DATA.y is None:
+            self.prediction = DATA.mlModel.predict(DATA.X)
+        else:
+            self.prediction = DATA.mlModel.predict(DATA.X_test)
 
         if DATA.mlModelType == 'Linear Regression':
             self.MaxErrorLabel = ctk.CTkLabel(self.NumericMetricsFrame,
-                                              text=f"Max error: {round(metrics.max_error(DATA.y_test, self.prediction), 4)}",
+                                              text=f"Max error: {round(metrics.max_error(DATA.y if (DATA.X_train is None or DATA.y_train is None or DATA.X_test is None or DATA.y_test is None or DATA.X is None or DATA.y is None) else DATA.y_test, self.prediction), 4)}",
                                               text_color="#FFFFFF", font=MEDIUMFONT)
             self.MaxErrorLabel.grid(row=2, column=0, padx=0, pady=8, sticky="w")
 
             self.MAELabel = ctk.CTkLabel(self.NumericMetricsFrame,
-                                         text=f"Mean absolute error: {round(metrics.mean_absolute_error(DATA.y_test, self.prediction), 4)}",
+                                         text=f"Mean absolute error: {round(metrics.mean_absolute_error(DATA.y if (DATA.X_train is None or DATA.y_train is None or DATA.X_test is None or DATA.y_test is None or DATA.X is None or DATA.y is None) else DATA.y_test, self.prediction), 4)}",
                                          text_color="#FFFFFF", font=MEDIUMFONT)
             self.MAELabel.grid(row=3, column=0, padx=0, pady=8, sticky="w")
 
             self.MSELabel = ctk.CTkLabel(self.NumericMetricsFrame,
-                                         text=f"Mean squared error: {round(metrics.mean_squared_error(DATA.y_test, self.prediction), 4)}",
+                                         text=f"Mean squared error: {round(metrics.mean_squared_error(DATA.y if (DATA.X_train is None or DATA.y_train is None or DATA.X_test is None or DATA.y_test is None or DATA.X is None or DATA.y is None) else DATA.y_test, self.prediction), 4)}",
                                          text_color="#FFFFFF", font=MEDIUMFONT)
             self.MSELabel.grid(row=4, column=0, padx=0, pady=8, sticky="w")
 
             self.R2Label = ctk.CTkLabel(self.NumericMetricsFrame,
-                                        text=f"R2 score: {round(metrics.r2_score(DATA.y_test, self.prediction), 4)}",
+                                        text=f"R2 score: {round(metrics.r2_score(DATA.y if (DATA.X_train is None or DATA.y_train is None or DATA.X_test is None or DATA.y_test is None or DATA.X is None or DATA.y is None) else DATA.y_test, self.prediction), 4)}",
                                         text_color="#FFFFFF", font=MEDIUMFONT)
             self.R2Label.grid(row=5, column=0, padx=0, pady=8, sticky="w")
 
             self.showMetricsPlotsBtn.configure(state="disabled")
 
         else:
-            self.cm = metrics.confusion_matrix(DATA.y_test, self.prediction)
+            self.cm = metrics.confusion_matrix(DATA.y if (DATA.X_train is None or DATA.y_train is None or DATA.X_test is None or DATA.y_test is None or DATA.X is None or DATA.y is None) else DATA.y_test, self.prediction)
             BER = 1 - (1/2 * ((self.cm[0][0] / (self.cm[0][0] + self.cm[1][0])) + (self.cm[1][1] / (self.cm[1][1] + self.cm[0][1]))))
     
             self.BERLabel = ctk.CTkLabel(self.NumericMetricsFrame, text=f"Balanced Error Rate: {round(BER, 4)}", text_color="#FFFFFF", font=MEDIUMFONT)
@@ -1885,27 +1888,27 @@ class MLPage(ctk.CTkFrame):
             self.BERLabel.grid(row=3, column=0, padx=0, pady=8, sticky="w")
 
             self.AccuracyLabel = ctk.CTkLabel(self.NumericMetricsFrame,
-                                              text=f"Accuracy: {round(metrics.accuracy_score(DATA.y_test, self.prediction), 4)}",
+                                              text=f"Accuracy: {round(metrics.accuracy_score(DATA.y if (DATA.X_train is None or DATA.y_train is None or DATA.X_test is None or DATA.y_test is None or DATA.X is None or DATA.y is None) else DATA.y_test, self.prediction), 4)}",
                                               text_color="#FFFFFF", font=MEDIUMFONT)
             self.AccuracyLabel.grid(row=4, column=0, padx=0, pady=8, sticky="w")
 
             self.PrecisionLabel = ctk.CTkLabel(self.NumericMetricsFrame,
-                                               text=f"Precision: {round(metrics.precision_score(DATA.y_test, self.prediction), 4)}",
+                                               text=f"Precision: {round(metrics.precision_score(DATA.y if (DATA.X_train is None or DATA.y_train is None or DATA.X_test is None or DATA.y_test is None or DATA.X is None or DATA.y is None) else DATA.y_test, self.prediction), 4)}",
                                                text_color="#FFFFFF", font=MEDIUMFONT)
             self.PrecisionLabel.grid(row=5, column=0, padx=0, pady=8, sticky="w")
 
             self.RecallLabel = ctk.CTkLabel(self.NumericMetricsFrame,
-                                            text=f"Recall: {round(metrics.recall_score(DATA.y_test, self.prediction), 4)}",
+                                            text=f"Recall: {round(metrics.recall_score(DATA.y if (DATA.X_train is None or DATA.y_train is None or DATA.X_test is None or DATA.y_test is None or DATA.X is None or DATA.y is None) else DATA.y_test, self.prediction), 4)}",
                                             text_color="#FFFFFF", font=MEDIUMFONT)
             self.RecallLabel.grid(row=6, column=0, padx=0, pady=8, sticky="w")
 
             self.F1ScoreLabel = ctk.CTkLabel(self.NumericMetricsFrame,
-                                             text=f"F1 score: {round(metrics.f1_score(DATA.y_test, self.prediction), 4)}",
+                                             text=f"F1 score: {round(metrics.f1_score(DATA.y if (DATA.X_train is None or DATA.y_train is None or DATA.X_test is None or DATA.y_test is None or DATA.X is None or DATA.y is None) else DATA.y_test, self.prediction), 4)}",
                                              text_color="#FFFFFF", font=MEDIUMFONT)
             self.F1ScoreLabel.grid(row=7, column=0, padx=0, pady=8, sticky="w")
 
             self.AUCScoreLabel = ctk.CTkLabel(self.NumericMetricsFrame,
-                                              text=f"AUC score: {round(metrics.roc_auc_score(DATA.y_test, self.prediction), 4)}",
+                                              text=f"AUC score: {round(metrics.roc_auc_score(DATA.y if (DATA.X_train is None or DATA.y_train is None or DATA.X_test is None or DATA.y_test is None or DATA.X is None or DATA.y is None) else DATA.y_test, self.prediction), 4)}",
                                               text_color="#FFFFFF", font=MEDIUMFONT)
             self.AUCScoreLabel.grid(row=8, column=0, padx=0, pady=8, sticky="w")
 
@@ -1923,8 +1926,8 @@ class MLPage(ctk.CTkFrame):
 
         if DATA.mlModelType != 'Linear Regression' :
             if app.winfo_exists():
-                disp = metrics.ConfusionMatrixDisplay.from_predictions(y_true=DATA.y_test, y_pred=self.prediction, display_labels=["False", "True"], cmap=plt.cm.Blues)
-                fpr, tpr, thresh = metrics.roc_curve(DATA.y_test, self.prediction, pos_label=1)
+                disp = metrics.ConfusionMatrixDisplay.from_predictions(y_true=DATA.y if (DATA.X_train is None or DATA.y_train is None or DATA.X_test is None or DATA.y_test is None or DATA.X is None or DATA.y is None) else DATA.y_test, y_pred=self.prediction, display_labels=["False", "True"], cmap=plt.cm.Blues)
+                fpr, tpr, thresh = metrics.roc_curve(DATA.y if (DATA.X_train is None or DATA.y_train is None or DATA.X_test is None or DATA.y_test is None or DATA.X is None or DATA.y is None) else DATA.y_test, self.prediction, pos_label=1)
                 roc_display = metrics.RocCurveDisplay(fpr=fpr, tpr=tpr)
 
                 self.figure1 = Figure()
