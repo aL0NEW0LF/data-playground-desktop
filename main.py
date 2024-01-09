@@ -1846,10 +1846,14 @@ class MLPage(ctk.CTkFrame):
         else:
             prediction = DATA.mlModel.predict(DATA.X_test) """
         
-        if DATA.X_train is None or DATA.y_train is None or DATA.X_test is None or DATA.y_test is None or DATA.X is None or DATA.y is None:
-            self.prediction = DATA.mlModel.predict(DATA.X)
-        else:
-            self.prediction = DATA.mlModel.predict(DATA.X_test)
+        try:
+            if DATA.X_train is None or DATA.y_train is None or DATA.X_test is None or DATA.y_test is None or DATA.X is None or DATA.y is None:
+                self.prediction = DATA.mlModel.predict(DATA.X)
+            else:
+                self.prediction = DATA.mlModel.predict(DATA.X_test)
+        except Exception as e:
+            tk.messagebox.showerror("Information", f"An error occurred while trying to predict data: {e}")
+            return
 
         if DATA.mlModelType == 'Linear Regression':
             self.MaxErrorLabel = ctk.CTkLabel(self.NumericMetricsFrame,
