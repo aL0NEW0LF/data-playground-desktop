@@ -5,28 +5,37 @@ from scipy import stats
 from sklearn.feature_selection import VarianceThreshold, SelectKBest, f_classif
 from enums import enums
 
+
 def get_non_numeric_columns(df: list | DataFrame):
     return df.select_dtypes(exclude=['number']).columns.values.tolist()
 
-def get_dataframe_columns(df: list | DataFrame):    
+
+def get_dataframe_columns(df: list | DataFrame):
     return df.columns.values.tolist()
 
-def get_dataframe_features(df: list | DataFrame):    
+
+def get_dataframe_features(df: list | DataFrame):
     return df.columns.values.tolist()
+
 
 def get_constant_columns(df: list | DataFrame):
     return [col for col in df.columns if len(df[col].unique()) <= 1]
 
+
 def get_non_constant_columns(df: list | DataFrame):
     return [col for col in df.columns if len(df[col].unique()) > 1]
+
 
 def drop_contant_columns(df: list | DataFrame):
     df.loc[:, (df != df.iloc[0]).any()]
 
+
 def drop_duplicate_rows(df: list | DataFrame):
     df.drop_duplicates(inplace=True)
 
-def handle_missing_values(df: list | DataFrame, value: int | float | str = None, method: enums.FillMethod = enums.FillMethod.DROP):
+
+def handle_missing_values(df: list | DataFrame, value: int | float | str = None,
+                          method: enums.FillMethod = enums.FillMethod.DROP):
     if value is not None:
         df.fillna(value, inplace=True)
     else:
@@ -41,7 +50,8 @@ def handle_missing_values(df: list | DataFrame, value: int | float | str = None,
         elif method == enums.FillMethod.ZERO:
             df.fillna(0, inplace=True)
 
-def remove_outliers(df: list | DataFrame, method: enums.OutlierMethod = enums.OutlierMethod.ZSCORE):   
+
+def remove_outliers(df: list | DataFrame, method: enums.OutlierMethod = enums.OutlierMethod.ZSCORE):
     if method == enums.OutlierMethod.ZSCORE:
         for col in df.columns:
             df[abs(stats.zscore(df[col])) < 3]
