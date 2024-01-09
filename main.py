@@ -461,7 +461,7 @@ class VarianceThresholdPage(ctk.CTkFrame):
                                     font=SMALLFONT, hover_color="#F0F0F0", height=48)
         ApplyButton.grid(row=2, column=0, padx=0, pady=(8, 4), sticky="ew")
 
-        CancelButton = ctk.CTkButton(self, image=BackImage, text="", command=lambda: controller.show_frame(BlankPage),
+        CancelButton = ctk.CTkButton(self, text="Cancel", command=lambda: controller.show_frame(BlankPage),
                                      corner_radius=0, text_color="#FFFFFF", bg_color="#0d1117", fg_color="#fe7b72",
                                      font=SMALLFONT, hover=True, hover_color="#F94545", height=48, width=56)
         CancelButton.grid(row=3, column=0, padx=0, pady=4, sticky="ew")
