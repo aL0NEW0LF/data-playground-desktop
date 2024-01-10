@@ -13,7 +13,7 @@ from sklearn.calibration import LabelEncoder
 from sklearn.exceptions import NotFittedError
 from sklearn.model_selection import train_test_split
 from sklearn.naive_bayes import BernoulliNB, GaussianNB, MultinomialNB
-from sklearn.tree import DecisionTreeClassifier
+from sklearn.tree import DecisionTreeClassifier, DecisionTreeRegressor
 from sklearn.linear_model import LogisticRegression
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.ensemble import RandomForestClassifier
@@ -1268,7 +1268,7 @@ class MLPage(ctk.CTkFrame):
 
         target_type = DATA.y.dtype.name
 
-        if (target_type != 'int64' and target_type != 'float64' and target_type != 'int32' and target_type != 'float32' and choice in ["Linear Regression", "K-means"]) or ((target_type == 'float64' or target_type == 'float32') and choice not in ["Linear Regression", "Decision tree", "K-means"]):
+        if (target_type != 'float64' and target_type != 'float32' and choice in ["Linear Regression", "Decision tree", "K-means"]):
             tk.messagebox.showerror("Information", "Please choose a valid model for your chosen target column")
             return
         
@@ -1312,20 +1312,34 @@ class MLPage(ctk.CTkFrame):
 
         elif choice == 'Decision Tree':
             CriterionLabel = ctk.CTkLabel(self.ModelConfigFrame, text="Criterion:", text_color="#FFFFFF",
-                                          font=SMALLFONT)
+                                        font=SMALLFONT)
             CriterionLabel.grid(row=0, column=0, padx=(0, 4), pady=4, sticky="w")
 
-            self.optionmenu_var2 = ctk.StringVar(value="gini")
-            self.dtCriterionBox = ctk.CTkOptionMenu(master=self.ModelConfigFrame,
-                                                    values=["gini", "entropy", "log_loss"],
-                                                    width=250,
-                                                    command=lambda x: print(x),
-                                                    variable=self.optionmenu_var2,
-                                                    corner_radius=0, text_color="#101010", bg_color="#FFFFFF",
-                                                    fg_color="#FFFFFF", font=SMALLFONT, height=48,
-                                                    button_color="#FFFFFF", button_hover_color="#FFFFFF",
-                                                    dropdown_font=SMALLFONT, dropdown_hover_color="#F0F0F0",
-                                                    dropdown_fg_color="#FFFFFF", dropdown_text_color="#101010")
+            if target_type != 'float64' and target_type != 'float32':
+                self.CriterionVar = ctk.StringVar(value="gini")
+                self.dtCriterionBox = ctk.CTkOptionMenu(master=self.ModelConfigFrame,
+                                                        values=["gini", "entropy", "log_loss"],
+                                                        width=250,
+                                                        command=lambda x: print(x),
+                                                        variable=self.CriterionVar,
+                                                        corner_radius=0, text_color="#101010", bg_color="#FFFFFF",
+                                                        fg_color="#FFFFFF", font=SMALLFONT, height=48,
+                                                        button_color="#FFFFFF", button_hover_color="#FFFFFF",
+                                                        dropdown_font=SMALLFONT, dropdown_hover_color="#F0F0F0",
+                                                        dropdown_fg_color="#FFFFFF", dropdown_text_color="#101010")
+            else:
+                self.CriterionVar = ctk.StringVar(value="squared_error")
+                self.dtCriterionBox = ctk.CTkOptionMenu(master=self.ModelConfigFrame,
+                                                        values=["squared_error", "friedman_mse", "absolute_error", "poisson"],
+                                                        width=250,
+                                                        command=lambda x: print(x),
+                                                        variable=self.CriterionVar,
+                                                        corner_radius=0, text_color="#101010", bg_color="#FFFFFF",
+                                                        fg_color="#FFFFFF", font=SMALLFONT, height=48,
+                                                        button_color="#FFFFFF", button_hover_color="#FFFFFF",
+                                                        dropdown_font=SMALLFONT, dropdown_hover_color="#F0F0F0",
+                                                        dropdown_fg_color="#FFFFFF", dropdown_text_color="#101010")
+            
             self.dtCriterionBox.grid(row=0, column=1, padx=4, pady=0, sticky="w")
 
             MaxDepthLabel = ctk.CTkLabel(self.ModelConfigFrame, text="Max depth:", text_color="#FFFFFF", font=SMALLFONT)
@@ -1596,9 +1610,13 @@ class MLPage(ctk.CTkFrame):
             dtMaxDepth = self.dtMaxDepthEntry.get()
             dtMinSamplesSplit = self.dtMinSamplesSplitEntry.get()
             dtRandomState = self.dtRandomStateEntry.get()
+            target_type = DATA.y.dtype.name
 
             if dtCriterion == '' or dtCriterion == None:
-                dtCriterion = 'gini'
+                if target_type != 'float64' and target_type != 'float32':
+                    dtCriterion = 'gini'
+                else:
+                    dtCriterion = 'squared_error'
             if dtMaxDepth == '':
                 dtMaxDepth = None
             else:
@@ -1606,13 +1624,24 @@ class MLPage(ctk.CTkFrame):
                     dtMaxDepth = int(dtMaxDepth)
                 except:
                     dtMaxDepth = None 
+            
             if dtMinSamplesSplit == '':
                 dtMinSamplesSplit = 2
             else:
                 try:
-                    dtMinSamplesSplit = float(dtMinSamplesSplit)
+                    dtMinSamplesSplit = int(dtMinSamplesSplit)
+
+                    if dtMinSamplesSplit < 2:
+                        dtMinSamplesSplit = 2
                 except:
-                    dtMinSamplesSplit = 2
+                    try:
+                        dtMinSamplesSplit = float(dtMinSamplesSplit)
+
+                        if dtMinSamplesSplit < 0.0 or dtMinSamplesSplit > 1.0:
+                            dtMinSamplesSplit = 2
+
+                    except:
+                        dtMinSamplesSplit = 2
             if dtRandomState == '':
                 dtRandomState = 42
             else:
@@ -1621,7 +1650,10 @@ class MLPage(ctk.CTkFrame):
                 except:
                     dtRandomState = 42
 
-            DATA.mlModel = DecisionTreeClassifier(criterion=dtCriterion, max_depth=dtMaxDepth, min_samples_split=dtMinSamplesSplit, random_state=dtRandomState)
+            if target_type != 'float64' and target_type != 'float32':
+                DATA.mlModel = DecisionTreeClassifier(criterion=dtCriterion, max_depth=dtMaxDepth, min_samples_split=dtMinSamplesSplit, random_state=dtRandomState)
+            else:
+                DATA.mlModel = DecisionTreeRegressor(criterion=dtCriterion, max_depth=dtMaxDepth, min_samples_split=dtMinSamplesSplit, random_state=dtRandomState)
 
         elif DATA.mlModelType == 'Logistic Regression':
             lrSolver = self.lrSolverBox.get()
@@ -1682,9 +1714,18 @@ class MLPage(ctk.CTkFrame):
                 rfMinSamplesSplit = 2
             else:
                 try:
-                    rfMinSamplesSplit = float(rfMinSamplesSplit)
+                    rfMinSamplesSplit = int(rfMinSamplesSplit)
+
+                    if rfMinSamplesSplit < 2:
+                        rfMinSamplesSplit = 2
                 except:
-                    rfMinSamplesSplit = 2
+                    try:
+                        rfMinSamplesSplit = float(rfMinSamplesSplit)
+
+                        if rfMinSamplesSplit < 0.0 or rfMinSamplesSplit > 1.0:
+                            rfMinSamplesSplit = 2
+                    except:
+                        rfMinSamplesSplit = 2
             if rfRandomState == '':
                 rfRandomState = 42
             else:
@@ -1786,6 +1827,8 @@ class MLPage(ctk.CTkFrame):
 
             DATA.mlModel = svm.SVC(C=svmC, kernel=svmKernel, gamma=svmGamma, random_state=svmRandomState)
         
+        print(DATA.mlModel)
+        
         if DATA.X_train is None or DATA.y_train is None or DATA.X_test is None or DATA.y_test is None or DATA.X is None or DATA.y is None:
             if DATA.mlModelType == 'K-means':
                 DATA.mlModel.fit(concat([DATA.X, DATA.y], axis=1))
@@ -1802,7 +1845,8 @@ class MLPage(ctk.CTkFrame):
 
     def test_mlModel(self):
         global DATA
-        
+        target_type = DATA.y.dtype.name
+
         try:
             if DATA.X_train is None or DATA.y_train is None or DATA.X_test is None or DATA.y_test is None or DATA.X is None or DATA.y is None:
                 if DATA.mlModelType == 'K-means':
@@ -1818,7 +1862,7 @@ class MLPage(ctk.CTkFrame):
             tk.messagebox.showerror("Information", f"An error occurred while trying to predict data: {e}")
             return
 
-        if DATA.mlModelType == 'Linear Regression':
+        if DATA.mlModelType == 'Linear Regression' or (DATA.mlModelType == 'Decision Tree' and (target_type == 'float64' or target_type == 'float32')):
             self.MaxErrorLabel = ctk.CTkLabel(self.NumericMetricsFrame,
                                               text=f"Max error: {round(metrics.max_error(DATA.y if (DATA.X_train is None or DATA.y_train is None or DATA.X_test is None or DATA.y_test is None or DATA.X is None or DATA.y is None) else DATA.y_test, self.prediction), 4)}",
                                               text_color="#FFFFFF", font=MEDIUMFONT)
