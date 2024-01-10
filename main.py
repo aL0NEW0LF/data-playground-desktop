@@ -1251,24 +1251,20 @@ class MLPage(ctk.CTkFrame):
         
         self.rowconfigure(3, weight=1)
         self.MetricsFrame.columnconfigure(1, weight=1)
-        self.MetricsFrame.columnconfigure(2, weight=1)
         self.MetricsFrame.rowconfigure(0, weight=1)
 
         self.NumericMetricsFrame = ctk.CTkFrame(self.MetricsFrame, fg_color="#101010")
         self.NumericMetricsFrame.grid(row=0, column=0, sticky="nsew")
 
-        self.ConfusionMatrixFrame = ctk.CTkFrame(self.MetricsFrame, fg_color="#101010")
-        self.ConfusionMatrixFrame.grid(row=0, column=1, padx=(8, 0), sticky="nsew")
-
-        self.ROCCurveFrame = ctk.CTkFrame(self.MetricsFrame, fg_color="#101010")
-        self.ROCCurveFrame.grid(row=0, column=2, padx=0, sticky="nsew")
+        self.MetricsPlotsFrame = ctk.CTkFrame(self.MetricsFrame, fg_color="#101010")
+        self.MetricsPlotsFrame.grid(row=0, column=1, padx=(8, 0), sticky="nsew")
 
     def optionmenu_callback(self, choice: str):
         global DATA
 
         target_type = DATA.y.dtype.name
 
-        if (target_type != 'float64' and target_type != 'float32' and choice in ["Linear Regression", "Decision tree", "K-means"]):
+        if (target_type == 'float64' and target_type == 'float32' and choice not in ["Linear Regression", "Decision tree", "K-means"]):
             tk.messagebox.showerror("Information", "Please choose a valid model for your chosen target column")
             return
         
@@ -1280,10 +1276,7 @@ class MLPage(ctk.CTkFrame):
         for widget in self.NumericMetricsFrame.winfo_children():
             widget.destroy()
 
-        for widget in self.ConfusionMatrixFrame.winfo_children():
-            widget.destroy()
-
-        for widget in self.ROCCurveFrame.winfo_children():
+        for widget in self.MetricsPlotsFrame.winfo_children():
             widget.destroy()
 
         if choice == 'Linear Regression':
@@ -1308,8 +1301,6 @@ class MLPage(ctk.CTkFrame):
                                                        dropdown_fg_color="#FFFFFF", dropdown_text_color="#101010")
             self.nbDistributionBox.grid(row=0, column=1, padx=4, pady=0, sticky="w")
             
-            self.MetricsFrame.columnconfigure(2, weight=1)
-
         elif choice == 'Decision Tree':
             CriterionLabel = ctk.CTkLabel(self.ModelConfigFrame, text="Criterion:", text_color="#FFFFFF",
                                         font=SMALLFONT)
@@ -1361,8 +1352,6 @@ class MLPage(ctk.CTkFrame):
             self.dtRandomStateEntry = ctk.CTkEntry(self.ModelConfigFrame, width=100, height=24)
             self.dtRandomStateEntry.grid(row=0, column=8, padx=4, sticky="w")
 
-            self.MetricsFrame.columnconfigure(2, weight=1)
-
         elif choice == 'Logistic Regression':
             SolverLabel = ctk.CTkLabel(self.ModelConfigFrame, text="Solver:", text_color="#FFFFFF", font=SMALLFONT)
             SolverLabel.grid(row=0, column=0, padx=(0, 4), sticky="w")
@@ -1413,8 +1402,6 @@ class MLPage(ctk.CTkFrame):
             self.lrRandomStateEntry = ctk.CTkEntry(self.ModelConfigFrame, width=100, height=24)
             self.lrRandomStateEntry.grid(row=0, column=9, padx=4, sticky="w")
 
-            self.MetricsFrame.columnconfigure(2, weight=1)
-
         elif choice == 'Random Forest':
             CriterionLabel = ctk.CTkLabel(self.ModelConfigFrame, text="Criterion:", text_color="#FFFFFF", font=SMALLFONT)
             CriterionLabel.grid(row=0, column=0, padx=(0, 4), sticky="w")
@@ -1448,8 +1435,6 @@ class MLPage(ctk.CTkFrame):
 
             self.rfRandomStateEntry = ctk.CTkEntry(self.ModelConfigFrame, width=100, height=24)
             self.rfRandomStateEntry.grid(row=0, column=8, padx=4, sticky="w")
-
-            self.MetricsFrame.columnconfigure(2, weight=1)
 
         elif choice == 'K-Nearest Neighbors (KNN)':
             NNeighborsLabel = ctk.CTkLabel(self.ModelConfigFrame, text="N neighbors:", text_color="#FFFFFF", font=SMALLFONT)
@@ -1495,8 +1480,6 @@ class MLPage(ctk.CTkFrame):
                                                   dropdown_text_color="#101010")
             self.knnMetricBox.grid(row=0, column=7, padx=4, pady=0, sticky="w")
 
-            self.MetricsFrame.columnconfigure(2, weight=1)
-
         elif choice == 'K-means':
             NClustersLabel = ctk.CTkLabel(self.ModelConfigFrame, text="N clusters:", text_color="#FFFFFF",
                                           font=SMALLFONT)
@@ -1533,8 +1516,6 @@ class MLPage(ctk.CTkFrame):
             self.kmRandomStateEntry = ctk.CTkEntry(self.ModelConfigFrame, width=100, height=24)
             self.kmRandomStateEntry.grid(row=0, column=8, padx=4, sticky="w")
 
-            self.MetricsFrame.columnconfigure(2, weight=0)
-
         elif choice == 'Support Vector Machine (SVM)':
             CLabel = ctk.CTkLabel(self.ModelConfigFrame, text="C:", text_color="#FFFFFF", font=SMALLFONT)
             CLabel.grid(row=0, column=0, padx=(0, 4), sticky="w")
@@ -1568,8 +1549,6 @@ class MLPage(ctk.CTkFrame):
 
             self.svmRandomStateEntry = ctk.CTkEntry(self.ModelConfigFrame, width=100, height=24)
             self.svmRandomStateEntry.grid(row=0, column=8, padx=4, sticky="w")
-
-            self.MetricsFrame.columnconfigure(2, weight=1)
         
         self.TrainButton.configure(state="normal")
         self.TestButton.configure(state="disabled")
@@ -1586,12 +1565,9 @@ class MLPage(ctk.CTkFrame):
         for widget in self.NumericMetricsFrame.winfo_children():
             widget.destroy()
 
-        for widget in self.ConfusionMatrixFrame.winfo_children():
+        for widget in self.MetricsPlotsFrame.winfo_children():
             widget.destroy()
 
-        for widget in self.ROCCurveFrame.winfo_children():
-            widget.destroy()
-        
         if DATA.mlModelType == 'Linear Regression':
             DATA.mlModel = LinearRegression()
 
@@ -1827,8 +1803,6 @@ class MLPage(ctk.CTkFrame):
 
             DATA.mlModel = svm.SVC(C=svmC, kernel=svmKernel, gamma=svmGamma, random_state=svmRandomState)
         
-        print(DATA.mlModel)
-        
         if DATA.X_train is None or DATA.y_train is None or DATA.X_test is None or DATA.y_test is None or DATA.X is None or DATA.y is None:
             if DATA.mlModelType == 'K-means':
                 DATA.mlModel.fit(concat([DATA.X, DATA.y], axis=1))
@@ -1925,17 +1899,15 @@ class MLPage(ctk.CTkFrame):
                                               text_color="#FFFFFF", font=MEDIUMFONT)
             self.AUCScoreLabel.grid(row=8, column=0, padx=0, pady=8, sticky="w")
 
-            self.SaveModelButton.configure(state="normal")
             self.showMetricsPlotsBtn.configure(state="normal")
+
+        self.SaveModelButton.configure(state="normal")
 
     def showMetricsPlots(self):
         global DATA
         global app
         
-        for widget in self.ConfusionMatrixFrame.winfo_children():
-            widget.destroy()
-
-        for widget in self.ROCCurveFrame.winfo_children():
+        for widget in self.MetricsPlotsFrame.winfo_children():
             widget.destroy()
 
         if DATA.mlModelType == 'K-means':
@@ -1971,42 +1943,28 @@ class MLPage(ctk.CTkFrame):
             fpr, tpr, thresh = metrics.roc_curve(DATA.y if (DATA.X_train is None or DATA.y_train is None or DATA.X_test is None or DATA.y_test is None or DATA.X is None or DATA.y is None) else DATA.y_test, self.prediction, pos_label=1)
             roc_display = metrics.RocCurveDisplay(fpr=fpr, tpr=tpr)
 
-            self.figure1 = Figure()
+            self.figure, (self.axe1, self.axe2) = plt.subplots(1, 2)
 
-            # create FigureCanvasTkAgg object
-            self.figure_canvas1 = FigureCanvasTkAgg(self.figure1, self.ConfusionMatrixFrame)
-
-            # create axes
-            self.axe1 = self.figure1.add_subplot()
+            self.figure_canva = FigureCanvasTkAgg(self.figure, self.MetricsPlotsFrame)
 
             disp.plot(ax=self.axe1)
             self.axe1.legend([""], fontsize="x-large")
             self.axe1.set_xlabel("")
             self.axe1.set_title("Confusion matrix")
 
-            self.figure2 = Figure()
-
-            # create FigureCanvasTkAgg object
-            self.figure_canvas2 = FigureCanvasTkAgg(self.figure2, self.ROCCurveFrame)
-
-            # create axes
-            self.axe2 = self.figure2.add_subplot()
-
             roc_display.plot(ax=self.axe2)
             self.axe2.legend([""], fontsize="x-large")
             self.axe2.set_xlabel("")
             self.axe2.set_title("ROC curve")
 
-            self.figure_canvas1.draw()
-            self.figure_canvas2.draw()
-            self.figure_canvas1.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=True)
-            self.figure_canvas2.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=True)
+            self.figure_canva.draw()
+            self.figure_canva.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=True)
+
+            self.toolbar = NavigationToolbar2Tk(self.figure_canva, self.MetricsPlotsFrame)
+            self.toolbar.update()
 
     def showKmeansPlots(self):
-        for widget in self.ConfusionMatrixFrame.winfo_children():
-            widget.destroy()
-
-        for widget in self.ROCCurveFrame.winfo_children():
+        for widget in self.MetricsPlotsFrame.winfo_children():
             widget.destroy()
 
         if DATA.X_train is None or DATA.y_train is None or DATA.X_test is None or DATA.y_test is None or DATA.X is None or DATA.y is None:
@@ -2014,13 +1972,13 @@ class MLPage(ctk.CTkFrame):
         else:
             new_points = concat([DATA.X_test, DATA.y_test], axis=1).to_numpy()
 
-
         xc = self.ColumnXCombobox.get()
         yc = self.ColumnYCombobox.get()
 
         if xc == 'Column X' or yc == 'Column Y':
             tk.messagebox.showerror("Information", "Please choose columns")
             return
+        
         xi = get_dataframe_columns(DATA.file_data).index(xc)
         yi = get_dataframe_columns(DATA.file_data).index(yc)
 
@@ -2032,19 +1990,23 @@ class MLPage(ctk.CTkFrame):
         centroids_x = centroids[:, xi]
         centroids_y = centroids[:, yi]
 
-        self.figure1 = Figure()
+        self.figure = Figure()
 
-        self.figure_canvas1 = FigureCanvasTkAgg(self.figure1, self.ConfusionMatrixFrame)
+        self.figure_canva = FigureCanvasTkAgg(self.figure, self.MetricsPlotsFrame)
 
-        self.axe1 = self.figure1.add_subplot()
-        self.axe1.scatter(xs, ys, c=self.prediction, alpha=0.5, s=10)
-        self.axe1.scatter(centroids_x, centroids_y, marker='D', s=10)
-        self.axe1.legend([""], fontsize="x-large")
-        self.axe1.set_xlabel("")
-        self.axe1.set_title("Clusters")
+        self.axe = self.figure.add_subplot()
+        self.axe.scatter(xs, ys, c=self.prediction, alpha=0.5, s=10)
+        self.axe.scatter(centroids_x, centroids_y, marker='D', s=10)
+        self.axe.legend([""], fontsize="x-large")
+        self.axe.set_xlabel("")
+        self.axe.set_title("Clusters")
 
-        self.figure_canvas1.draw()
-        self.figure_canvas1.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=True)
+        self.figure_canva.draw()
+        self.figure_canva.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=True)
+
+        # create the toolbar
+        self.toolbar = NavigationToolbar2Tk(self.figure_canva, self.MetricsPlotsFrame)
+        self.toolbar.update()
 
     def importModelHandler(self):
         file_path, file_extension = UploadAction(type="model")
@@ -2073,10 +2035,7 @@ class MLPage(ctk.CTkFrame):
         for widget in self.NumericMetricsFrame.winfo_children():
             widget.destroy()
 
-        for widget in self.ConfusionMatrixFrame.winfo_children():
-            widget.destroy()
-        
-        for widget in self.ROCCurveFrame.winfo_children():
+        for widget in self.MetricsPlotsFrame.winfo_children():
             widget.destroy()
 
     def openSaveModelWindow(self):
