@@ -17,6 +17,7 @@ pandas==2.1.4
 patsy==0.5.4
 pefile==2023.2.7
 Pillow==10.1.0
+pyinstaller==5.13.2
 pyinstaller-hooks-contrib==2023.11
 pyparsing==3.1.1
 python-dateutil==2.8.2
