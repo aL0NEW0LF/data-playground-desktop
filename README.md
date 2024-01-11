@@ -53,3 +53,4 @@ python main.py
 > - [ ] Add log file to record every step of the process and be able to return
 > - [x] Fix the 'K-means' workflow, with more visualization of the results
 > - [ ] Add 3d and violent visualization
+> - [ ] Choose what form you want to save your file
