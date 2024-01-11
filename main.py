@@ -35,17 +35,25 @@ from matplotlib.backends.backend_tkagg import (
     NavigationToolbar2Tk
 )
 
-#
+###########################################################################################################################
+# THIS APP MAINLY USES THE CUSTOMTKINTER LIBRARY, WHICH IS A CUSTOM TKINTER LIBRARY, IT IS A WRAPPER AROUND TKINTER,      #
+# THAT MAKES IT EASIER TO USE                                                                                             #
+# THE APP IS DIVIDED INTO FRAMES, EACH FRAME IS A PAGE, AND EACH PAGE HAS ITS OWN LOGIC, AND ITS OWN WIDGETS              #
+# AND EACH PAGE IS A CLASS, THAT INHERITS FROM THE CTkFrame CLASS, WHICH IS A CUSTOM TKINTER FRAME CLASS                  #
+###########################################################################################################################
+
+# INSTANTIATE THE FILE HANDLING CLASS
 DATA = fh()
 
-#
+# WRAPPER FUNCTIONS: THESE FUNCTIONS ARE USED TO WRAP THE DATAFRAME AND THE MODEL, SO THAT THEY CAN BE USED IN THE CALLBACKS
+# THIS FUNCTION HANDLES THE UPLOAD ACTION AND RETURNS THE FILE PATH AND EXTENSION
 def UploadAction(type: str = 'file'):
     file_path = ctk.filedialog.askopenfilename(filetypes=[("Excel files", "*.xlsx"), ("CSV files", "*.csv"), ("JSON files", "*.json"), ("Text files", "*.txt")] if type == 'file' else [(".SAV files", "*.sav")])
     _, file_extension = os.path.splitext(file_path)
 
     return file_path, file_extension
 
-#
+# THIS FUNCTION HANDLES THE EXIT ACTION, IT CLOSES THE PLOTS SO THE APP DONT TRY TO UPDATE THEM AFTER THE APP IS CLOSED, THEN IT CLOSES THE APP
 def Exit():
     plt.close()
     app.quit()
@@ -84,7 +92,7 @@ class App(ctk.CTk):
         frame.configure(fg_color="#101010")
         frame.tkraise()
     
-#
+# THE START PAGE, IT IS THE FIRST PAGE THAT THE USER SEES WHEN HE OPENS THE APP
 class StartPage(ctk.CTkFrame):
     def __init__(self, parent, controller):
         ctk.CTkFrame.__init__(self, parent)
@@ -111,7 +119,8 @@ class StartPage(ctk.CTkFrame):
         UploadButton.configure(command=lambda: self.upload_data(controller))
         UploadButton.grid(row=1, column=0, padx=20, pady=36, sticky="nsew")
 
-    #
+    # THIS METHOD HANDLES THE UPLOAD ACTION, IT GETS THE FILE PATH AND EXTENSION, THEN IT READS THE FILE AND STORES IT IN THE DATAFRAME,
+    # THEN IT LOADS THE DATA INTO THE SHEET, THEN IT ENABLES THE DATA PROCESSING BUTTONS, THEN IT SWITCHES TO THE DATA PROCESSING PAGE
     def upload_data(self, controller):
         file_path, file_extension = UploadAction()
 
@@ -138,7 +147,8 @@ class StartPage(ctk.CTkFrame):
 
         controller.show_frame(DataProcessingPage)
 
-#
+# THE DATA PROCESSING PAGE, IT IS THE PAGE THAT HANDLES ALL THE DATA PROCESSING, IT HAS A SHEET THAT DISPLAYS THE DATA, IT ALLOWS THE USER TO SELECT THE TARGET COLUMN,
+# THEN CAN PROCESS THE DATA HOWEVER THEY WANT, THEY CAN VISUALIZE THE DATA, THEY CAN SAVE THE DATA
 class DataProcessingPage(ctk.CTkFrame):
     def __init__(self, parent, controller):
         ctk.CTkFrame.__init__(self, parent)
@@ -261,7 +271,7 @@ class DataProcessingPage(ctk.CTkFrame):
         frame.configure(fg_color="#101010", width=358)
         frame.tkraise()
 
-    #
+    # THIS METHOD HANDLES THE UPLOAD ACTION, IT GETS THE FILE PATH AND EXTENSION, THEN IT READS THE FILE AND STORES IT IN THE DATAFRAME
     def upload_data(self):
         file_path, file_extension = UploadAction()
         
@@ -290,13 +300,13 @@ class DataProcessingPage(ctk.CTkFrame):
         self.SaveDatasetButton.configure(state='disabled')
         self.ContinueButton.configure(state='disabled')
 
-    #
+    # THIS METHOD LOADS THE DATA INTO THE SHEET
     def load_data(self):
         global app
         global DATA
         self.sheet.set_sheet_data(data=DATA.file_data.values.tolist())
 
-    #
+    # THIS METHOD HANDLES THE OPTIONMENU CALLBACKS, IT SWITCHES TO THE CORRESPONDING PROCESSING FRAME
     def optionmenu_callback(self, choice):
         if 'DATA' not in globals() or DATA.file_data is None:
             tk.messagebox.showerror("Information", "Please upload a data file first")
@@ -328,7 +338,7 @@ class DataProcessingPage(ctk.CTkFrame):
             self.frames[LabelEncodingPage].ColumnsCombobox.configure(values=get_non_numeric_columns(DATA.file_data))
             self.show_frame(LabelEncodingPage)
 
-    #
+    # THIS METHOD HANDLES THE VISUALIZE BUTTON, IT SWITCHES TO THE VISUALIZATION PAGE
     def VisPageSwitch(self, controller):
         if 'DATA' not in globals() or DATA.file_data is None:
             tk.messagebox.showerror("Information", "Please upload a data file first")
@@ -339,7 +349,7 @@ class DataProcessingPage(ctk.CTkFrame):
         app.frames[VisualizationPage].ColumnYCombobox.configure(values=get_dataframe_columns(DATA.file_data))
         controller.show_frame(VisualizationPage)
 
-    #
+    # THIS METHOD HANDLES THE SPLIT BUTTON, IT SWITCHES TO THE SPLIT PAGE
     def SplitPageSwitch(self, controller):
         if 'DATA' not in globals() or DATA.file_data is None:
             tk.messagebox.showerror("Information", "Please upload a data file first")
@@ -351,7 +361,7 @@ class DataProcessingPage(ctk.CTkFrame):
         self.show_frame(BlankPage)
         controller.show_frame(DataSplitPage)
     
-    #
+    # THIS METHOD HANDLES THE TARGET COLUMN SELECTION, IT SPLITS THE DATA INTO X AND Y, THEN IT ENABLES THE PROCESSING BUTTONS
     def split_X_y(self, choice: str):
         global DATA
         global app
@@ -391,7 +401,7 @@ class BlankPage(ctk.CTkFrame):
 ###########################################################################################################################################
 ###########################################################################################################################################
 
-#
+# THE VARIANCE THRESHOLD PAGE, IT ALLOWS THE USER TO SELECT THE VARIANCE THRESHOLD, THEN IT APPLIES THE VARIANCE THRESHOLD
 class VarianceThresholdPage(ctk.CTkFrame):
     def __init__(self, parent, controller):
         ctk.CTkFrame.__init__(self, parent)
@@ -424,7 +434,7 @@ class VarianceThresholdPage(ctk.CTkFrame):
                                      font=SMALLFONT, hover=True, hover_color="#F94545", height=48, width=56)
         CancelButton.grid(row=3, column=0, padx=0, pady=4, sticky="ew")
 
-    #
+    # THIS METHOD HANDLES THE APPLY BUTTON, IT APPLIES THE VARIANCE THRESHOLD
     def apply_threshold(self, k, controller):
         global DATA
 
@@ -448,7 +458,7 @@ class VarianceThresholdPage(ctk.CTkFrame):
 
         controller.show_frame(BlankPage)
 
-#
+# THE K-BEST FEATURES PAGE, IT ALLOWS THE USER TO SELECT THE NUMBER OF FEATURES THEY WANT TO KEEP, THEN IT APPLIES THE K-BEST FEATURES
 class KbestfeatPage(ctk.CTkFrame):
     def __init__(self, parent, controller):
         ctk.CTkFrame.__init__(self, parent)
@@ -483,7 +493,7 @@ class KbestfeatPage(ctk.CTkFrame):
                                      font=SMALLFONT, hover=True, hover_color="#F94545", height=48)
         CancelButton.grid(row=3, column=0, padx=0, pady=4, sticky="ew")
 
-    #
+    # THIS METHOD HANDLES THE APPLY BUTTON, IT APPLIES THE K-BEST FEATURES
     def kbestFeat_Selec_event(self, k, controller):
         global DATA
 
@@ -515,7 +525,7 @@ class KbestfeatPage(ctk.CTkFrame):
         app.frames[DataProcessingPage].load_data()
         controller.show_frame(BlankPage)
 
-#
+# THE MISSING VALUES PAGE, IT ALLOWS THE USER TO SELECT THE METHOD THEY WANT TO USE TO HANDLE THE MISSING VALUES, THEN IT HANDLES THE MISSING VALUES
 class MissingValuesPage(ctk.CTkFrame):
     def __init__(self, parent, controller):
         ctk.CTkFrame.__init__(self, parent)
@@ -556,7 +566,7 @@ class MissingValuesPage(ctk.CTkFrame):
                                      font=SMALLFONT, hover=True, hover_color="#F94545", height=48, width=56)
         CancelButton.grid(row=5, column=0, padx=0, pady=4, sticky="ew")
 
-    #
+    # THIS METHOD HANDLES THE MISSING VALUES, IT FILLS THE MISSING VALUES WITH THE FILLING METHOD THE USER CHOSE
     def values_handling(self, controller, value: int | float | str = None,
                         method: enums.FillMethod = enums.FillMethod.MEAN):
         global DATA
@@ -572,6 +582,7 @@ class MissingValuesPage(ctk.CTkFrame):
         app.frames[DataProcessingPage].load_data()
         controller.show_frame(BlankPage)
 
+# THE DUPLICATE ROWS PAGE, IT ALLOWS THE USER TO DROP THE DUPLICATE ROWS
 class DuplicateRowsPage(ctk.CTkFrame):
     def __init__(self, parent, controller):
         ctk.CTkFrame.__init__(self, parent)
@@ -595,6 +606,7 @@ class DuplicateRowsPage(ctk.CTkFrame):
                                      font=SMALLFONT, hover=True, hover_color="#F94545", height=48)
         CancelButton.grid(row=3, column=0, padx=0, pady=4, sticky="ew")
 
+    # THIS METHOD HANDLES THE DUPLICATE ROWS, IT DROPS THE DUPLICATE ROWS
     def drop_duplicate_rows(self, controller):
         global DATA
 
@@ -609,6 +621,7 @@ class DuplicateRowsPage(ctk.CTkFrame):
         app.frames[DataProcessingPage].load_data()
         controller.show_frame(BlankPage)
 
+# THE CONSTANT FEATURES PAGE, IT ALLOWS THE USER TO DROP THE CONSTANT COLUMNS
 class ConstantFeaturesPage(ctk.CTkFrame):
     def __init__(self, parent, controller):
         ctk.CTkFrame.__init__(self, parent)
@@ -632,6 +645,7 @@ class ConstantFeaturesPage(ctk.CTkFrame):
                                    font=SMALLFONT, hover=True, hover_color="#F94545", height=48)
         BackButton.grid(row=3, column=0, padx=0, pady=4, sticky="ew")
 
+    # THIS METHOD HANDLES THE CONSTANT COLUMNS, IT DROPS THE CONSTANT COLUMNS
     def drop_contant_columns(self, controller):
         global DATA
         
@@ -646,6 +660,7 @@ class ConstantFeaturesPage(ctk.CTkFrame):
         app.frames[DataProcessingPage].load_data()
         controller.show_frame(BlankPage)
 
+# THE OUTLIERS PAGE, IT ALLOWS THE USER TO SELECT THE METHOD THEY WANT TO USE TO HANDLE THE OUTLIERS, THEN IT HANDLES THE OUTLIERS
 class OutliersPage(ctk.CTkFrame):
     def __init__(self, parent, controller):
         ctk.CTkFrame.__init__(self, parent)
@@ -673,6 +688,7 @@ class OutliersPage(ctk.CTkFrame):
                                      font=SMALLFONT, hover=True, hover_color="#F94545", height=48)
         CancelButton.grid(row=3, column=0, padx=0, pady=4, sticky="ew")
 
+    # THIS METHOD HANDLES THE OUTLIERS, IT DROPS THE OUTLIERS
     def outliers_handling(self, controller, method: enums.OutlierMethod = enums.OutlierMethod.ZSCORE):
         global DATA
 
@@ -682,7 +698,7 @@ class OutliersPage(ctk.CTkFrame):
         app.frames[DataProcessingPage].load_data()
         controller.show_frame(BlankPage)
 
-
+# THE REMOVE COLUMNS PAGE, IT ALLOWS THE USER TO SELECT THE COLUMNS THEY WANT TO REMOVE, THEN IT REMOVES THE COLUMNS
 class RemoveColumnsPage(ctk.CTkFrame):
     def __init__(self, parent, controller):
         ctk.CTkFrame.__init__(self, parent)
@@ -710,6 +726,7 @@ class RemoveColumnsPage(ctk.CTkFrame):
                                      font=SMALLFONT, hover=True, hover_color="#F94545", height=48)
         CancelButton.grid(row=3, column=0, padx=0, pady=4, sticky="ew")
 
+    # THIS METHOD LOADS THE CHECKBOXES WHEN SWITCHING TO THIS PAGE
     def load_checkboxes(self):
         self.df_columns = get_dataframe_columns(DATA.X)
         
@@ -726,6 +743,7 @@ class RemoveColumnsPage(ctk.CTkFrame):
             self.checkbutton.pack(side="top", anchor="center", expand=True, fill="both", padx=0, pady=4)
             self.checkbuttons.append(self.checkbutton)
 
+    # THIS METHOD HANDLES THE REMOVE BUTTON, IT REMOVES THE SELECTED COLUMNS
     def remove_columns(self, controller):
         global DATA
         
@@ -746,6 +764,7 @@ class RemoveColumnsPage(ctk.CTkFrame):
         self.checkbuttons_vars.clear()
         self.df_columns.clear()
 
+# THE LABEL ENCODING PAGE, IT ALLOWS THE USER TO SELECT THE COLUMN THEY WANT TO ENCODE, THEN IT ENCODES THE COLUMN
 class LabelEncodingPage(ctk.CTkFrame):
     def __init__(self, parent, controller):
         ctk.CTkFrame.__init__(self, parent)
@@ -774,6 +793,7 @@ class LabelEncodingPage(ctk.CTkFrame):
                                      font=SMALLFONT, hover=True, hover_color="#F94545", height=48)
         CancelButton.grid(row=2, column=0, padx=0, pady=4, sticky="ew")
 
+    # THIS METHOD HANDLES THE COLUMN CHOICE, IT ENCODES THE COLUMN
     def Column_choice_handler(self, choice: str, controller):
         global app
         global DATA
@@ -786,12 +806,14 @@ class LabelEncodingPage(ctk.CTkFrame):
         app.frames[DataProcessingPage].load_data()
         controller.show_frame(BlankPage)
 
+# THE VISUALIZATION PAGE, IT ALLOWS THE USER TO SELECT THE PLOT TYPE, THEN IT PLOTS THE DATA
 class VisualizationPage(ctk.CTkFrame):
     def __init__(self, parent, controller):
         ctk.CTkFrame.__init__(self, parent)
         
         BackImage = ImageTk.PhotoImage(Image.open("./assets/icons/back.png").resize((24, 24), Image.LANCZOS))
-        # prepare data
+        
+        # VISUALIZATION VARIABLES 
         self.visPlotType = None
         self.visColumnX = None
         self.visColumnY = None
@@ -870,22 +892,15 @@ class VisualizationPage(ctk.CTkFrame):
 
         self.figure = Figure(dpi=100)
 
-        # create FigureCanvasTkAgg object
         self.figure_canvas = FigureCanvasTkAgg(self.figure, PlotFrame)
         self.figure_canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=True)
 
-        # create the toolbar
         self.toolbar = NavigationToolbar2Tk(self.figure_canvas, PlotFrame)
         self.toolbar.update()
-        # create axes
         self.axes = self.figure.add_subplot()
 
-
-    def plotType_optionmenu_callback(self, choice):
-        """ if 'DATA' not in globals() or DATA.file_data is None:
-            tk.messagebox.showerror("Information", "Please upload a data file first")
-            return """
-        
+    # THIS METHOD HANDLES THE PLOT TYPE CHOICE, IT ENABLES THE CORRESPONDING ENTRIES
+    def plotType_optionmenu_callback(self, choice):  
         self.visPlotType = choice
         print(self.visPlotType)
         
@@ -915,22 +930,17 @@ class VisualizationPage(ctk.CTkFrame):
             self.ColumnXCombobox.configure(state="normal")
             self.ColumnYCombobox.configure(state="disabled")
 
+    # THIS METHOD HANDLES THE COLUMN X CHOICE
     def columnX_optionmenu_callback(self, choice):
-        """ if 'DATA' not in globals() or DATA.file_data is None:
-            tk.messagebox.showerror("Information", "Please upload a data file first")
-            return """
-        
         self.visColumnX = choice
         print(self.visColumnX)
     
+    # THIS METHOD HANDLES THE COLUMN Y CHOICE
     def columnY_optionmenu_callback(self, choice):
-        """ if 'DATA' not in globals() or DATA.file_data is None:
-            tk.messagebox.showerror("Information", "Please upload a data file first")
-            return """
-        
         self.visColumnY = choice
         print(self.visColumnY)
 
+    # THIS METHOD HANDLES THE PLOT BUTTON, IT PLOTS THE DATA
     def plot(self, k=''):
         global DATA
         
@@ -990,7 +1000,7 @@ class VisualizationPage(ctk.CTkFrame):
         self.figure_canvas.draw()
         self.toolbar.update()
 
-
+# THE DATA SAVING PAGE, IT ALLOWS THE USER TO SELECT THE DIRECTORY AND THE FILE NAME, THEN IT SAVES THE DATA
 class SaveDatasetPage(ctk.CTkFrame):
     def __init__(self, parent, controller):
         ctk.CTkFrame.__init__(self, parent)
@@ -1026,9 +1036,11 @@ class SaveDatasetPage(ctk.CTkFrame):
                                      font=SMALLFONT, hover=True, hover_color="#F94545", height=48, width=56)
         CancelButton.grid(row=4, column=0, padx=0, pady=4, sticky="ew")
 
+    # THIS METHOD ALLOWS THE USER TO SELECT THE DIRECTORY
     def SelectSaveDirectory(self):
         self.SaveDirectory = ctk.filedialog.askdirectory()
     
+    # THIS METHOD HANDLES THE SAVE BUTTON, IT SAVES THE DATA
     def SaveFile(self, controller):
         global DATA
         
@@ -1048,6 +1060,7 @@ class SaveDatasetPage(ctk.CTkFrame):
             tk.messagebox.showerror("Information", "Please select a directory")
             return
 
+# THE DATA SPLIT PAGE, IT ALLOWS THE USER TO SPLIT THE DATA INTO TRAINING AND TESTING DATA
 class DataSplitPage(ctk.CTkFrame):
     def __init__(self, parent, controller):
         ctk.CTkFrame.__init__(self, parent)
@@ -1129,6 +1142,7 @@ class DataSplitPage(ctk.CTkFrame):
         self.TestSheet.enable_bindings()
         self.TestSheet.pack(side="top" , fill="both", expand=True)
 
+    # THIS METHOD HANDLES THE SPLIT BUTTON, IT SPLITS THE DATA
     def split_train_test(self, k='', random_state=''):
         global app
         global DATA
@@ -1175,17 +1189,15 @@ class DataSplitPage(ctk.CTkFrame):
         self.TrainSheet.set_sheet_data(data = concat([DATA.X_train, DATA.y_train], axis=1).values.tolist())
         self.TestSheet.set_sheet_data(data = concat([DATA.X_test, DATA.y_test], axis=1).values.tolist())
     
+    # THIS METHOD HANDLES THE CONTINUE BUTTON, IT SWITCHES TO THE ML PAGE
     def mlPage_switch(self, controller):
         global app
         global DATA
 
-        """ if DATA.X_train is None or DATA.y_train is None or DATA.X_test is None or DATA.y_test is None or DATA.X is None or DATA.y is None:
-            tk.messagebox.showerror("Information", "Please split the data first")
-            return """
-
         app.frames[MLPage].Title.configure(text=DATA.mlModelType)
         controller.show_frame(MLPage)
 
+# THE ML PAGE, IT ALLOWS THE USER TO TRAIN AND TEST THE MODEL
 class MLPage(ctk.CTkFrame):
     def __init__(self, parent, controller):
         ctk.CTkFrame.__init__(self, parent)
@@ -1265,6 +1277,7 @@ class MLPage(ctk.CTkFrame):
         self.MetricsPlotsFrame = ctk.CTkFrame(self.MetricsFrame, fg_color="#101010")
         self.MetricsPlotsFrame.grid(row=0, column=1, padx=(8, 0), sticky="nsew")
 
+    # THIS METHOD HANDLES THE MACHINE LEARNING MODEL OPTIONMENU CHOICE, IT ENABLES THE CORRESPONDING BUTTONS
     def optionmenu_callback(self, choice: str):
         global DATA
 
@@ -1561,6 +1574,7 @@ class MLPage(ctk.CTkFrame):
         self.SaveModelButton.configure(state="disabled")
         self.showMetricsPlotsBtn.configure(state="disabled")
 
+    # THIS METHOD HANDLES THE TRAIN BUTTON, IT TRAINS THE MODEL
     def train_mlModel(self):
         global DATA
 
@@ -1823,6 +1837,7 @@ class MLPage(ctk.CTkFrame):
         self.TestButton.configure(state="normal")
         self.SaveModelButton.configure(state="normal")
 
+    # THIS METHOD HANDLES THE TEST BUTTON, IT TESTS THE MODEL, DISPLAYS THE METRICS, AND ENABLES THE PLOTS BUTTON
     def test_mlModel(self):
         global DATA
         target_type = DATA.y.dtype.name
@@ -1913,6 +1928,7 @@ class MLPage(ctk.CTkFrame):
 
         self.SaveModelButton.configure(state="normal")
 
+    # THIS METHOD HANDLES THE METRICS PLOTS BUTTON, IT DISPLAYS THE METRICS PLOTS
     def showMetricsPlots(self):
         global DATA
         global app
@@ -2033,6 +2049,7 @@ class MLPage(ctk.CTkFrame):
             self.toolbar = NavigationToolbar2Tk(self.figure_canva, self.MetricsPlotsFrame)
             self.toolbar.update()
 
+    # THIS METHOD HANDLE ONLY THE K-MEANS PLOTS
     def showKmeansPlots(self):
         for widget in self.MetricsPlotsFrame.winfo_children():
             widget.destroy()
@@ -2078,6 +2095,7 @@ class MLPage(ctk.CTkFrame):
         self.toolbar = NavigationToolbar2Tk(self.figure_canva, self.MetricsPlotsFrame)
         self.toolbar.update()
 
+    # THIS METHOD HANDLES THE MODEL IMPORTING
     def importModelHandler(self):
         file_path, file_extension = UploadAction(type="model")
 
@@ -2108,6 +2126,7 @@ class MLPage(ctk.CTkFrame):
         for widget in self.MetricsPlotsFrame.winfo_children():
             widget.destroy()
 
+    # THIS METHOD OPENS THE SAVE MODEL WINDOW
     def openSaveModelWindow(self):
         try:
             if DATA.X_train is None or DATA.y_train is None or DATA.X_test is None or DATA.y_test is None:
@@ -2121,6 +2140,7 @@ class MLPage(ctk.CTkFrame):
         SaveModelWindow = SaveModelTopLevel()
         SaveModelWindow.grab_set()
 
+# THIS CLASS IS THE SAVE MODEL WINDOW
 class SaveModelTopLevel(ctk.CTkToplevel):
     def __init__(self):
         ctk.CTkToplevel.__init__(self)
@@ -2157,9 +2177,11 @@ class SaveModelTopLevel(ctk.CTkToplevel):
                                        hover_color="#F0F0F0", height=48, width=56)
         SaveFileButton.grid(row=3, column=0, padx=8, pady=4, sticky="ew")
 
+    # THIS METHOD HANDLES THE CHOOSE DIRECTORY BUTTON, IT OPENS A DIRECTORY CHOOSER
     def SelectSaveDirectory(self):
         self.SaveDirectory = ctk.filedialog.askdirectory()
     
+    # THIS METHOD HANDLES THE SAVE FILE BUTTON, IT SAVES THE MODEL
     def SaveFile(self):
         global DATA
         if hasattr(self, 'SaveDirectory'):

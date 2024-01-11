@@ -2,7 +2,7 @@ import pandas as pd
 import customtkinter as ctk
 from typing import Protocol
 
-
+# THIS CLASS HANDLES ALL THE FILE OPERATIONS, IT ACTS KINDA AS SINGLETON CLASS, THAT STORES ALL THE FILE, DATAFRAME, AND MODEL RELATED INFORMATION, DURING THE LIFETIME OF THE APPLICATION
 class file_handling:
     def __init__(self):
         self.file_path: str = None
@@ -36,6 +36,7 @@ class file_handling:
     def __str__(self) -> str:
         return f"File path: {self.file_path}\nFile extension: {self.file_extension}\nFile data: {self.file_data}\nFile columns: {self.file_data.columns.values.tolist()}"
 
+    # THIS METHOD READS THE DATA FROM THE STORED FILE PATH
     def file_data_read(self):
         try:
             if self.file_extension == '.csv':
