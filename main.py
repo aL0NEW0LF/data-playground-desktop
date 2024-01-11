@@ -1026,15 +1026,26 @@ class SaveDatasetPage(ctk.CTkFrame):
                                         font=SMALLFONT, hover_color="#F0F0F0", height=48, width=56)
         ChooseDirButton.grid(row=2, column=0, padx=0, pady=(8, 4), sticky="ew")
 
+        self.FileTypeOptionmenuVar = ctk.StringVar(value="File type")
+        self.FileTypeCombobox = ctk.CTkOptionMenu(master=self,
+                                                  values=["Excel file", "CSV file", "JSON file", "Text file"],
+                                                  variable=self.FileTypeOptionmenuVar,
+                                                  width=150, corner_radius=0, text_color="#101010",
+                                                  bg_color="#FFFFFF", fg_color="#FFFFFF", font=SMALLFONT, height=32,
+                                                  button_color="#FFFFFF", button_hover_color="#FFFFFF",
+                                                  dropdown_font=SMALLFONT, dropdown_hover_color="#F0F0F0",
+                                                  dropdown_fg_color="#FFFFFF", dropdown_text_color="#101010")
+        self.FileTypeCombobox.grid(row=3, column=0, padx=0, pady=4, ipadx=8, ipady=8, sticky="ew")
+
         SaveFileButton = ctk.CTkButton(self, text="Save file", command=lambda: self.SaveFile(controller),
                                        corner_radius=0, text_color="#101010", bg_color="#FFFFFF", fg_color="#FFFFFF",
                                        font=SMALLFONT, hover_color="#F0F0F0", height=48, width=56)
-        SaveFileButton.grid(row=3, column=0, padx=0, pady=4, sticky="ew")
+        SaveFileButton.grid(row=4, column=0, padx=0, pady=4, sticky="ew")
 
         CancelButton = ctk.CTkButton(self, text="Cancel", command=lambda: controller.show_frame(BlankPage),
                                      corner_radius=0, text_color="#FFFFFF", bg_color="#101010", fg_color="#fe7b72",
                                      font=SMALLFONT, hover=True, hover_color="#F94545", height=48, width=56)
-        CancelButton.grid(row=4, column=0, padx=0, pady=4, sticky="ew")
+        CancelButton.grid(row=5, column=0, padx=0, pady=4, sticky="ew")
 
     # THIS METHOD ALLOWS THE USER TO SELECT THE DIRECTORY
     def SelectSaveDirectory(self):
@@ -1044,6 +1055,8 @@ class SaveDatasetPage(ctk.CTkFrame):
     def SaveFile(self, controller):
         global DATA
         
+        FileType = self.FileTypeOptionmenuVar.get()
+
         if hasattr(self, 'SaveDirectory'):
             if self.SaveDirectory == None or self.SaveDirectory == '':
                 tk.messagebox.showerror("Information", "Please select a directory")
@@ -1051,9 +1064,19 @@ class SaveDatasetPage(ctk.CTkFrame):
             elif self.FileNameEntry.get() == None or self.FileNameEntry.get() == '':
                 tk.messagebox.showerror("Information", "Please enter a file name")
                 return
-            
-            DATA.file_data.to_excel(self.SaveDirectory + "/" + self.FileNameEntry.get() + ".xlsx", index=False)
+            elif FileType == "File type" or FileType == '':
+                tk.messagebox.showerror("Information", "Please select a file type")
+                return
 
+            if FileType == "Excel file":
+                DATA.file_data.to_excel(self.SaveDirectory + "/" + self.FileNameEntry.get() + ".xlsx", index=False)
+            elif FileType == "CSV file":
+                DATA.file_data.to_csv(self.SaveDirectory + "/" + self.FileNameEntry.get() + ".csv", index=False)
+            elif FileType == "JSON file":
+                DATA.file_data.to_json(self.SaveDirectory + "/" + self.FileNameEntry.get() + ".json", orient="records")
+            elif FileType == "Text file":
+                DATA.file_data.to_csv(self.SaveDirectory + "/" + self.FileNameEntry.get() + ".txt", index=False)
+            
             controller.show_frame(BlankPage)
 
         else:
