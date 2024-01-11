@@ -1,4 +1,5 @@
 from itertools import cycle, product
+from textwrap import wrap
 from numpy import arange, newaxis, reshape, trace
 from assets.fonts.fonts import LARGEFONT, MEDIUMFONT, SMALLFONT
 import tkinter as tk
@@ -25,6 +26,7 @@ from logic.file_handling import file_handling as fh
 from tksheet import Sheet
 from logic.data_preprocessing import feature_selection_kBestFeatures, feature_selection_varianceThreshold, handle_missing_values, drop_duplicate_rows, get_non_numeric_columns, get_dataframe_columns, get_non_constant_columns, get_constant_columns, remove_outliers
 from enums import enums
+from webbrowser import open_new_tab
 import matplotlib
 
 matplotlib.use('TkAgg')
@@ -78,7 +80,7 @@ class App(ctk.CTk):
 
         self.frames = {}
 
-        for F in (StartPage, DataProcessingPage, VisualizationPage, RemoveColumnsPage, DataSplitPage, MLPage):
+        for F in (DocumentationPage, StartPage, DataProcessingPage, VisualizationPage, RemoveColumnsPage, DataSplitPage, MLPage):
             frame = F(container, self)
 
             self.frames[F] = frame
@@ -91,24 +93,95 @@ class App(ctk.CTk):
         frame = self.frames[cont]
         frame.configure(fg_color="#101010")
         frame.tkraise()
-    
-# THE START PAGE, IT IS THE FIRST PAGE THAT THE USER SEES WHEN HE OPENS THE APP
-class StartPage(ctk.CTkFrame):
+
+# THE DOCUMENTATION PAGE
+class DocumentationPage(ctk.CTkFrame):
     def __init__(self, parent, controller):
         ctk.CTkFrame.__init__(self, parent)
 
+        BackImage = ImageTk.PhotoImage(Image.open("./assets/icons/back.png").resize((24, 24), Image.LANCZOS))
+        GithubImage = ImageTk.PhotoImage(Image.open("./assets/icons/github.png").resize((24, 24), Image.LANCZOS))
+
+        self.columnconfigure(0, weight=1)
+        self.rowconfigure(1, weight=1)
+
+        BackButton = ctk.CTkButton(self, image=BackImage, text="",
+                                     command=lambda: controller.show_frame(StartPage),
+                                     corner_radius=0, text_color="#101010",
+                                     bg_color="#FFFFFF", fg_color="#FFFFFF", font=SMALLFONT,
+                                     hover_color="#F0F0F0", height=48, width=56)
+        BackButton.grid(row=0, column=0, padx=0, pady=(0, 8), sticky="w")
+
+        GithubButton = ctk.CTkButton(self, image=GithubImage, text="", command=lambda: open_new_tab("https://github.com/aL0NEW0LF/data-playground-desktop"),
+                                                                                        corner_radius=0, text_color="#101010",
+                                                                                        bg_color="#FFFFFF", fg_color="#FFFFFF", font=SMALLFONT,
+                                                                                        hover_color="#F0F0F0", height=48, width=56)
+        GithubButton.grid(row=0, column=1, padx=0, pady=(0, 8), sticky="e")
+
+        DocumentationFrame = ctk.CTkScrollableFrame(self, fg_color="#101010")
+        DocumentationFrame.grid(row=1, column=0, columnspan=2, sticky="nsew")
+        DocumentationFrame.columnconfigure(0, weight=1)
+        
+        OverviewLabel = ctk.CTkLabel(DocumentationFrame, text="Overview", text_color="#FFFFFF", font=LARGEFONT)
+        OverviewLabel.grid(row=1, column=0, padx=0, pady=8, sticky="w")
+        
+        OverviewText = ctk.CTkTextbox(DocumentationFrame, text_color="#FFFFFF", font=MEDIUMFONT, bg_color="#101010", fg_color="#101010", activate_scrollbars=False, height=150)
+        OverviewText.configure(wrap=tk.WORD)
+        OverviewText.grid(row=2, column=0, padx=0, pady=0, ipadx= 0, ipady= 0, sticky="nsew")
+        OverviewText.insert(tk.END, "This app is a data playground, it allows you to upload your data, visualize it, process it, and train a machine learning model on it. The app is divided into pages, each page has its own logic, and its own widgets. The app is divided into 3 main pages:\n- The data processing page: it allows you to upload your data, visualize it, process it, and save it.\n- The visualization page: it allows you to visualize your data in different plots.\n- The data split page: it allows you to split your data into training and testing sets.\n- The machine learning page: it allows you to train a machine learning model on your data, and visualize the results.")
+
+        GettingStartedLabel = ctk.CTkLabel(DocumentationFrame, text="Getting started", text_color="#FFFFFF", font=LARGEFONT)
+        GettingStartedLabel.grid(row=3, column=0, padx=0, pady=8, sticky="w")
+
+        GettingStartedText = ctk.CTkTextbox(DocumentationFrame, text_color="#FFFFFF", font=MEDIUMFONT, bg_color="#101010", fg_color="#101010", activate_scrollbars=False, height=192)
+        GettingStartedText.configure(wrap=tk.WORD)
+        GettingStartedText.grid(row=4, column=0, padx=0, pady=(0, 8), ipadx= 0, ipady= 0, sticky="ew")
+        GettingStartedText.insert(tk.END, "To get started, you will find an upload button in the middle of the start page, click on it, and choose your data file.\nThen you will find a target column optionmenu, choose the target column.\nAfter that, 3 buttons will be enabled:\n- The visualize button allows you to visualize your data.\n- The save dataset button allows you to save your data.\n- The continue button allows you to continue to the data split page.\nAfter you are done with the data processing, you can continue to the data split page, where you can split your data into training and testing sets.\nThen you can continue to the machine learning page, where you can train a machine learning model on your data and test it.")
+        
+        FeaturesLabel = ctk.CTkLabel(DocumentationFrame, text="Features", text_color="#FFFFFF", font=LARGEFONT)
+        FeaturesLabel.grid(row=5, column=0, padx=0, pady=8, sticky="w")
+
+        FeaturesText = ctk.CTkTextbox(DocumentationFrame, text_color="#FFFFFF", font=MEDIUMFONT, bg_color="#101010", fg_color="#101010", activate_scrollbars=False, height=262)
+        FeaturesText.configure(wrap=tk.WORD)
+        FeaturesText.grid(row=6, column=0, padx=0, pady=(0, 8), ipadx= 0, ipady= 0, sticky="ew")
+        FeaturesText.insert(tk.END, "The app has a lot of features, it allows you to:\n- Upload your data.\n- Process your data: Handle missing values, drop duplicate rows, drop constant features, handle outliers, removes features, label encode columns, and do feature selection with variance threshold and k-best features.\n- Visualize your data.\n- Save your data.\n- Split your data into training and testing sets.\n- Train a machine learning model on your data.\n- Test your machine learning model.\n- Visualize the results of your machine learning model.\n- Save your machine learning model.")
+        
+# THE START PAGE, IT IS THE FIRST PAGE THAT THE USER SEES WHEN HE OPENS THE APP
+class StartPage(ctk.CTkFrame):
+    def __init__(self, parent, controller):
+        ctk.CTkFrame.__init__(self, parent)     
+
+        self.columnconfigure(0, weight=1)
+        self.rowconfigure(1, weight=1)
+
+        CancelButton = ctk.CTkButton(self, text="Documentation",
+                                     command=lambda: controller.show_frame(DocumentationPage),
+                                     corner_radius=0, text_color="#101010",
+                                     bg_color="#FFFFFF", fg_color="#FFFFFF", font=SMALLFONT,
+                                     hover_color="#F0F0F0", height=48)
+        CancelButton.grid(row=0, column=0, padx=(0, 4), pady=(0, 8), sticky="w")
+
         frame = ctk.CTkFrame(self)
         frame.configure(fg_color="#101010")
-        frame.place(relx=0.5, rely=0.5, anchor="c")
+        frame.grid(row=1, column=0, sticky="nsew")
+
+        frame.columnconfigure(0, weight=1)
+        frame.rowconfigure(0, weight=1)
+        frame.rowconfigure(1, weight=1)
 
         label = ctk.CTkLabel(frame,
                              text="Let's get started! Please upload your dataset\n\n(Files supported: .xlsx / .csv / .json / .txt)",
                              text_color="#FFFFFF", font=LARGEFONT,
                              fg_color="#101010")
-        label.grid(row=0, column=0, padx=0, pady=(100, 8), sticky="n")
+        label.grid(row=0, column=0, padx=0, pady=(100, 8), sticky="nsew")
 
-        UploadButton = ctk.CTkButton(frame,
+        UploadButtonFrame = ctk.CTkFrame(frame)
+        UploadButtonFrame.configure(fg_color="#101010")
+        UploadButtonFrame.grid(row=1, column=0, sticky="nsew")
+
+        UploadButton = ctk.CTkButton(UploadButtonFrame,
                                      text="Upload your dataset",
+                                     command=lambda: self.upload_data(controller),
                                      height=70,
                                      width=400,
                                      corner_radius=0,
@@ -116,8 +189,7 @@ class StartPage(ctk.CTkFrame):
                                      text_color="#000000",
                                      font=LARGEFONT,
                                      hover_color="#F0F0F0")
-        UploadButton.configure(command=lambda: self.upload_data(controller))
-        UploadButton.grid(row=1, column=0, padx=20, pady=36, sticky="nsew")
+        UploadButton.place(relx=0.5, rely=0.5, anchor="center")
 
     # THIS METHOD HANDLES THE UPLOAD ACTION, IT GETS THE FILE PATH AND EXTENSION, THEN IT READS THE FILE AND STORES IT IN THE DATAFRAME,
     # THEN IT LOADS THE DATA INTO THE SHEET, THEN IT ENABLES THE DATA PROCESSING BUTTONS, THEN IT SWITCHES TO THE DATA PROCESSING PAGE
