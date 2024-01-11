@@ -1,5 +1,5 @@
-from hmac import new
-from sklearn.feature_selection import VarianceThreshold
+from itertools import cycle, product
+from numpy import arange, newaxis, reshape, trace
 from assets.fonts.fonts import LARGEFONT, MEDIUMFONT, SMALLFONT
 import tkinter as tk
 from tkinter import ttk
@@ -7,8 +7,9 @@ import os
 import customtkinter as ctk
 from PIL import ImageTk, Image
 from joblib import dump, load
-from matplotlib import axis, pyplot as plt
+from matplotlib import pyplot as plt
 from pandas import concat
+from sklearn.preprocessing import LabelBinarizer
 from sklearn.calibration import LabelEncoder
 from sklearn.exceptions import NotFittedError
 from sklearn.model_selection import train_test_split
@@ -22,10 +23,9 @@ from sklearn import metrics, svm
 from sklearn.cluster import KMeans
 from logic.file_handling import file_handling as fh
 from tksheet import Sheet
-from logic.data_preprocessing import feature_selection_kBestFeatures, feature_selection_varianceThreshold, handle_missing_values, drop_duplicate_rows, drop_contant_columns, get_non_numeric_columns, get_dataframe_columns, get_non_constant_columns, get_constant_columns, remove_outliers
+from logic.data_preprocessing import feature_selection_kBestFeatures, feature_selection_varianceThreshold, handle_missing_values, drop_duplicate_rows, get_non_numeric_columns, get_dataframe_columns, get_non_constant_columns, get_constant_columns, remove_outliers
 from enums import enums
 import matplotlib
-from numpy import float64, float32
 
 matplotlib.use('TkAgg')
 
@@ -35,21 +35,17 @@ from matplotlib.backends.backend_tkagg import (
     NavigationToolbar2Tk
 )
 
-MLModels = {'Linear Regression': LinearRegression(), 'Decision Tree': DecisionTreeClassifier(), 'Naive Bayes': GaussianNB(), 'Support Vector Machine (SVM)': svm.SVC(), 'K-means': KMeans(), 'K-Nearest Neighbors (KNN)': KNeighborsClassifier(), 'Random Forest': RandomForestClassifier(), 'Logistic Regression': LogisticRegression()}
+#
 DATA = fh()
 
-# WRAPPER FUNCTIONS
+#
 def UploadAction(type: str = 'file'):
     file_path = ctk.filedialog.askopenfilename(filetypes=[("Excel files", "*.xlsx"), ("CSV files", "*.csv"), ("JSON files", "*.json"), ("Text files", "*.txt")] if type == 'file' else [(".SAV files", "*.sav")])
     _, file_extension = os.path.splitext(file_path)
 
     return file_path, file_extension
 
-def read_data():
-    global DATA
-    DATA.file_data_read()
-    print(DATA)
-
+#
 def Exit():
     plt.close()
     app.quit()
@@ -88,7 +84,7 @@ class App(ctk.CTk):
         frame.configure(fg_color="#101010")
         frame.tkraise()
     
-# first window frame startpage
+#
 class StartPage(ctk.CTkFrame):
     def __init__(self, parent, controller):
         ctk.CTkFrame.__init__(self, parent)
@@ -115,14 +111,7 @@ class StartPage(ctk.CTkFrame):
         UploadButton.configure(command=lambda: self.upload_data(controller))
         UploadButton.grid(row=1, column=0, padx=20, pady=36, sticky="nsew")
 
-    def button_click_controller(self, btn: ctk.CTkButton, controller):
-        global DATA 
-
-        DATA.mlModelType = btn.cget('text')
-        DATA.mlModel = MLModels[DATA.mlModelType]
-        print(DATA.mlModelType)
-        controller.show_frame(DataProcessingPage)
-
+    #
     def upload_data(self, controller):
         file_path, file_extension = UploadAction()
 
@@ -149,6 +138,7 @@ class StartPage(ctk.CTkFrame):
 
         controller.show_frame(DataProcessingPage)
 
+#
 class DataProcessingPage(ctk.CTkFrame):
     def __init__(self, parent, controller):
         ctk.CTkFrame.__init__(self, parent)
@@ -271,6 +261,7 @@ class DataProcessingPage(ctk.CTkFrame):
         frame.configure(fg_color="#101010", width=358)
         frame.tkraise()
 
+    #
     def upload_data(self):
         file_path, file_extension = UploadAction()
         
@@ -299,11 +290,13 @@ class DataProcessingPage(ctk.CTkFrame):
         self.SaveDatasetButton.configure(state='disabled')
         self.ContinueButton.configure(state='disabled')
 
+    #
     def load_data(self):
         global app
         global DATA
         self.sheet.set_sheet_data(data=DATA.file_data.values.tolist())
 
+    #
     def optionmenu_callback(self, choice):
         if 'DATA' not in globals() or DATA.file_data is None:
             tk.messagebox.showerror("Information", "Please upload a data file first")
@@ -335,6 +328,7 @@ class DataProcessingPage(ctk.CTkFrame):
             self.frames[LabelEncodingPage].ColumnsCombobox.configure(values=get_non_numeric_columns(DATA.file_data))
             self.show_frame(LabelEncodingPage)
 
+    #
     def VisPageSwitch(self, controller):
         if 'DATA' not in globals() or DATA.file_data is None:
             tk.messagebox.showerror("Information", "Please upload a data file first")
@@ -345,6 +339,7 @@ class DataProcessingPage(ctk.CTkFrame):
         app.frames[VisualizationPage].ColumnYCombobox.configure(values=get_dataframe_columns(DATA.file_data))
         controller.show_frame(VisualizationPage)
 
+    #
     def SplitPageSwitch(self, controller):
         if 'DATA' not in globals() or DATA.file_data is None:
             tk.messagebox.showerror("Information", "Please upload a data file first")
@@ -355,11 +350,11 @@ class DataProcessingPage(ctk.CTkFrame):
                 
         self.show_frame(BlankPage)
         controller.show_frame(DataSplitPage)
-
+    
+    #
     def split_X_y(self, choice: str):
         global DATA
-
-        choice_type = DATA.file_data[choice].dtype.name
+        global app
 
         if choice is None or choice == "":
             tk.messagebox.showerror("Information", "Choose a target class")
@@ -367,8 +362,10 @@ class DataProcessingPage(ctk.CTkFrame):
 
         DATA.target_column = choice
 
-        print(DATA.target_column)
-
+        DATA.X_train = None
+        DATA.X_test = None
+        DATA.y_train = None
+        DATA.y_test = None
         DATA.X = DATA.file_data.drop(DATA.target_column, axis=1)
         DATA.y = DATA.file_data[DATA.target_column]
 
@@ -382,6 +379,9 @@ class DataProcessingPage(ctk.CTkFrame):
         self.ContinueButton.configure(state='normal')
         self.SaveDatasetButton.configure(state='normal')
 
+        app.frames[DataSplitPage].TrainSheet.set_sheet_data(data=[])
+        app.frames[DataSplitPage].TestSheet.set_sheet_data(data=[])
+
 # FILLER PAGES ############################################################################################################################
 ###########################################################################################################################################
 class BlankPage(ctk.CTkFrame):
@@ -391,6 +391,7 @@ class BlankPage(ctk.CTkFrame):
 ###########################################################################################################################################
 ###########################################################################################################################################
 
+#
 class VarianceThresholdPage(ctk.CTkFrame):
     def __init__(self, parent, controller):
         ctk.CTkFrame.__init__(self, parent)
@@ -423,6 +424,7 @@ class VarianceThresholdPage(ctk.CTkFrame):
                                      font=SMALLFONT, hover=True, hover_color="#F94545", height=48, width=56)
         CancelButton.grid(row=3, column=0, padx=0, pady=4, sticky="ew")
 
+    #
     def apply_threshold(self, k, controller):
         global DATA
 
@@ -446,6 +448,7 @@ class VarianceThresholdPage(ctk.CTkFrame):
 
         controller.show_frame(BlankPage)
 
+#
 class KbestfeatPage(ctk.CTkFrame):
     def __init__(self, parent, controller):
         ctk.CTkFrame.__init__(self, parent)
@@ -480,6 +483,7 @@ class KbestfeatPage(ctk.CTkFrame):
                                      font=SMALLFONT, hover=True, hover_color="#F94545", height=48)
         CancelButton.grid(row=3, column=0, padx=0, pady=4, sticky="ew")
 
+    #
     def kbestFeat_Selec_event(self, k, controller):
         global DATA
 
@@ -511,6 +515,7 @@ class KbestfeatPage(ctk.CTkFrame):
         app.frames[DataProcessingPage].load_data()
         controller.show_frame(BlankPage)
 
+#
 class MissingValuesPage(ctk.CTkFrame):
     def __init__(self, parent, controller):
         ctk.CTkFrame.__init__(self, parent)
@@ -551,6 +556,7 @@ class MissingValuesPage(ctk.CTkFrame):
                                      font=SMALLFONT, hover=True, hover_color="#F94545", height=48, width=56)
         CancelButton.grid(row=5, column=0, padx=0, pady=4, sticky="ew")
 
+    #
     def values_handling(self, controller, value: int | float | str = None,
                         method: enums.FillMethod = enums.FillMethod.MEAN):
         global DATA
@@ -1864,6 +1870,8 @@ class MLPage(ctk.CTkFrame):
             self.showMetricsPlotsBtn.configure(state="normal")
 
         else:
+            self.showMetricsPlotsBtn.configure(state="normal")
+            
             self.cm = metrics.confusion_matrix(DATA.y if (DATA.X_train is None or DATA.y_train is None or DATA.X_test is None or DATA.y_test is None or DATA.X is None or DATA.y is None) else DATA.y_test, self.prediction)
             BER = 1 - (1/2 * ((self.cm[0][0] / (self.cm[0][0] + self.cm[1][0])) + (self.cm[1][1] / (self.cm[1][1] + self.cm[0][1]))))
     
@@ -1880,26 +1888,28 @@ class MLPage(ctk.CTkFrame):
             self.AccuracyLabel.grid(row=4, column=0, padx=0, pady=8, sticky="w")
 
             self.PrecisionLabel = ctk.CTkLabel(self.NumericMetricsFrame,
-                                               text=f"Precision: {round(metrics.precision_score(DATA.y if (DATA.X_train is None or DATA.y_train is None or DATA.X_test is None or DATA.y_test is None or DATA.X is None or DATA.y is None) else DATA.y_test, self.prediction), 4)}",
+                                               text=f"Precision: {round(metrics.precision_score(DATA.y if (DATA.X_train is None or DATA.y_train is None or DATA.X_test is None or DATA.y_test is None or DATA.X is None or DATA.y is None) else DATA.y_test, self.prediction, average='macro'), 4)}",
                                                text_color="#FFFFFF", font=MEDIUMFONT)
             self.PrecisionLabel.grid(row=5, column=0, padx=0, pady=8, sticky="w")
 
             self.RecallLabel = ctk.CTkLabel(self.NumericMetricsFrame,
-                                            text=f"Recall: {round(metrics.recall_score(DATA.y if (DATA.X_train is None or DATA.y_train is None or DATA.X_test is None or DATA.y_test is None or DATA.X is None or DATA.y is None) else DATA.y_test, self.prediction), 4)}",
+                                            text=f"Recall: {round(metrics.recall_score(DATA.y if (DATA.X_train is None or DATA.y_train is None or DATA.X_test is None or DATA.y_test is None or DATA.X is None or DATA.y is None) else DATA.y_test, self.prediction, average='macro'), 4)}",
                                             text_color="#FFFFFF", font=MEDIUMFONT)
             self.RecallLabel.grid(row=6, column=0, padx=0, pady=8, sticky="w")
 
             self.F1ScoreLabel = ctk.CTkLabel(self.NumericMetricsFrame,
-                                             text=f"F1 score: {round(metrics.f1_score(DATA.y if (DATA.X_train is None or DATA.y_train is None or DATA.X_test is None or DATA.y_test is None or DATA.X is None or DATA.y is None) else DATA.y_test, self.prediction), 4)}",
+                                             text=f"F1 score: {round(metrics.f1_score(DATA.y if (DATA.X_train is None or DATA.y_train is None or DATA.X_test is None or DATA.y_test is None or DATA.X is None or DATA.y is None) else DATA.y_test, self.prediction, average='macro'), 4)}",
                                              text_color="#FFFFFF", font=MEDIUMFONT)
             self.F1ScoreLabel.grid(row=7, column=0, padx=0, pady=8, sticky="w")
 
+            self.multiclassClassification = len(DATA.y.unique()) > 2
+            
+            self.predictionProba = DATA.mlModel.predict_proba(DATA.X_test)
+            
             self.AUCScoreLabel = ctk.CTkLabel(self.NumericMetricsFrame,
-                                              text=f"AUC score: {round(metrics.roc_auc_score(DATA.y if (DATA.X_train is None or DATA.y_train is None or DATA.X_test is None or DATA.y_test is None or DATA.X is None or DATA.y is None) else DATA.y_test, self.prediction), 4)}",
+                                              text=f"AUC score: {round(metrics.roc_auc_score(DATA.y if (DATA.X_train is None or DATA.y_train is None or DATA.X_test is None or DATA.y_test is None or DATA.X is None or DATA.y is None) else DATA.y_test, self.predictionProba if self.multiclassClassification else self.prediction, multi_class='ovr'), 4)}",
                                               text_color="#FFFFFF", font=MEDIUMFONT)
             self.AUCScoreLabel.grid(row=8, column=0, padx=0, pady=8, sticky="w")
-
-            self.showMetricsPlotsBtn.configure(state="normal")
 
         self.SaveModelButton.configure(state="normal")
 
@@ -1939,24 +1949,84 @@ class MLPage(ctk.CTkFrame):
             PlotButton.grid(row=2, column=0, padx=0, pady=4, ipadx=8, ipady=8, sticky="ew")
 
         elif DATA.mlModelType != 'Linear Regression':
-            disp = metrics.ConfusionMatrixDisplay.from_predictions(y_true=DATA.y if (DATA.X_train is None or DATA.y_train is None or DATA.X_test is None or DATA.y_test is None or DATA.X is None or DATA.y is None) else DATA.y_test, y_pred=self.prediction, display_labels=["False", "True"], cmap=plt.cm.Blues)
-            fpr, tpr, thresh = metrics.roc_curve(DATA.y if (DATA.X_train is None or DATA.y_train is None or DATA.X_test is None or DATA.y_test is None or DATA.X is None or DATA.y is None) else DATA.y_test, self.prediction, pos_label=1)
-            roc_display = metrics.RocCurveDisplay(fpr=fpr, tpr=tpr)
-
             self.figure, (self.axe1, self.axe2) = plt.subplots(1, 2)
 
             self.figure_canva = FigureCanvasTkAgg(self.figure, self.MetricsPlotsFrame)
 
+            colors = cycle(["aqua", "darkorange", "cornflowerblue", "red", "green", "yellow", "purple", "pink", "brown", "orange", "gray", "black", "cyan", "magenta", "lime", "teal", "lavender", "maroon", "navy", "olive", "silver", "blue", "gold", "crimson", "indigo", "turquoise", "tan", "salmon"])
+
+            if DATA.X_train is None or DATA.y_train is None or DATA.X_test is None or DATA.y_test is None or DATA.X is None or DATA.y is None:
+                disp = metrics.ConfusionMatrixDisplay.from_estimator(
+                                                            DATA.mlModel,
+                                                            DATA.X,
+                                                            DATA.y,
+                                                            display_labels=DATA.y.unique().tolist(),
+                                                            cmap=plt.cm.Blues,
+                                                            normalize=None,
+                                                        )
+                            
+                if self.multiclassClassification:
+                    target_names = DATA.y.unique().tolist()
+                    n_classes = len(target_names)
+                    label_binarizer = LabelBinarizer().fit(DATA.y)
+                    y_onehot_test = label_binarizer.transform(DATA.y)
+
+                    for class_id, color in zip(range(n_classes), colors):
+                            metrics.RocCurveDisplay.from_predictions(
+                            y_onehot_test[:, class_id],
+                            self.predictionProba[:, class_id],
+                            name=f"ROC curve for {target_names[class_id]}",
+                            color=color,
+                            ax=self.axe2,
+                            plot_chance_level=(class_id == 2),
+                        )
+                    self.axe2.set_title("All OvR ROC curves")
+                else:
+                    roc_display = metrics.RocCurveDisplay.from_estimator(DATA.mlModel, DATA.X, DATA.y)
+                    roc_display.plot(ax=self.axe2)
+                    self.axe2.set_title("ROC curve")
+                    
+            else:
+                disp = metrics.ConfusionMatrixDisplay.from_estimator(
+                                                            DATA.mlModel,
+                                                            DATA.X_test,
+                                                            DATA.y_test,
+                                                            display_labels=DATA.y.unique().tolist(),
+                                                            cmap=plt.cm.Blues,
+                                                            normalize=None,
+                                                        )
+                            
+                if self.multiclassClassification:
+                    target_names = DATA.y.unique().tolist()
+                    n_classes = len(target_names)
+                    label_binarizer = LabelBinarizer().fit(DATA.y_train)
+                    y_onehot_test = label_binarizer.transform(DATA.y_test)
+
+                    for class_id, color in zip(range(n_classes), colors):
+                            metrics.RocCurveDisplay.from_predictions(
+                            y_onehot_test[:, class_id],
+                            self.predictionProba[:, class_id],
+                            name=f"ROC curve for {target_names[class_id]}",
+                            color=color,
+                            ax=self.axe2,
+                            plot_chance_level=(class_id == 2),
+                        )
+                    self.axe2.set_title("All OvR ROC curves")
+                else:
+                    roc_display = metrics.RocCurveDisplay.from_estimator(DATA.mlModel, DATA.X_test, DATA.y_test)
+                    roc_display.plot(ax=self.axe2)
+                    self.axe2.set_title("ROC curve")
+
+            self.axe2.legend([""], fontsize="x-large")
+            self.axe2.set_xlabel("False Positive Rate")
+            self.axe2.set_ylabel("True Positive Rate")
+
             disp.plot(ax=self.axe1)
             self.axe1.legend([""], fontsize="x-large")
-            self.axe1.set_xlabel("")
+            self.axe1.set_xlabel("Predicted label")
+            self.axe1.set_ylabel("True label")
             self.axe1.set_title("Confusion matrix")
-
-            roc_display.plot(ax=self.axe2)
-            self.axe2.legend([""], fontsize="x-large")
-            self.axe2.set_xlabel("")
-            self.axe2.set_title("ROC curve")
-
+            
             self.figure_canva.draw()
             self.figure_canva.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=True)
 
