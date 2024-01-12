@@ -129,6 +129,7 @@ class DocumentationPage(ctk.CTkFrame):
         OverviewText.configure(wrap=tk.WORD)
         OverviewText.grid(row=2, column=0, padx=0, pady=0, ipadx= 0, ipady= 0, sticky="nsew")
         OverviewText.insert(tk.END, "This app is a data playground, it allows you to upload your data, visualize it, process it, and train a machine learning model on it. The app is divided into pages, each page has its own logic, and its own widgets. The app is divided into 3 main pages:\n- The data processing page: it allows you to upload your data, visualize it, process it, and save it.\n- The visualization page: it allows you to visualize your data in different plots.\n- The data split page: it allows you to split your data into training and testing sets.\n- The machine learning page: it allows you to train a machine learning model on your data, and visualize the results.")
+        OverviewText.configure(state='disabled')
 
         GettingStartedLabel = ctk.CTkLabel(DocumentationFrame, text="Getting started", text_color="#FFFFFF", font=LARGEFONT)
         GettingStartedLabel.grid(row=3, column=0, padx=0, pady=8, sticky="w")
@@ -137,7 +138,8 @@ class DocumentationPage(ctk.CTkFrame):
         GettingStartedText.configure(wrap=tk.WORD)
         GettingStartedText.grid(row=4, column=0, padx=0, pady=(0, 8), ipadx= 0, ipady= 0, sticky="ew")
         GettingStartedText.insert(tk.END, "To get started, you will find an upload button in the middle of the start page, click on it, and choose your data file.\nThen you will find a target column optionmenu, choose the target column.\nAfter that, 3 buttons will be enabled:\n- The visualize button allows you to visualize your data.\n- The save dataset button allows you to save your data.\n- The continue button allows you to continue to the data split page.\nAfter you are done with the data processing, you can continue to the data split page, where you can split your data into training and testing sets.\nThen you can continue to the machine learning page, where you can train a machine learning model on your data and test it.")
-        
+        GettingStartedText.configure(state='disabled')
+
         FeaturesLabel = ctk.CTkLabel(DocumentationFrame, text="Features", text_color="#FFFFFF", font=LARGEFONT)
         FeaturesLabel.grid(row=5, column=0, padx=0, pady=8, sticky="w")
 
@@ -145,7 +147,8 @@ class DocumentationPage(ctk.CTkFrame):
         FeaturesText.configure(wrap=tk.WORD)
         FeaturesText.grid(row=6, column=0, padx=0, pady=(0, 8), ipadx= 0, ipady= 0, sticky="ew")
         FeaturesText.insert(tk.END, "The app has a lot of features, it allows you to:\n- Upload your data.\n- Process your data: Handle missing values, drop duplicate rows, drop constant features, handle outliers, removes features, label encode columns, and do feature selection with variance threshold and k-best features.\n- Visualize your data.\n- Save your data.\n- Split your data into training and testing sets.\n- Train a machine learning model on your data.\n- Test your machine learning model.\n- Visualize the results of your machine learning model.\n- Save your machine learning model.")
-        
+        FeaturesText.configure(state='disabled')
+
 # THE START PAGE, IT IS THE FIRST PAGE THAT THE USER SEES WHEN HE OPENS THE APP
 class StartPage(ctk.CTkFrame):
     def __init__(self, parent, controller):
@@ -2103,7 +2106,6 @@ class MLPage(ctk.CTkFrame):
                                                             DATA.X_test,
                                                             DATA.y_test,
                                                             display_labels=DATA.y.unique().tolist(),
-                                                            cmap=plt.cm.Blues,
                                                             normalize=None,
                                                         )
                             
@@ -2132,7 +2134,7 @@ class MLPage(ctk.CTkFrame):
             self.axe2.set_xlabel("False Positive Rate")
             self.axe2.set_ylabel("True Positive Rate")
 
-            disp.plot(ax=self.axe1)
+            disp.plot(ax=self.axe1, cmap='Blues')
             self.axe1.legend([""], fontsize="x-large")
             self.axe1.set_xlabel("Predicted label")
             self.axe1.set_ylabel("True label")
