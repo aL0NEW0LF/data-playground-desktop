@@ -54,3 +54,5 @@ python main.py
 > - [x] Fix the 'K-means' workflow, with more visualization of the results
 > - [ ] Add 3d and violent visualization
 > - [x] Choose what form you want to save your file
+> - [ ] Add more regression models
+> - [ ] Add regression metrics plots
