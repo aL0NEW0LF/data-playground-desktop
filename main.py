@@ -893,6 +893,7 @@ class VisualizationPage(ctk.CTkFrame):
         self.visPlotType = None
         self.visColumnX = None
         self.visColumnY = None
+        self.visColumnZ = None
 
         Title = ctk.CTkLabel(self, text="Visualization", text_color="#FFFFFF", font=LARGEFONT)
         Title.grid(row=0, column=0, padx=0, pady=8, sticky="w")
@@ -912,7 +913,7 @@ class VisualizationPage(ctk.CTkFrame):
         self.PlotTypeOptionmenuVar = ctk.StringVar(value="Plot type")
         self.PlotTypeCombobox = ctk.CTkOptionMenu(master=ButtonsFrame,
                                                   values=["Scatter plot", "Histogram", "Bar chart", "Line chart",
-                                                          "Box plot"],
+                                                          "Box plot", "Violin plot", "3D scatter plot", "3D surface plot"],
                                                   command=lambda x: self.plotType_optionmenu_callback(x),
                                                   variable=self.PlotTypeOptionmenuVar,
                                                   width=150, corner_radius=0, text_color="#101010", bg_color="#FFFFFF",
@@ -945,6 +946,18 @@ class VisualizationPage(ctk.CTkFrame):
                                                  dropdown_font=SMALLFONT, dropdown_hover_color="#F0F0F0",
                                                  dropdown_fg_color="#FFFFFF", dropdown_text_color="#101010")
         self.ColumnYCombobox.grid(row=0, column=5, padx=4, pady=8, ipadx=8, ipady=8, sticky="w")
+
+        self.ColumnZOptionmenuVar = ctk.StringVar(value="Column Z")
+        self.ColumnZCombobox = ctk.CTkOptionMenu(master=ButtonsFrame,
+                                                 values=[],
+                                                 command=lambda x: self.columnZ_optionmenu_callback(x),
+                                                 variable=self.ColumnZOptionmenuVar,
+                                                 width=150, state='disabled', corner_radius=0, text_color="#101010",
+                                                 bg_color="#FFFFFF", fg_color="#FFFFFF", font=SMALLFONT, height=32,
+                                                 button_color="#FFFFFF", button_hover_color="#FFFFFF",
+                                                 dropdown_font=SMALLFONT, dropdown_hover_color="#F0F0F0",
+                                                 dropdown_fg_color="#FFFFFF", dropdown_text_color="#101010")
+        self.ColumnZCombobox.grid(row=0, column=6, padx=4, pady=8, ipadx=8, ipady=8, sticky="w")
 
         BinsNbrLabel = ctk.CTkLabel(ButtonsFrame, text="Bins number:", text_color="#FFFFFF", font=SMALLFONT)
         BinsNbrLabel.grid(row=0, column=7, padx=0, pady=8, sticky="w")
@@ -984,26 +997,49 @@ class VisualizationPage(ctk.CTkFrame):
             self.BinsEntry.configure(state="disabled")
             self.ColumnXCombobox.configure(state="normal")
             self.ColumnYCombobox.configure(state="normal")
+            self.ColumnZCombobox.configure(state="disabled")
         elif self.visPlotType == "Histogram":
             self.MarkerSizeEntry.configure(state="disabled")
             self.BinsEntry.configure(state="normal")
             self.ColumnXCombobox.configure(state="normal")
             self.ColumnYCombobox.configure(state="disabled")
+            self.ColumnZCombobox.configure(state="disabled")
         elif self.visPlotType == "Bar chart":
             self.MarkerSizeEntry.configure(state="disabled")
             self.BinsEntry.configure(state="disabled")
             self.ColumnXCombobox.configure(state="normal")
             self.ColumnYCombobox.configure(state="normal")
+            self.ColumnZCombobox.configure(state="disabled")
         elif self.visPlotType == "Line chart":
             self.MarkerSizeEntry.configure(state="disabled")
             self.BinsEntry.configure(state="disabled")
             self.ColumnXCombobox.configure(state="normal")
             self.ColumnYCombobox.configure(state="normal")
+            self.ColumnZCombobox.configure(state="disabled")
         elif self.visPlotType == "Box plot":
             self.MarkerSizeEntry.configure(state="disabled")
             self.BinsEntry.configure(state="disabled")
             self.ColumnXCombobox.configure(state="normal")
             self.ColumnYCombobox.configure(state="disabled")
+            self.ColumnZCombobox.configure(state="disabled")
+        elif self.visPlotType == "3D scatter plot":
+            self.MarkerSizeEntry.configure(state="disabled")
+            self.BinsEntry.configure(state="disabled")
+            self.ColumnXCombobox.configure(state="normal")
+            self.ColumnYCombobox.configure(state="normal")
+            self.ColumnZCombobox.configure(state="normal")
+        elif self.visPlotType == "3D surface plot":
+            self.MarkerSizeEntry.configure(state="disabled")
+            self.BinsEntry.configure(state="disabled")
+            self.ColumnXCombobox.configure(state="normal")
+            self.ColumnYCombobox.configure(state="normal")
+            self.ColumnZCombobox.configure(state="normal")
+        elif self.visPlotType == "Violin plot":
+            self.MarkerSizeEntry.configure(state="disabled")
+            self.BinsEntry.configure(state="disabled")
+            self.ColumnXCombobox.configure(state="normal")
+            self.ColumnYCombobox.configure(state="disabled")
+            self.ColumnZCombobox.configure(state="disabled")
 
     # THIS METHOD HANDLES THE COLUMN X CHOICE
     def columnX_optionmenu_callback(self, choice):
@@ -1014,6 +1050,11 @@ class VisualizationPage(ctk.CTkFrame):
     def columnY_optionmenu_callback(self, choice):
         self.visColumnY = choice
         print(self.visColumnY)
+
+    # THIS METHOD HANDLES THE COLUMN Z CHOICE
+    def columnZ_optionmenu_callback(self, choice):
+        self.visColumnZ = choice
+        print(self.visColumnZ)
 
     # THIS METHOD HANDLES THE PLOT BUTTON, IT PLOTS THE DATA
     def plot(self, k=''):
@@ -1040,6 +1081,33 @@ class VisualizationPage(ctk.CTkFrame):
             self.axes.set_xlabel(self.visColumnX)
             self.axes.set_ylabel(self.visColumnY)
             self.axes.set_title(f"{self.visColumnX} vs {self.visColumnY}")
+        elif self.visPlotType == "3D scatter plot":
+            if self.visColumnX == None or self.visColumnY == None or self.visColumnX == '' or self.visColumnY == '':
+                tk.messagebox.showerror("Information", "Please select a column for X and Y")
+                return
+            self.axes.scatter(DATA.file_data[self.visColumnX], DATA.file_data[self.visColumnY], DATA.file_data[self.visColumnZ], s=5, alpha=0.5)
+            self.axes.set_xlabel(self.visColumnX)
+            self.axes.set_ylabel(self.visColumnY)
+            self.axes.set_zlabel(self.visColumnZ)
+            self.axes.set_title(f"{self.visColumnX} vs {self.visColumnY} vs {self.visColumnZ}")
+        elif self.visPlotType == "3D surface plot":
+            if self.visColumnX == None or self.visColumnY == None or self.visColumnX == '' or self.visColumnY == '':
+                tk.messagebox.showerror("Information", "Please select a column for X and Y")
+                return
+            
+            print(DATA.file_data[self.visColumnX].dtype.name)
+            print(DATA.file_data[self.visColumnY].dtype.name)
+            print(DATA.file_data[self.visColumnZ].dtype.name)
+
+            if (DATA.file_data[self.visColumnX].dtype.name != "float64" and DATA.file_data[self.visColumnX].dtype.name != "float32") or (DATA.file_data[self.visColumnY].dtype.name != "float64" and DATA.file_data[self.visColumnY].dtype.name != "float32") or (DATA.file_data[self.visColumnZ].dtype.name != "float64" and DATA.file_data[self.visColumnZ].dtype.name != "float32"):
+                tk.messagebox.showerror("Information", "Please select a column with float values")
+                return 
+            
+            self.axes.plot_trisurf(DATA.file_data[self.visColumnX], DATA.file_data[self.visColumnY], DATA.file_data[self.visColumnZ], cmap='viridis')
+            self.axes.set_xlabel(self.visColumnX)
+            self.axes.set_ylabel(self.visColumnY)
+            self.axes.set_zlabel(self.visColumnZ)
+            self.axes.set_title(f"{self.visColumnX} vs {self.visColumnY} vs {self.visColumnZ}")
         elif self.visPlotType == "Histogram":
             if self.visColumnX == None or self.visColumnX == '':
                 tk.messagebox.showerror("Information", "Please select a column for X")
@@ -1073,6 +1141,13 @@ class VisualizationPage(ctk.CTkFrame):
             self.axes.boxplot(DATA.file_data[self.visColumnX])
             self.axes.set_xlabel(self.visColumnX)
             self.axes.set_title(f"{self.visColumnX} box plot")
+        elif self.visPlotType == "Violin plot":
+            if self.visColumnX == None or self.visColumnX == '':
+                tk.messagebox.showerror("Information", "Please select a column for X")
+                return
+            self.axes.violinplot(DATA.file_data[self.visColumnX], showmeans=True, showmedians=True, quantiles=[[0.25, 0.5, 0.75]])
+            self.axes.set_xlabel(self.visColumnX)
+            self.axes.set_title(f"{self.visColumnX} violin plot")
 
         self.figure_canvas.draw()
         self.toolbar.update()
