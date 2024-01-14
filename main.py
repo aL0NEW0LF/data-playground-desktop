@@ -422,6 +422,7 @@ class DataProcessingPage(ctk.CTkFrame):
         global app
         app.frames[VisualizationPage].ColumnXCombobox.configure(values=get_dataframe_columns(DATA.file_data))
         app.frames[VisualizationPage].ColumnYCombobox.configure(values=get_dataframe_columns(DATA.file_data))
+        app.frames[VisualizationPage].ColumnZCombobox.configure(values=get_dataframe_columns(DATA.file_data))
         controller.show_frame(VisualizationPage)
 
     # THIS METHOD HANDLES THE SPLIT BUTTON, IT SWITCHES TO THE SPLIT PAGE
@@ -946,21 +947,21 @@ class VisualizationPage(ctk.CTkFrame):
         self.ColumnYCombobox.grid(row=0, column=5, padx=4, pady=8, ipadx=8, ipady=8, sticky="w")
 
         BinsNbrLabel = ctk.CTkLabel(ButtonsFrame, text="Bins number:", text_color="#FFFFFF", font=SMALLFONT)
-        BinsNbrLabel.grid(row=0, column=6, padx=0, pady=8, sticky="w")
+        BinsNbrLabel.grid(row=0, column=7, padx=0, pady=8, sticky="w")
 
         self.BinsEntry = ctk.CTkEntry(ButtonsFrame, width=100, state='disabled')
-        self.BinsEntry.grid(row=0, column=7, padx=8, pady=8)
+        self.BinsEntry.grid(row=0, column=8, padx=8, pady=8)
 
         MarkerSizeLabel = ctk.CTkLabel(ButtonsFrame, text="Marker size:", text_color="#FFFFFF", font=SMALLFONT)
-        MarkerSizeLabel.grid(row=0, column=8, padx=0, pady=8, sticky="w")
+        MarkerSizeLabel.grid(row=0, column=9, padx=0, pady=8, sticky="w")
 
         self.MarkerSizeEntry = ctk.CTkEntry(ButtonsFrame, width=100, state='disabled')
-        self.MarkerSizeEntry.grid(row=0, column=9, padx=8, pady=8)
+        self.MarkerSizeEntry.grid(row=0, column=10, padx=8, pady=8)
 
         PlotButton = ctk.CTkButton(ButtonsFrame, text="Plot", command=lambda: self.plot(self.BinsEntry.get()),
                                    corner_radius=0, text_color="#101010", bg_color="#FFFFFF", fg_color="#FFFFFF",
                                    font=SMALLFONT, hover_color="#F0F0F0", height=32)
-        PlotButton.grid(row=0, column=10, padx=4, pady=8, ipadx=8, ipady=8, sticky="w")
+        PlotButton.grid(row=0, column=11, padx=4, pady=8, ipadx=8, ipady=8, sticky="w")
 
         PlotFrame = ctk.CTkFrame(self, fg_color="#101010")
         PlotFrame.grid(row=2, column=0, columnspan=5, ipadx=8, ipady=8, sticky="nsew")
@@ -972,7 +973,6 @@ class VisualizationPage(ctk.CTkFrame):
 
         self.toolbar = NavigationToolbar2Tk(self.figure_canvas, PlotFrame)
         self.toolbar.update()
-        self.axes = self.figure.add_subplot()
 
     # THIS METHOD HANDLES THE PLOT TYPE CHOICE, IT ENABLES THE CORRESPONDING ENTRIES
     def plotType_optionmenu_callback(self, choice):  
@@ -1019,6 +1019,8 @@ class VisualizationPage(ctk.CTkFrame):
     def plot(self, k=''):
         global DATA
         
+        self.figure.clear()
+        self.axes = self.figure.add_subplot(projection="3d" if self.visPlotType == "3D scatter plot" or self.visPlotType == "3D surface plot" else None)
         self.axes.clear()
 
         if self.visPlotType == "Scatter plot":
@@ -1919,7 +1921,7 @@ class MLPage(ctk.CTkFrame):
                 except:
                     svmRandomState = 42
 
-            DATA.mlModel = svm.SVC(C=svmC, kernel=svmKernel, gamma=svmGamma, random_state=svmRandomState)
+            DATA.mlModel = svm.SVC(C=svmC, kernel=svmKernel, gamma=svmGamma, random_state=svmRandomState, probability=True)
         
         if DATA.X_train is None or DATA.y_train is None or DATA.X_test is None or DATA.y_test is None or DATA.X is None or DATA.y is None:
             if DATA.mlModelType == 'K-means':
@@ -2017,7 +2019,7 @@ class MLPage(ctk.CTkFrame):
 
             self.multiclassClassification = len(DATA.y.unique()) > 2
             
-            self.predictionProba = DATA.mlModel.predict_proba(DATA.X_test)
+            self.predictionProba = DATA.mlModel.predict_proba(DATA.X if (DATA.X_train is None or DATA.y_train is None or DATA.X_test is None or DATA.y_test is None or DATA.X is None or DATA.y is None) else DATA.X_test)
             
             self.AUCScoreLabel = ctk.CTkLabel(self.NumericMetricsFrame,
                                               text=f"AUC score: {round(metrics.roc_auc_score(DATA.y if (DATA.X_train is None or DATA.y_train is None or DATA.X_test is None or DATA.y_test is None or DATA.X is None or DATA.y is None) else DATA.y_test, self.predictionProba if self.multiclassClassification else self.prediction, multi_class='ovr'), 4)}",
