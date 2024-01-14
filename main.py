@@ -18,7 +18,7 @@ from sklearn.naive_bayes import BernoulliNB, GaussianNB, MultinomialNB
 from sklearn.tree import DecisionTreeClassifier, DecisionTreeRegressor
 from sklearn.linear_model import LogisticRegression
 from sklearn.neighbors import KNeighborsClassifier
-from sklearn.ensemble import RandomForestClassifier
+from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
 from sklearn.linear_model import LinearRegression
 from sklearn import metrics, svm
 from sklearn.cluster import KMeans
@@ -28,6 +28,7 @@ from logic.data_preprocessing import feature_selection_kBestFeatures, feature_se
 from enums import enums
 from webbrowser import open_new_tab
 import matplotlib
+import seaborn as sns
 
 matplotlib.use('TkAgg')
 
@@ -432,6 +433,9 @@ class DataProcessingPage(ctk.CTkFrame):
             return
         elif 'object' in DATA.file_data.dtypes.to_dict().values(): 
             tk.messagebox.showerror("Information", "Please make sure all the labels are encoded")
+            return
+        elif DATA.file_data.isnull().sum().sum() > 0:
+            tk.messagebox.showerror("Information", "Please make sure there are no missing values")
             return
                 
         self.show_frame(BlankPage)
@@ -1458,7 +1462,7 @@ class MLPage(ctk.CTkFrame):
 
         target_type = DATA.y.dtype.name
 
-        if (target_type == 'float64' and target_type == 'float32' and choice not in ["Linear Regression", "Decision tree", "K-means"]):
+        if (target_type == 'float64' and target_type == 'float32' and choice not in ["Linear Regression", "Decision tree", "K-means", "Random Forest"]):
             tk.messagebox.showerror("Information", "Please choose a valid model for your chosen target column")
             return
         
@@ -1600,16 +1604,29 @@ class MLPage(ctk.CTkFrame):
             CriterionLabel = ctk.CTkLabel(self.ModelConfigFrame, text="Criterion:", text_color="#FFFFFF", font=SMALLFONT)
             CriterionLabel.grid(row=0, column=0, padx=(0, 4), sticky="w")
 
-            self.CriterionVar = ctk.StringVar(value="gini")
-            self.rfCriterionBox = ctk.CTkOptionMenu(master=self.ModelConfigFrame,
-                                                    values=["gini", "entropy"],
-                                                    width=250,
-                                                    variable=self.CriterionVar,
-                                                    corner_radius=0, text_color="#101010", bg_color="#FFFFFF",
-                                                    fg_color="#FFFFFF", font=SMALLFONT, height=48,
-                                                    button_color="#FFFFFF", button_hover_color="#FFFFFF",
-                                                    dropdown_font=SMALLFONT, dropdown_hover_color="#F0F0F0",
-                                                    dropdown_fg_color="#FFFFFF", dropdown_text_color="#101010")
+            if target_type != 'float64' and target_type != 'float32':
+                self.CriterionVar = ctk.StringVar(value="gini")
+                self.rfCriterionBox = ctk.CTkOptionMenu(master=self.ModelConfigFrame,
+                                                        values=["gini", "entropy"],
+                                                        width=250,
+                                                        variable=self.CriterionVar,
+                                                        corner_radius=0, text_color="#101010", bg_color="#FFFFFF",
+                                                        fg_color="#FFFFFF", font=SMALLFONT, height=48,
+                                                        button_color="#FFFFFF", button_hover_color="#FFFFFF",
+                                                        dropdown_font=SMALLFONT, dropdown_hover_color="#F0F0F0",
+                                                        dropdown_fg_color="#FFFFFF", dropdown_text_color="#101010")
+            else:
+                self.CriterionVar = ctk.StringVar(value="squared_error")
+                self.rfCriterionBox = ctk.CTkOptionMenu(master=self.ModelConfigFrame,
+                                                        values=["squared_error", "friedman_mse", "absolute_error", "poisson"],
+                                                        width=250,
+                                                        variable=self.CriterionVar,
+                                                        corner_radius=0, text_color="#101010", bg_color="#FFFFFF",
+                                                        fg_color="#FFFFFF", font=SMALLFONT, height=48,
+                                                        button_color="#FFFFFF", button_hover_color="#FFFFFF",
+                                                        dropdown_font=SMALLFONT, dropdown_hover_color="#F0F0F0",
+                                                        dropdown_fg_color="#FFFFFF", dropdown_text_color="#101010")
+                
             self.rfCriterionBox.grid(row=0, column=1, padx=4, pady=0, sticky="w")
 
             MaxDepthLabel = ctk.CTkLabel(self.ModelConfigFrame, text="Max depth:", text_color="#FFFFFF", font=SMALLFONT)
@@ -1763,251 +1780,259 @@ class MLPage(ctk.CTkFrame):
         for widget in self.MetricsPlotsFrame.winfo_children():
             widget.destroy()
 
-        if DATA.mlModelType == 'Linear Regression':
-            DATA.mlModel = LinearRegression()
+        try:
+            if DATA.mlModelType == 'Linear Regression':
+                DATA.mlModel = LinearRegression()
 
-        elif DATA.mlModelType == 'Naive Bayes':
-            nbDistribution = self.nbDistributionBox.get()
+            elif DATA.mlModelType == 'Naive Bayes':
+                nbDistribution = self.nbDistributionBox.get()
 
-            if nbDistribution == '' or nbDistribution == None or nbDistribution == 'Gaussian':
-                DATA.mlModel = GaussianNB()
-            elif nbDistribution == 'Multinomial':
-                DATA.mlModel = MultinomialNB()
-            elif nbDistribution == 'Bernoulli':
-                DATA.mlModel = BernoulliNB()
+                if nbDistribution == '' or nbDistribution == None or nbDistribution == 'Gaussian':
+                    DATA.mlModel = GaussianNB()
+                elif nbDistribution == 'Multinomial':
+                    DATA.mlModel = MultinomialNB()
+                elif nbDistribution == 'Bernoulli':
+                    DATA.mlModel = BernoulliNB()
 
-        elif DATA.mlModelType == 'Decision Tree':
-            dtCriterion = self.dtCriterionBox.get()
-            dtMaxDepth = self.dtMaxDepthEntry.get()
-            dtMinSamplesSplit = self.dtMinSamplesSplitEntry.get()
-            dtRandomState = self.dtRandomStateEntry.get()
-            target_type = DATA.y.dtype.name
+            elif DATA.mlModelType == 'Decision Tree':
+                dtCriterion = self.dtCriterionBox.get()
+                dtMaxDepth = self.dtMaxDepthEntry.get()
+                dtMinSamplesSplit = self.dtMinSamplesSplitEntry.get()
+                dtRandomState = self.dtRandomStateEntry.get()
+                target_type = DATA.y.dtype.name
 
-            if dtCriterion == '' or dtCriterion == None:
-                if target_type != 'float64' and target_type != 'float32':
-                    dtCriterion = 'gini'
+                if dtCriterion == '' or dtCriterion == None:
+                    if target_type != 'float64' and target_type != 'float32':
+                        dtCriterion = 'gini'
+                    else:
+                        dtCriterion = 'squared_error'
+                if dtMaxDepth == '':
+                    dtMaxDepth = None
                 else:
-                    dtCriterion = 'squared_error'
-            if dtMaxDepth == '':
-                dtMaxDepth = None
-            else:
-                try:
-                    dtMaxDepth = int(dtMaxDepth)
-                except:
-                    dtMaxDepth = None 
-            
-            if dtMinSamplesSplit == '':
-                dtMinSamplesSplit = 2
-            else:
-                try:
-                    dtMinSamplesSplit = int(dtMinSamplesSplit)
-
-                    if dtMinSamplesSplit < 2:
-                        dtMinSamplesSplit = 2
-                except:
                     try:
-                        dtMinSamplesSplit = float(dtMinSamplesSplit)
-
-                        if dtMinSamplesSplit < 0.0 or dtMinSamplesSplit > 1.0:
-                            dtMinSamplesSplit = 2
-
+                        dtMaxDepth = int(dtMaxDepth)
                     except:
-                        dtMinSamplesSplit = 2
-            if dtRandomState == '':
-                dtRandomState = 42
-            else:
-                try:
-                    dtRandomState = int(dtRandomState)
-                except:
-                    dtRandomState = 42
-
-            if target_type != 'float64' and target_type != 'float32':
-                DATA.mlModel = DecisionTreeClassifier(criterion=dtCriterion, max_depth=dtMaxDepth, min_samples_split=dtMinSamplesSplit, random_state=dtRandomState)
-            else:
-                DATA.mlModel = DecisionTreeRegressor(criterion=dtCriterion, max_depth=dtMaxDepth, min_samples_split=dtMinSamplesSplit, random_state=dtRandomState)
-
-        elif DATA.mlModelType == 'Logistic Regression':
-            lrSolver = self.lrSolverBox.get()
-            lrPenalty = self.lrPenaltyBox.get()
-            lrC = self.lrCEntry.get()
-            lrMaxIter = self.lrMaxIterEntry.get()
-            lrRandomState = self.lrRandomStateEntry.get()
-            
-            if lrSolver == '' or lrSolver == None:
-                lrSolver = 'lbfgs'
-            if lrPenalty == '' or lrPenalty == None:
-                lrPenalty = 'l2'
-            if lrC == '':
-                lrC = 1.0
-            else:
-                try:
-                    lrC = float(lrC)
-                except:
-                    lrC = 1.0
-            if lrMaxIter == '':
-                lrMaxIter = 100
-            else:
-                try:
-                    lrMaxIter = int(lrMaxIter)
-                except:
-                    lrMaxIter = 100
-            if lrRandomState == '':
-                lrRandomState = 42
-            else:
-                try:
-                    lrRandomState = int(lrRandomState)
-                except:
-                    lrRandomState = 42
-            
-            if (lrSolver in ['lbfgs', 'sag', 'newton-cg', 'newton-cholesky'] and lrPenalty not in ['l2', None]) or (lrSolver == 'liblinear' and lrPenalty not in ['l1', 'l2']):
-                tk.messagebox.showerror("Information", "Please choose a valid penalty for the chosen solver")
-                return
-            
-
-            DATA.mlModel = LogisticRegression(penalty=lrPenalty, C=lrC, max_iter=lrMaxIter, random_state=lrRandomState)
-
-        elif DATA.mlModelType == 'Random Forest':   
-            rfCriterion = self.rfCriterionBox.get()
-            rfMaxDepth = self.rfMaxDepthEntry.get()
-            rfMinSamplesSplit = self.rfMinSamplesSplitEntry.get()
-            rfRandomState = self.rfRandomStateEntry.get()
-
-            if rfCriterion == '' or rfCriterion == None:
-                rfCriterion = 'gini'
-            if rfMaxDepth == '':
-                rfMaxDepth = None
-            else:
-                try:
-                    rfMaxDepth = int(rfMaxDepth)
-                except:
-                    rfMaxDepth = None 
-            if rfMinSamplesSplit == '':
-                rfMinSamplesSplit = 2
-            else:
-                try:
-                    rfMinSamplesSplit = int(rfMinSamplesSplit)
-
-                    if rfMinSamplesSplit < 2:
-                        rfMinSamplesSplit = 2
-                except:
+                        dtMaxDepth = None 
+                
+                if dtMinSamplesSplit == '':
+                    dtMinSamplesSplit = 2
+                else:
                     try:
-                        rfMinSamplesSplit = float(rfMinSamplesSplit)
+                        dtMinSamplesSplit = int(dtMinSamplesSplit)
 
-                        if rfMinSamplesSplit < 0.0 or rfMinSamplesSplit > 1.0:
+                        if dtMinSamplesSplit < 2:
+                            dtMinSamplesSplit = 2
+                    except:
+                        try:
+                            dtMinSamplesSplit = float(dtMinSamplesSplit)
+
+                            if dtMinSamplesSplit < 0.0 or dtMinSamplesSplit > 1.0:
+                                dtMinSamplesSplit = 2
+
+                        except:
+                            dtMinSamplesSplit = 2
+                if dtRandomState == '':
+                    dtRandomState = 42
+                else:
+                    try:
+                        dtRandomState = int(dtRandomState)
+                    except:
+                        dtRandomState = 42
+
+                if target_type != 'float64' and target_type != 'float32':
+                    DATA.mlModel = DecisionTreeClassifier(criterion=dtCriterion, max_depth=dtMaxDepth, min_samples_split=dtMinSamplesSplit, random_state=dtRandomState)
+                else:
+                    DATA.mlModel = DecisionTreeRegressor(criterion=dtCriterion, max_depth=dtMaxDepth, min_samples_split=dtMinSamplesSplit, random_state=dtRandomState)
+
+            elif DATA.mlModelType == 'Logistic Regression':
+                lrSolver = self.lrSolverBox.get()
+                lrPenalty = self.lrPenaltyBox.get()
+                lrC = self.lrCEntry.get()
+                lrMaxIter = self.lrMaxIterEntry.get()
+                lrRandomState = self.lrRandomStateEntry.get()
+                
+                if lrSolver == '' or lrSolver == None:
+                    lrSolver = 'lbfgs'
+                if lrPenalty == '' or lrPenalty == None:
+                    lrPenalty = 'l2'
+                if lrC == '':
+                    lrC = 1.0
+                else:
+                    try:
+                        lrC = float(lrC)
+                    except:
+                        lrC = 1.0
+                if lrMaxIter == '':
+                    lrMaxIter = 100
+                else:
+                    try:
+                        lrMaxIter = int(lrMaxIter)
+                    except:
+                        lrMaxIter = 100
+                if lrRandomState == '':
+                    lrRandomState = 42
+                else:
+                    try:
+                        lrRandomState = int(lrRandomState)
+                    except:
+                        lrRandomState = 42
+                
+                if (lrSolver in ['lbfgs', 'sag', 'newton-cg', 'newton-cholesky'] and lrPenalty not in ['l2', None]) or (lrSolver == 'liblinear' and lrPenalty not in ['l1', 'l2']):
+                    tk.messagebox.showerror("Information", "Please choose a valid penalty for the chosen solver")
+                    return
+                
+
+                DATA.mlModel = LogisticRegression(penalty=lrPenalty, C=lrC, max_iter=lrMaxIter, random_state=lrRandomState)
+
+            elif DATA.mlModelType == 'Random Forest':   
+                rfCriterion = self.rfCriterionBox.get()
+                rfMaxDepth = self.rfMaxDepthEntry.get()
+                rfMinSamplesSplit = self.rfMinSamplesSplitEntry.get()
+                rfRandomState = self.rfRandomStateEntry.get()
+                target_type = DATA.y.dtype.name
+                
+                if rfCriterion == '' or rfCriterion == None:
+                    rfCriterion = 'gini'
+                if rfMaxDepth == '':
+                    rfMaxDepth = None
+                else:
+                    try:
+                        rfMaxDepth = int(rfMaxDepth)
+                    except:
+                        rfMaxDepth = None 
+                if rfMinSamplesSplit == '':
+                    rfMinSamplesSplit = 2
+                else:
+                    try:
+                        rfMinSamplesSplit = int(rfMinSamplesSplit)
+
+                        if rfMinSamplesSplit < 2:
                             rfMinSamplesSplit = 2
                     except:
-                        rfMinSamplesSplit = 2
-            if rfRandomState == '':
-                rfRandomState = 42
-            else:
-                try:
-                    rfRandomState = int(rfRandomState)
-                except:
+                        try:
+                            rfMinSamplesSplit = float(rfMinSamplesSplit)
+
+                            if rfMinSamplesSplit < 0.0 or rfMinSamplesSplit > 1.0:
+                                rfMinSamplesSplit = 2
+                        except:
+                            rfMinSamplesSplit = 2
+                if rfRandomState == '':
                     rfRandomState = 42
+                else:
+                    try:
+                        rfRandomState = int(rfRandomState)
+                    except:
+                        rfRandomState = 42
 
-            DATA.mlModel = RandomForestClassifier(criterion=rfCriterion, max_depth=rfMaxDepth, min_samples_split=rfMinSamplesSplit, random_state=rfRandomState)
+                if target_type != 'float64' and target_type != 'float32':
+                    DATA.mlModel = RandomForestClassifier(criterion=rfCriterion, max_depth=rfMaxDepth, min_samples_split=rfMinSamplesSplit, random_state=rfRandomState)
+                else:
+                    DATA.mlModel = RandomForestRegressor(criterion=rfCriterion, max_depth=rfMaxDepth, min_samples_split=rfMinSamplesSplit, random_state=rfRandomState)
 
-        elif DATA.mlModelType == 'K-Nearest Neighbors (KNN)':
-            knnNNeighbors = self.knnNNeighborsEntry.get()
-            knnAlgorithm = self.knnAlgorithmBox.get()
-            knnLeafSize = self.knnLeafSizeEntry.get()
-            knnMetric = self.knnMetricBox.get()
+            elif DATA.mlModelType == 'K-Nearest Neighbors (KNN)':
+                knnNNeighbors = self.knnNNeighborsEntry.get()
+                knnAlgorithm = self.knnAlgorithmBox.get()
+                knnLeafSize = self.knnLeafSizeEntry.get()
+                knnMetric = self.knnMetricBox.get()
 
-            if knnNNeighbors == '':
-                knnNNeighbors = 5
-            else:
-                try:
-                    knnNNeighbors = int(knnNNeighbors)
-                except:
+                if knnNNeighbors == '':
                     knnNNeighbors = 5
-            if knnAlgorithm == '' or knnAlgorithm == None:
-                knnAlgorithm = 'auto'
-            if knnLeafSize == '':
-                knnLeafSize = 30
-            else:
-                try:
-                    knnLeafSize = int(knnLeafSize)
-                except:
+                else:
+                    try:
+                        knnNNeighbors = int(knnNNeighbors)
+                    except:
+                        knnNNeighbors = 5
+                if knnAlgorithm == '' or knnAlgorithm == None:
+                    knnAlgorithm = 'auto'
+                if knnLeafSize == '':
                     knnLeafSize = 30
-            if knnMetric == '' or knnMetric == None:
-                knnMetric = 'minkowski'
+                else:
+                    try:
+                        knnLeafSize = int(knnLeafSize)
+                    except:
+                        knnLeafSize = 30
+                if knnMetric == '' or knnMetric == None:
+                    knnMetric = 'minkowski'
 
-            DATA.mlModel = KNeighborsClassifier(n_neighbors=knnNNeighbors, algorithm=knnAlgorithm, leaf_size=knnLeafSize, metric=knnMetric)
+                DATA.mlModel = KNeighborsClassifier(n_neighbors=knnNNeighbors, algorithm=knnAlgorithm, leaf_size=knnLeafSize, metric=knnMetric)
 
-        elif DATA.mlModelType == 'K-means':
-            kmNClusters = self.kmNClustersEntry.get()
-            kmMaxIter = self.kmMaxIterEntry.get()
-            kmAlgorithm = self.kmAlgorithmBox.get()
-            kmRandomState = self.kmRandomStateEntry.get()
+            elif DATA.mlModelType == 'K-means':
+                kmNClusters = self.kmNClustersEntry.get()
+                kmMaxIter = self.kmMaxIterEntry.get()
+                kmAlgorithm = self.kmAlgorithmBox.get()
+                kmRandomState = self.kmRandomStateEntry.get()
 
-            if kmNClusters == '':
-                kmNClusters = 8
-            else:
-                try:
-                    kmNClusters = int(kmNClusters)
-                except:
+                if kmNClusters == '':
                     kmNClusters = 8
-            if kmMaxIter == '':
-                kmMaxIter = 300
-            else:
-                try:
-                    kmMaxIter = int(kmMaxIter)
-                except:
+                else:
+                    try:
+                        kmNClusters = int(kmNClusters)
+                    except:
+                        kmNClusters = 8
+                if kmMaxIter == '':
                     kmMaxIter = 300
-            if kmAlgorithm == '' or kmAlgorithm == None:
-                kmAlgorithm = 'lloyd'
-            if kmRandomState == '':
-                kmRandomState = 42
-            else:
-                try:
-                    kmRandomState = int(kmRandomState)
-                except:
+                else:
+                    try:
+                        kmMaxIter = int(kmMaxIter)
+                    except:
+                        kmMaxIter = 300
+                if kmAlgorithm == '' or kmAlgorithm == None:
+                    kmAlgorithm = 'lloyd'
+                if kmRandomState == '':
                     kmRandomState = 42
+                else:
+                    try:
+                        kmRandomState = int(kmRandomState)
+                    except:
+                        kmRandomState = 42
 
-            DATA.mlModel = KMeans(n_clusters=kmNClusters, max_iter=kmMaxIter, algorithm=kmAlgorithm, random_state=kmRandomState)
+                DATA.mlModel = KMeans(n_clusters=kmNClusters, max_iter=kmMaxIter, algorithm=kmAlgorithm, random_state=kmRandomState)
 
-        elif DATA.mlModelType == 'Support Vector Machine (SVM)':
-            svmC = self.svmCEntry.get()
-            svmKernel = self.svmKernelBox.get()
-            svmGamma = self.svmGammaEntry.get()
-            svmRandomState = self.svmRandomStateEntry.get()
+            elif DATA.mlModelType == 'Support Vector Machine (SVM)':
+                svmC = self.svmCEntry.get()
+                svmKernel = self.svmKernelBox.get()
+                svmGamma = self.svmGammaEntry.get()
+                svmRandomState = self.svmRandomStateEntry.get()
 
-            if svmC == '':
-                svmC = 1.0
-            else:
-                try:
-                    svmC = float(svmC)
-                except:
+                if svmC == '':
                     svmC = 1.0
-            if svmKernel == '' or svmKernel == None:
-                svmKernel = 'rbf'
-            if svmGamma == '':
-                svmGamma = 'scale'
-            else:
-                try:
-                    svmGamma = float(svmGamma)
-                except:
+                else:
+                    try:
+                        svmC = float(svmC)
+                    except:
+                        svmC = 1.0
+                if svmKernel == '' or svmKernel == None:
+                    svmKernel = 'rbf'
+                if svmGamma == '':
                     svmGamma = 'scale'
-            if svmRandomState == '':
-                svmRandomState = 42
-            else:
-                try:
-                    svmRandomState = int(svmRandomState)
-                except:
+                else:
+                    try:
+                        svmGamma = float(svmGamma)
+                    except:
+                        svmGamma = 'scale'
+                if svmRandomState == '':
                     svmRandomState = 42
+                else:
+                    try:
+                        svmRandomState = int(svmRandomState)
+                    except:
+                        svmRandomState = 42
 
-            DATA.mlModel = svm.SVC(C=svmC, kernel=svmKernel, gamma=svmGamma, random_state=svmRandomState, probability=True)
-        
-        if DATA.X_train is None or DATA.y_train is None or DATA.X_test is None or DATA.y_test is None or DATA.X is None or DATA.y is None:
-            if DATA.mlModelType == 'K-means':
-                DATA.mlModel.fit(concat([DATA.X, DATA.y], axis=1))
+                DATA.mlModel = svm.SVC(C=svmC, kernel=svmKernel, gamma=svmGamma, random_state=svmRandomState, probability=True)
+            
+            if DATA.X_train is None or DATA.y_train is None or DATA.X_test is None or DATA.y_test is None or DATA.X is None or DATA.y is None:
+                if DATA.mlModelType == 'K-means':
+                    DATA.mlModel.fit(concat([DATA.X, DATA.y], axis=1))
+                else:
+                    DATA.mlModel.fit(DATA.X, DATA.y)
             else:
-                DATA.mlModel.fit(DATA.X, DATA.y)
-        else:
-            if DATA.mlModelType == 'K-means':
-                DATA.mlModel.fit(concat([DATA.X_train, DATA.y_train], axis=1))
-            else:
-                DATA.mlModel.fit(DATA.X_train, DATA.y_train)
+                if DATA.mlModelType == 'K-means':
+                    DATA.mlModel.fit(concat([DATA.X_train, DATA.y_train], axis=1))
+                else:
+                    DATA.mlModel.fit(DATA.X_train, DATA.y_train)
+        except Exception as e:
+            tk.messagebox.showerror("Information", f"An error occurred while trying to train the model: {e}")
+            return
 
         self.TestButton.configure(state="normal")
         self.SaveModelButton.configure(state="normal")
@@ -2032,7 +2057,7 @@ class MLPage(ctk.CTkFrame):
             tk.messagebox.showerror("Information", f"An error occurred while trying to predict data: {e}")
             return
 
-        if DATA.mlModelType == 'Linear Regression' or (DATA.mlModelType == 'Decision Tree' and (target_type == 'float64' or target_type == 'float32')):
+        if DATA.mlModelType == 'Linear Regression' or (DATA.mlModelType in ['Decision Tree', 'Random Forest'] and (target_type == 'float64' or target_type == 'float32')):
             self.MaxErrorLabel = ctk.CTkLabel(self.NumericMetricsFrame,
                                               text=f"Max error: {round(metrics.max_error(DATA.y if (DATA.X_train is None or DATA.y_train is None or DATA.X_test is None or DATA.y_test is None or DATA.X is None or DATA.y is None) else DATA.y_test, self.prediction), 4)}",
                                               text_color="#FFFFFF", font=MEDIUMFONT)
@@ -2053,7 +2078,7 @@ class MLPage(ctk.CTkFrame):
                                         text_color="#FFFFFF", font=MEDIUMFONT)
             self.R2Label.grid(row=5, column=0, padx=0, pady=8, sticky="w")
 
-            self.showMetricsPlotsBtn.configure(state="disabled")
+            self.showMetricsPlotsBtn.configure(state="normal")
 
         elif DATA.mlModelType == 'K-means':
             self.SaveModelButton.configure(state="normal")
@@ -2107,7 +2132,8 @@ class MLPage(ctk.CTkFrame):
     def showMetricsPlots(self):
         global DATA
         global app
-        
+        target_type = DATA.y.dtype.name
+
         for widget in self.MetricsPlotsFrame.winfo_children():
             widget.destroy()
 
@@ -2223,6 +2249,23 @@ class MLPage(ctk.CTkFrame):
             self.toolbar = NavigationToolbar2Tk(self.figure_canva, self.MetricsPlotsFrame)
             self.toolbar.update()
 
+        elif DATA.mlModelType == 'Linear Regression':
+            self.ColumnXOptionmenuVar = ctk.StringVar(value="Column X")
+            self.ColumnXCombobox = ctk.CTkOptionMenu(master=self.NumericMetricsFrame,
+                                                    values=get_dataframe_columns(DATA.file_data),
+                                                    variable=self.ColumnXOptionmenuVar,
+                                                    width=150, corner_radius=0, text_color="#101010",
+                                                    bg_color="#FFFFFF", fg_color="#FFFFFF", font=SMALLFONT, height=32,
+                                                    button_color="#FFFFFF", button_hover_color="#FFFFFF",
+                                                    dropdown_font=SMALLFONT, dropdown_hover_color="#F0F0F0",
+                                                    dropdown_fg_color="#FFFFFF", dropdown_text_color="#101010")
+            self.ColumnXCombobox.grid(row=6, column=0, padx=0, pady=(0, 4), ipadx=8, ipady=8, sticky="ew")
+
+            PlotButton = ctk.CTkButton(self.NumericMetricsFrame, text="Plot", command=lambda: self.showRegressionPlots(),
+                                   corner_radius=0, text_color="#101010", bg_color="#FFFFFF", fg_color="#FFFFFF",
+                                   font=SMALLFONT, hover_color="#F0F0F0", height=32)
+            PlotButton.grid(row=7, column=0, padx=0, pady=4, ipadx=8, ipady=8, sticky="ew")
+
     # THIS METHOD HANDLE ONLY THE K-MEANS PLOTS
     def showKmeansPlots(self):
         for widget in self.MetricsPlotsFrame.winfo_children():
@@ -2269,6 +2312,34 @@ class MLPage(ctk.CTkFrame):
         self.toolbar = NavigationToolbar2Tk(self.figure_canva, self.MetricsPlotsFrame)
         self.toolbar.update()
 
+    def showRegressionPlots(self):
+        for widget in self.MetricsPlotsFrame.winfo_children():
+            widget.destroy()
+
+        sns.set_theme(color_codes=True)
+
+        self.figure = Figure(figsize=(20, 5), dpi=100)
+
+        self.figure_canva = FigureCanvasTkAgg(self.figure, self.MetricsPlotsFrame)
+
+        self.axe = self.figure.add_subplot()
+
+        if DATA.X_train is None or DATA.y_train is None or DATA.X_test is None or DATA.y_test is None or DATA.X is None or DATA.y is None:
+            sns.regplot(x=self.ColumnXCombobox.get(), y=DATA.target_column, data=DATA.file_data, ax=self.axe)
+        else:
+            sns.regplot(x=self.ColumnXCombobox.get(), y=DATA.target_column, data=concat([DATA.X_train, DATA.y_train], axis=1), ax=self.axe)
+
+        self.axe.set_xlabel(self.ColumnXCombobox.get())
+        self.axe.set_ylabel(DATA.target_column)
+        self.axe.set_title("Regression plot")
+
+        self.figure_canva.draw()
+        self.figure_canva.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=True)
+
+        # create the toolbar
+        self.toolbar = NavigationToolbar2Tk(self.figure_canva, self.MetricsPlotsFrame)
+        self.toolbar.update()
+        
     # THIS METHOD HANDLES THE MODEL IMPORTING
     def importModelHandler(self):
         file_path, file_extension = UploadAction(type="model")
