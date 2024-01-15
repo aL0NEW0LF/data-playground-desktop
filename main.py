@@ -1,6 +1,4 @@
-from itertools import cycle, product
-from textwrap import wrap
-from numpy import arange, newaxis, reshape, trace
+from itertools import cycle
 from assets.fonts.fonts import LARGEFONT, MEDIUMFONT, SMALLFONT
 import tkinter as tk
 from tkinter import ttk
