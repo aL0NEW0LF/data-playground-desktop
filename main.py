@@ -992,7 +992,6 @@ class VisualizationPage(ctk.CTkFrame):
     # THIS METHOD HANDLES THE PLOT TYPE CHOICE, IT ENABLES THE CORRESPONDING ENTRIES
     def plotType_optionmenu_callback(self, choice):  
         self.visPlotType = choice
-        print(self.visPlotType)
         
         if self.visPlotType == "Scatter plot":
             self.MarkerSizeEntry.configure(state="normal")
@@ -1046,17 +1045,14 @@ class VisualizationPage(ctk.CTkFrame):
     # THIS METHOD HANDLES THE COLUMN X CHOICE
     def columnX_optionmenu_callback(self, choice):
         self.visColumnX = choice
-        print(self.visColumnX)
     
     # THIS METHOD HANDLES THE COLUMN Y CHOICE
     def columnY_optionmenu_callback(self, choice):
         self.visColumnY = choice
-        print(self.visColumnY)
 
     # THIS METHOD HANDLES THE COLUMN Z CHOICE
     def columnZ_optionmenu_callback(self, choice):
         self.visColumnZ = choice
-        print(self.visColumnZ)
 
     # THIS METHOD HANDLES THE PLOT BUTTON, IT PLOTS THE DATA
     def plot(self, k=''):
@@ -1096,10 +1092,6 @@ class VisualizationPage(ctk.CTkFrame):
             if self.visColumnX == None or self.visColumnY == None or self.visColumnX == '' or self.visColumnY == '':
                 tk.messagebox.showerror("Information", "Please select a column for X and Y")
                 return
-            
-            print(DATA.file_data[self.visColumnX].dtype.name)
-            print(DATA.file_data[self.visColumnY].dtype.name)
-            print(DATA.file_data[self.visColumnZ].dtype.name)
 
             if (DATA.file_data[self.visColumnX].dtype.name != "float64" and DATA.file_data[self.visColumnX].dtype.name != "float32") or (DATA.file_data[self.visColumnY].dtype.name != "float64" and DATA.file_data[self.visColumnY].dtype.name != "float32") or (DATA.file_data[self.visColumnZ].dtype.name != "float64" and DATA.file_data[self.visColumnZ].dtype.name != "float32"):
                 tk.messagebox.showerror("Information", "Please select a column with float values")
@@ -1507,7 +1499,6 @@ class MLPage(ctk.CTkFrame):
                 self.dtCriterionBox = ctk.CTkOptionMenu(master=self.ModelConfigFrame,
                                                         values=["gini", "entropy", "log_loss"],
                                                         width=250,
-                                                        command=lambda x: print(x),
                                                         variable=self.CriterionVar,
                                                         corner_radius=0, text_color="#101010", bg_color="#FFFFFF",
                                                         fg_color="#FFFFFF", font=SMALLFONT, height=48,
@@ -1519,7 +1510,6 @@ class MLPage(ctk.CTkFrame):
                 self.dtCriterionBox = ctk.CTkOptionMenu(master=self.ModelConfigFrame,
                                                         values=["squared_error", "friedman_mse", "absolute_error", "poisson"],
                                                         width=250,
-                                                        command=lambda x: print(x),
                                                         variable=self.CriterionVar,
                                                         corner_radius=0, text_color="#101010", bg_color="#FFFFFF",
                                                         fg_color="#FFFFFF", font=SMALLFONT, height=48,
