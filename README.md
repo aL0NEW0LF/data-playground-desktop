@@ -56,4 +56,8 @@ python main.py
 > - [x] Choose what form you want to save your file
 > - [x] Add more regression models
 > - [x] Add regression metrics plots
-> - [ ] Add a button to show the dataset info and description on click
+> - [ ] Add a button to show the dataset info and description and different metrics on click
+> - [ ] Add a way predict for new datasets
+> - [ ] Add a way to create a new dataset or line of data
+> - [ ] Save the label encoder used to later reverse transform future predictions
+> - [ ] Choose the column where you want to handle missing values
